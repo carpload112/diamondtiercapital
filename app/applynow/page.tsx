@@ -7,6 +7,8 @@ import { Progress } from "@/components/ui/progress"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 import SBAFormStep from "../components/SBAFormStep"
 import ConfettiExplosion from "react-confetti-explosion"
+import { submitLoanApplication } from "@/lib/form-service"
+import { useToast } from "@/components/ui/use-toast"
 
 const formSteps = [
   {
@@ -65,20 +67,46 @@ const formSteps = [
 
 export default function ApplyNow() {
   const [currentStep, setCurrentStep] = useState(0)
-  const [formData, setFormData] = useState({})
+  const [formData, setFormData] = useState<Record<string, string>>({})
   const [isExploding, setIsExploding] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { toast } = useToast()
 
   const handleInputChange = (name: string, value: string) => {
     setFormData((prevData) => ({ ...prevData, [name]: value }))
   }
 
-  const nextStep = () => {
+  const nextStep = async () => {
     if (currentStep < formSteps.length - 1) {
       setCurrentStep(currentStep + 1)
     } else {
-      setIsExploding(true)
-      // Here you would typically submit the form data
-      console.log("Form submitted:", formData)
+      setIsSubmitting(true)
+      try {
+        // Convert numeric fields to numbers
+        const processedData = {
+          ...formData,
+          yearsInBusiness: Number.parseInt(formData.yearsInBusiness) || 0,
+          loanAmount: Number.parseInt(formData.loanAmount) || 0,
+          annualRevenue: Number.parseInt(formData.annualRevenue) || 0,
+        }
+
+        await submitLoanApplication(processedData)
+        setIsExploding(true)
+        toast({
+          title: "Application Submitted",
+          description: "We've received your loan application and will contact you soon.",
+          variant: "default",
+        })
+      } catch (error) {
+        console.error("Error submitting application:", error)
+        toast({
+          title: "Submission Error",
+          description: "There was a problem submitting your application. Please try again.",
+          variant: "destructive",
+        })
+      } finally {
+        setIsSubmitting(false)
+      }
     }
   }
 
@@ -115,8 +143,9 @@ export default function ApplyNow() {
           <Button onClick={prevStep} disabled={currentStep === 0} variant="outline">
             <ArrowLeft className="mr-2 h-4 w-4" /> Previous
           </Button>
-          <Button onClick={nextStep}>
-            {currentStep === formSteps.length - 1 ? "Submit" : "Next"} <ArrowRight className="ml-2 h-4 w-4" />
+          <Button onClick={nextStep} disabled={isSubmitting}>
+            {currentStep === formSteps.length - 1 ? (isSubmitting ? "Submitting..." : "Submit") : "Next"}{" "}
+            {!isSubmitting && <ArrowRight className="ml-2 h-4 w-4" />}
           </Button>
         </div>
       </motion.div>

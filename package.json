@@ -60,7 +60,8 @@
     "zod": "^3.24.1",
     "@emotion/is-prop-valid": "latest",
     "framer-motion": "latest",
-    "react-confetti-explosion": "latest"
+    "react-confetti-explosion": "latest",
+    "firebase": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

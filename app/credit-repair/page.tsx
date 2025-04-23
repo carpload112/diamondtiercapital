@@ -5,6 +5,7 @@ import { motion, useScroll, useTransform } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowRight, CheckCircle, Star, ArrowUp, RefreshCcw } from "lucide-react"
 import ServicePageLayout from "../components/ServicePageLayout"
+import CreditRepairForm from "../components/CreditRepairForm"
 
 const caseStudies = [
   {
@@ -106,6 +107,28 @@ export default function CreditRepairPage() {
       primaryCTA="Start Your Journey"
       secondaryCTA="Learn More"
     >
+      {/* Application Form Section */}
+      <section className="py-20 bg-gradient-to-b from-white to-gray-50">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Start Your Credit Repair Journey Today</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Fill out the form below to begin your path to better credit and expanded business opportunities
+            </p>
+          </motion.div>
+
+          <div className="max-w-2xl mx-auto">
+            <CreditRepairForm />
+          </div>
+        </div>
+      </section>
+
       {/* Stats Section */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">

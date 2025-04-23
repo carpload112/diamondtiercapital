@@ -221,16 +221,27 @@ export default function Footer() {
           <p className="text-gray-400 text-sm">
             © {new Date().getFullYear()} Diamond Tier Capital. All rights reserved.
           </p>
-          <div className="flex space-x-6 mt-4 md:mt-0">
-            <Link href="/privacy-policy" className="text-gray-400 hover:text-white text-sm transition-colors">
-              Privacy Policy
-            </Link>
-            <Link href="/terms-of-service" className="text-gray-400 hover:text-white text-sm transition-colors">
-              Terms of Service
-            </Link>
-            <Link href="/sitemap" className="text-gray-400 hover:text-white text-sm transition-colors">
-              Sitemap
-            </Link>
+          <div className="flex flex-col md:flex-row md:items-center">
+            <div className="flex space-x-6 mt-4 md:mt-0">
+              <Link href="/privacy-policy" className="text-gray-400 hover:text-white text-sm transition-colors">
+                Privacy Policy
+              </Link>
+              <Link href="/terms-of-service" className="text-gray-400 hover:text-white text-sm transition-colors">
+                Terms of Service
+              </Link>
+              <Link href="/sitemap" className="text-gray-400 hover:text-white text-sm transition-colors">
+                Sitemap
+              </Link>
+            </div>
+            <div className="h-4 w-px bg-gray-700 mx-4 hidden md:block"></div>
+            <div className="flex space-x-6 mt-4 md:mt-0">
+              <Link href="/admin/dashboard" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">
+                Admin
+              </Link>
+              <Link href="/login" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">
+                Login
+              </Link>
+            </div>
           </div>
         </div>
       </div>
