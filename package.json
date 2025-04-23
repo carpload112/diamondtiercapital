@@ -61,7 +61,8 @@
     "@emotion/is-prop-valid": "latest",
     "framer-motion": "latest",
     "react-confetti-explosion": "latest",
-    "firebase": "latest"
+    "firebase": "latest",
+    "firebase-admin": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

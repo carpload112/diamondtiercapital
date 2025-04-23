@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import {
-  getFirebaseAuth,
+  auth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -49,66 +49,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [authInitialized, setAuthInitialized] = useState(false)
 
   useEffect(() => {
     // Only run on client side
     if (typeof window === "undefined") return
+    if (!auth) {
+      setError("Firebase Auth is not available")
+      setLoading(false)
+      return
+    }
 
-    // Use a small delay to ensure Firebase is fully initialized
-    const initializeAuth = setTimeout(() => {
-      const auth = getFirebaseAuth()
+    // Set up auth state listener
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (currentUser) => {
+        setUser(currentUser)
 
-      if (!auth) {
-        setError("Failed to initialize Firebase Auth")
+        // Simple admin check
+        if (currentUser) {
+          setIsAdmin(currentUser.email?.includes("admin") || false)
+        } else {
+          setIsAdmin(false)
+        }
+
         setLoading(false)
-        return
-      }
+      },
+      (error) => {
+        console.error("Auth state change error:", error)
+        setError("Authentication error: " + error.message)
+        setLoading(false)
+      },
+    )
 
-      setAuthInitialized(true)
-
-      // Set up auth state listener
-      const unsubscribe = onAuthStateChanged(
-        auth,
-        (currentUser) => {
-          setUser(currentUser)
-
-          // Simple admin check
-          if (currentUser) {
-            setIsAdmin(currentUser.email?.includes("admin") || false)
-          } else {
-            setIsAdmin(false)
-          }
-
-          setLoading(false)
-        },
-        (error) => {
-          console.error("Auth state change error:", error)
-          setError("Authentication error: " + error.message)
-          setLoading(false)
-        },
-      )
-
-      // Clean up subscription and timeout
-      return () => {
-        unsubscribe()
-      }
-    }, 100) // Small delay to ensure Firebase is initialized
-
-    return () => clearTimeout(initializeAuth)
+    // Clean up subscription
+    return () => unsubscribe()
   }, [])
 
   // Auth methods with error handling
   const login = async (email: string, password: string) => {
     setError(null)
-
-    if (!authInitialized) {
-      const errorMessage = "Authentication is still initializing"
-      setError(errorMessage)
-      throw new Error(errorMessage)
-    }
-
-    const auth = getFirebaseAuth()
 
     if (!auth) {
       const errorMessage = "Authentication is not available"
@@ -128,14 +107,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signup = async (email: string, password: string) => {
     setError(null)
 
-    if (!authInitialized) {
-      const errorMessage = "Authentication is still initializing"
-      setError(errorMessage)
-      throw new Error(errorMessage)
-    }
-
-    const auth = getFirebaseAuth()
-
     if (!auth) {
       const errorMessage = "Authentication is not available"
       setError(errorMessage)
@@ -154,14 +125,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     setError(null)
 
-    if (!authInitialized) {
-      const errorMessage = "Authentication is still initializing"
-      setError(errorMessage)
-      throw new Error(errorMessage)
-    }
-
-    const auth = getFirebaseAuth()
-
     if (!auth) {
       const errorMessage = "Authentication is not available"
       setError(errorMessage)
@@ -179,14 +142,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const resetPassword = async (email: string) => {
     setError(null)
-
-    if (!authInitialized) {
-      const errorMessage = "Authentication is still initializing"
-      setError(errorMessage)
-      throw new Error(errorMessage)
-    }
-
-    const auth = getFirebaseAuth()
 
     if (!auth) {
       const errorMessage = "Authentication is not available"
