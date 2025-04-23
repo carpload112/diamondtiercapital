@@ -1,20 +1,20 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
-import { useFirebase, getFirestoreMethods } from "@/lib/firebase"
-
-interface TestDocument {
-  id: string
-  [key: string]: any
-}
+import { getFirebaseFirestore, collection, getDocs } from "@/lib/firebase"
 
 export default function FirebaseTestPage() {
   const { user, loading, error: authError } = useAuth()
-  const { firestore, isLoading: firestoreLoading, isError: firestoreError } = useFirebase()
-  const [testData, setTestData] = useState<TestDocument[]>([])
+  const [testData, setTestData] = useState<any[]>([])
   const [testError, setTestError] = useState<string | null>(null)
   const [testStatus, setTestStatus] = useState<"idle" | "testing" | "success" | "error">("idle")
+  const [isClient, setIsClient] = useState(false)
+
+  // Check if we're on the client side
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   // Test Firestore connection
   const testFirestore = async () => {
@@ -22,16 +22,10 @@ export default function FirebaseTestPage() {
     setTestError(null)
 
     try {
+      const firestore = getFirebaseFirestore()
       if (!firestore) {
         throw new Error("Firestore is not initialized")
       }
-
-      const methods = await getFirestoreMethods()
-      if (!methods) {
-        throw new Error("Firestore methods are not available")
-      }
-
-      const { collection, getDocs } = methods
 
       // Try to fetch some data
       const querySnapshot = await getDocs(collection(firestore, "test-collection"))
@@ -47,6 +41,11 @@ export default function FirebaseTestPage() {
       setTestError(error.message || "Unknown error")
       setTestStatus("error")
     }
+  }
+
+  // If we're not on the client side yet, show a loading message
+  if (!isClient) {
+    return <div className="min-h-screen p-8">Loading...</div>
   }
 
   return (
@@ -82,39 +81,29 @@ export default function FirebaseTestPage() {
 
       <div className="mb-8 p-4 border rounded-lg">
         <h2 className="text-xl font-semibold mb-4">Firestore Test</h2>
-        {firestoreLoading ? (
-          <p>Loading Firestore...</p>
-        ) : firestoreError ? (
-          <div className="p-2 bg-red-50 text-red-600 rounded">
-            <p>Firestore initialization error</p>
+        <button
+          onClick={testFirestore}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          disabled={testStatus === "testing"}
+        >
+          {testStatus === "testing" ? "Testing..." : "Test Firestore Connection"}
+        </button>
+
+        {testStatus === "success" && (
+          <div className="mt-4">
+            <p className="text-green-600">Firestore connection successful!</p>
+            <p>Retrieved {testData.length} documents</p>
+            {testData.length > 0 && (
+              <pre className="mt-2 p-2 bg-gray-100 rounded overflow-auto">{JSON.stringify(testData, null, 2)}</pre>
+            )}
           </div>
-        ) : (
-          <>
-            <button
-              onClick={testFirestore}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-              disabled={testStatus === "testing"}
-            >
-              {testStatus === "testing" ? "Testing..." : "Test Firestore Connection"}
-            </button>
+        )}
 
-            {testStatus === "success" && (
-              <div className="mt-4">
-                <p className="text-green-600">Firestore connection successful!</p>
-                <p>Retrieved {testData.length} documents</p>
-                {testData.length > 0 && (
-                  <pre className="mt-2 p-2 bg-gray-100 rounded overflow-auto">{JSON.stringify(testData, null, 2)}</pre>
-                )}
-              </div>
-            )}
-
-            {testStatus === "error" && (
-              <div className="mt-4">
-                <p className="text-red-600">Firestore test failed:</p>
-                <p>{testError}</p>
-              </div>
-            )}
-          </>
+        {testStatus === "error" && (
+          <div className="mt-4">
+            <p className="text-red-600">Firestore test failed:</p>
+            <p>{testError}</p>
+          </div>
         )}
       </div>
     </div>

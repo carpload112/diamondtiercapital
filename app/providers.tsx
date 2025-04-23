@@ -4,7 +4,7 @@ import { type ReactNode, useEffect, useState } from "react"
 import { AuthProvider } from "@/lib/auth-context"
 
 export function Providers({ children }: { children: ReactNode }) {
-  // Use a ref to avoid unnecessary re-renders
+  // Use state to track if we're on the client
   const [isMounted, setIsMounted] = useState(false)
 
   // Simple check to ensure we're on the client

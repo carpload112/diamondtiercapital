@@ -1,9 +1,33 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import type { FirebaseApp } from "firebase/app"
-import type { Auth, User } from "firebase/auth"
-import type { Firestore } from "firebase/firestore"
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app"
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  sendPasswordResetEmail,
+  type User,
+  type Auth,
+} from "firebase/auth"
+import {
+  getFirestore,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  serverTimestamp,
+  type Firestore,
+} from "firebase/firestore"
 
 // Firebase configuration
 const firebaseConfig = {
@@ -16,208 +40,101 @@ const firebaseConfig = {
   measurementId: "G-6FPGZQJQGS",
 }
 
-// Global variables to hold Firebase instances
-let firebaseApp: FirebaseApp | null = null
-let firebaseAuth: Auth | null = null
-let firebaseFirestore: Firestore | null = null
-let isInitializing = false
+// Define a class to handle Firebase initialization and services
+class FirebaseClient {
+  private static instance: FirebaseClient
+  private app: FirebaseApp | null = null
+  private _auth: Auth | null = null
+  private _firestore: Firestore | null = null
+  private _initialized = false
 
-// Initialize Firebase only on client side
-export const initFirebase = async () => {
-  // Return early if not in browser
-  if (typeof window === "undefined") return null
-
-  // Return existing instances if already initialized
-  if (firebaseApp) return { app: firebaseApp, auth: firebaseAuth, firestore: firebaseFirestore }
-
-  // Prevent multiple simultaneous initialization attempts
-  if (isInitializing) {
-    // Wait a bit and check again
-    await new Promise((resolve) => setTimeout(resolve, 100))
-    if (firebaseApp) return { app: firebaseApp, auth: firebaseAuth, firestore: firebaseFirestore }
-  }
-
-  isInitializing = true
-
-  try {
-    // Dynamically import Firebase modules
-    const { initializeApp } = await import("firebase/app")
-    const { getAuth } = await import("firebase/auth")
-    const { getFirestore } = await import("firebase/firestore")
-
-    // Initialize Firebase
-    firebaseApp = initializeApp(firebaseConfig)
-
-    // Initialize services
-    firebaseAuth = getAuth(firebaseApp)
-    firebaseFirestore = getFirestore(firebaseApp)
-
-    console.log("Firebase initialized successfully")
-
-    return { app: firebaseApp, auth: firebaseAuth, firestore: firebaseFirestore }
-  } catch (error) {
-    console.error("Firebase initialization error:", error)
-    return null
-  } finally {
-    isInitializing = false
-  }
-}
-
-// Firebase hook with proper TypeScript types
-interface FirebaseState {
-  app: FirebaseApp | null
-  auth: Auth | null
-  firestore: Firestore | null
-  isLoading: boolean
-  isError: boolean
-}
-
-export function useFirebase() {
-  const [firebase, setFirebase] = useState<FirebaseState>({
-    app: null,
-    auth: null,
-    firestore: null,
-    isLoading: true,
-    isError: false,
-  })
-
-  useEffect(() => {
-    let isMounted = true
-
-    const loadFirebase = async () => {
+  private constructor() {
+    // Private constructor to enforce singleton pattern
+    if (typeof window !== "undefined") {
       try {
-        const result = await initFirebase()
-
-        if (!isMounted) return
-
-        if (result) {
-          setFirebase({
-            app: result.app,
-            auth: result.auth,
-            firestore: result.firestore,
-            isLoading: false,
-            isError: false,
-          })
+        if (!getApps().length) {
+          this.app = initializeApp(firebaseConfig)
         } else {
-          setFirebase((prev) => ({
-            ...prev,
-            isLoading: false,
-            isError: true,
-          }))
+          this.app = getApp()
         }
+        this._initialized = true
       } catch (error) {
-        console.error("Error loading Firebase:", error)
-
-        if (!isMounted) return
-
-        setFirebase((prev) => ({
-          ...prev,
-          isLoading: false,
-          isError: true,
-        }))
+        console.error("Firebase initialization error:", error)
       }
     }
+  }
 
-    loadFirebase()
-
-    return () => {
-      isMounted = false
+  public static getInstance(): FirebaseClient {
+    if (!FirebaseClient.instance) {
+      FirebaseClient.instance = new FirebaseClient()
     }
-  }, [])
+    return FirebaseClient.instance
+  }
 
-  return firebase
-}
+  public get initialized(): boolean {
+    return this._initialized
+  }
 
-// Type definitions for auth methods
-export interface AuthMethods {
-  signInWithEmailAndPassword: (auth: Auth, email: string, password: string) => Promise<any>
-  createUserWithEmailAndPassword: (auth: Auth, email: string, password: string) => Promise<any>
-  signOut: (auth: Auth) => Promise<void>
-  sendPasswordResetEmail: (auth: Auth, email: string) => Promise<void>
-  onAuthStateChanged: (auth: Auth, callback: (user: User | null) => void) => () => void
-}
-
-// Export Firebase auth methods
-export const getAuthMethods = async (): Promise<AuthMethods | null> => {
-  if (typeof window === "undefined") return null
-
-  try {
-    const {
-      signInWithEmailAndPassword,
-      createUserWithEmailAndPassword,
-      signOut,
-      sendPasswordResetEmail,
-      onAuthStateChanged,
-    } = await import("firebase/auth")
-
-    return {
-      signInWithEmailAndPassword,
-      createUserWithEmailAndPassword,
-      signOut,
-      sendPasswordResetEmail,
-      onAuthStateChanged,
+  public get auth(): Auth | null {
+    if (!this._auth && this.app && typeof window !== "undefined") {
+      try {
+        this._auth = getAuth(this.app)
+      } catch (error) {
+        console.error("Firebase auth initialization error:", error)
+      }
     }
-  } catch (error) {
-    console.error("Error loading auth methods:", error)
-    return null
+    return this._auth
+  }
+
+  public get firestore(): Firestore | null {
+    if (!this._firestore && this.app && typeof window !== "undefined") {
+      try {
+        this._firestore = getFirestore(this.app)
+      } catch (error) {
+        console.error("Firebase firestore initialization error:", error)
+      }
+    }
+    return this._firestore
   }
 }
 
-// Type definitions for Firestore methods
-export interface FirestoreMethods {
-  collection: any
-  doc: any
-  getDoc: any
-  getDocs: any
-  setDoc: any
-  addDoc: any
-  updateDoc: any
-  deleteDoc: any
-  query: any
-  where: any
-  orderBy: any
-  limit: any
-  serverTimestamp: any
+// Export a function to get the Firebase client
+export function getFirebaseClient(): FirebaseClient {
+  return FirebaseClient.getInstance()
 }
 
-// Export Firestore methods
-export const getFirestoreMethods = async (): Promise<FirestoreMethods | null> => {
+// Helper functions to access Firebase services
+export function getFirebaseAuth(): Auth | null {
   if (typeof window === "undefined") return null
+  const client = getFirebaseClient()
+  return client.auth
+}
 
-  try {
-    const {
-      collection,
-      doc,
-      getDoc,
-      getDocs,
-      setDoc,
-      addDoc,
-      updateDoc,
-      deleteDoc,
-      query,
-      where,
-      orderBy,
-      limit,
-      serverTimestamp,
-    } = await import("firebase/firestore")
+export function getFirebaseFirestore(): Firestore | null {
+  if (typeof window === "undefined") return null
+  const client = getFirebaseClient()
+  return client.firestore
+}
 
-    return {
-      collection,
-      doc,
-      getDoc,
-      getDocs,
-      setDoc,
-      addDoc,
-      updateDoc,
-      deleteDoc,
-      query,
-      where,
-      orderBy,
-      limit,
-      serverTimestamp,
-    }
-  } catch (error) {
-    console.error("Error loading firestore methods:", error)
-    return null
-  }
+// Export Firebase methods
+export {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  sendPasswordResetEmail,
+  type User,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  serverTimestamp,
 }

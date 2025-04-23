@@ -1,15 +1,22 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
-import { useFirebase, getAuthMethods, type AuthMethods } from "./firebase"
-import type { User } from "firebase/auth"
+import {
+  getFirebaseAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  sendPasswordResetEmail,
+  type User,
+} from "./firebase"
 
 interface AuthContextType {
   user: User | null
   loading: boolean
   isAdmin: boolean
-  login: (email: string, password: string) => Promise<any>
-  signup: (email: string, password: string) => Promise<any>
+  login: (email: string, password: string) => Promise<void>
+  signup: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   resetPassword: (email: string) => Promise<void>
   error: string | null
@@ -41,75 +48,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
-  const [authMethods, setAuthMethods] = useState<AuthMethods | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [authInitialized, setAuthInitialized] = useState(false)
 
-  // Get Firebase instances
-  const { auth, isLoading: firebaseLoading, isError: firebaseError } = useFirebase()
-
-  // Load auth methods
   useEffect(() => {
-    const loadAuthMethods = async () => {
-      try {
-        const methods = await getAuthMethods()
-        setAuthMethods(methods)
-      } catch (err) {
-        console.error("Failed to load auth methods:", err)
-        setError("Failed to initialize authentication")
-      }
-    }
+    // Only run on client side
+    if (typeof window === "undefined") return
 
-    loadAuthMethods()
-  }, [])
+    // Use a small delay to ensure Firebase is fully initialized
+    const initializeAuth = setTimeout(() => {
+      const auth = getFirebaseAuth()
 
-  // Set up auth state listener once auth is initialized
-  useEffect(() => {
-    if (!auth || !authMethods || firebaseLoading) return
-
-    let unsubscribe: (() => void) | undefined
-
-    try {
-      const { onAuthStateChanged } = authMethods
-
-      unsubscribe = onAuthStateChanged(auth, (currentUser: User | null) => {
-        setUser(currentUser)
-
-        // Simple admin check - we'll improve this later
-        if (currentUser) {
-          setIsAdmin(currentUser.email?.includes("admin") || false)
-        } else {
-          setIsAdmin(false)
-        }
-
+      if (!auth) {
+        setError("Failed to initialize Firebase Auth")
         setLoading(false)
-      })
-    } catch (err) {
-      console.error("Error setting up auth state listener:", err)
-      setError("Failed to monitor authentication state")
-      setLoading(false)
-    }
+        return
+      }
 
-    return () => {
-      if (unsubscribe) unsubscribe()
-    }
-  }, [auth, authMethods, firebaseLoading])
+      setAuthInitialized(true)
 
-  // Set error if Firebase initialization failed
-  useEffect(() => {
-    if (firebaseError) {
-      setError("Failed to initialize Firebase")
-      setLoading(false)
-    }
-  }, [firebaseError])
+      // Set up auth state listener
+      const unsubscribe = onAuthStateChanged(
+        auth,
+        (currentUser) => {
+          setUser(currentUser)
+
+          // Simple admin check
+          if (currentUser) {
+            setIsAdmin(currentUser.email?.includes("admin") || false)
+          } else {
+            setIsAdmin(false)
+          }
+
+          setLoading(false)
+        },
+        (error) => {
+          console.error("Auth state change error:", error)
+          setError("Authentication error: " + error.message)
+          setLoading(false)
+        },
+      )
+
+      // Clean up subscription and timeout
+      return () => {
+        unsubscribe()
+      }
+    }, 100) // Small delay to ensure Firebase is initialized
+
+    return () => clearTimeout(initializeAuth)
+  }, [])
 
   // Auth methods with error handling
   const login = async (email: string, password: string) => {
-    if (!auth || !authMethods) throw new Error("Authentication is not available")
     setError(null)
 
+    if (!authInitialized) {
+      const errorMessage = "Authentication is still initializing"
+      setError(errorMessage)
+      throw new Error(errorMessage)
+    }
+
+    const auth = getFirebaseAuth()
+
+    if (!auth) {
+      const errorMessage = "Authentication is not available"
+      setError(errorMessage)
+      throw new Error(errorMessage)
+    }
+
     try {
-      const { signInWithEmailAndPassword } = authMethods
-      return await signInWithEmailAndPassword(auth, email, password)
+      await signInWithEmailAndPassword(auth, email, password)
     } catch (err: any) {
       const errorMessage = err.message || "Failed to sign in"
       setError(errorMessage)
@@ -118,12 +126,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signup = async (email: string, password: string) => {
-    if (!auth || !authMethods) throw new Error("Authentication is not available")
     setError(null)
 
+    if (!authInitialized) {
+      const errorMessage = "Authentication is still initializing"
+      setError(errorMessage)
+      throw new Error(errorMessage)
+    }
+
+    const auth = getFirebaseAuth()
+
+    if (!auth) {
+      const errorMessage = "Authentication is not available"
+      setError(errorMessage)
+      throw new Error(errorMessage)
+    }
+
     try {
-      const { createUserWithEmailAndPassword } = authMethods
-      return await createUserWithEmailAndPassword(auth, email, password)
+      await createUserWithEmailAndPassword(auth, email, password)
     } catch (err: any) {
       const errorMessage = err.message || "Failed to create account"
       setError(errorMessage)
@@ -132,11 +152,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = async () => {
-    if (!auth || !authMethods) throw new Error("Authentication is not available")
     setError(null)
 
+    if (!authInitialized) {
+      const errorMessage = "Authentication is still initializing"
+      setError(errorMessage)
+      throw new Error(errorMessage)
+    }
+
+    const auth = getFirebaseAuth()
+
+    if (!auth) {
+      const errorMessage = "Authentication is not available"
+      setError(errorMessage)
+      throw new Error(errorMessage)
+    }
+
     try {
-      const { signOut } = authMethods
       await signOut(auth)
     } catch (err: any) {
       const errorMessage = err.message || "Failed to sign out"
@@ -146,11 +178,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const resetPassword = async (email: string) => {
-    if (!auth || !authMethods) throw new Error("Authentication is not available")
     setError(null)
 
+    if (!authInitialized) {
+      const errorMessage = "Authentication is still initializing"
+      setError(errorMessage)
+      throw new Error(errorMessage)
+    }
+
+    const auth = getFirebaseAuth()
+
+    if (!auth) {
+      const errorMessage = "Authentication is not available"
+      setError(errorMessage)
+      throw new Error(errorMessage)
+    }
+
     try {
-      const { sendPasswordResetEmail } = authMethods
       await sendPasswordResetEmail(auth, email)
     } catch (err: any) {
       const errorMessage = err.message || "Failed to reset password"
@@ -161,7 +205,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = {
     user,
-    loading: loading || firebaseLoading,
+    loading,
     isAdmin,
     login,
     signup,

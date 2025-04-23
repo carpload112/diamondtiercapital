@@ -1,27 +1,51 @@
-import { getFirestoreMethods, type FirestoreMethods } from "./firebase"
-import type { LoanApplication as LoanApplicationType, CreditRepairClient as CreditRepairClientType } from "./types"
-import type { Firestore } from "firebase/firestore"
+"use client"
+
+import {
+  getFirebaseFirestore,
+  collection,
+  doc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  getDocs,
+  query,
+  orderBy,
+  serverTimestamp,
+} from "./firebase"
 
 // Types for form data
-export type LoanApplication = LoanApplicationType
-export type CreditRepairClient = CreditRepairClientType
+export interface LoanApplication {
+  id?: string
+  fullName: string
+  email: string
+  phone: string
+  businessName: string
+  businessType: string
+  yearsInBusiness: number
+  loanAmount: number
+  loanPurpose: string
+  collateral: string
+  annualRevenue: number
+  creditScore: string
+  bankruptcy: string
+  status: "new" | "in-review" | "approved" | "rejected"
+  notes?: string
+  createdAt: Date
+  updatedAt: Date
+}
 
-// Helper function to get Firestore instance and methods
-const getFirestore = async (): Promise<{ db: Firestore; methods: FirestoreMethods }> => {
-  // Initialize Firebase if needed
-  const { initFirebase } = await import("./firebase")
-  const firebase = await initFirebase()
-
-  if (!firebase?.firestore) {
-    throw new Error("Firestore is not available")
-  }
-
-  const methods = await getFirestoreMethods()
-  if (!methods) {
-    throw new Error("Firestore methods are not available")
-  }
-
-  return { db: firebase.firestore, methods }
+export interface CreditRepairClient {
+  id?: string
+  fullName: string
+  email: string
+  phone: string
+  currentScore: number
+  desiredScore: number
+  issues: string[]
+  status: "new" | "in-progress" | "completed"
+  notes?: string
+  createdAt: Date
+  updatedAt: Date
 }
 
 // Submit loan application with better error handling
@@ -29,8 +53,10 @@ export const submitLoanApplication = async (
   data: Omit<LoanApplication, "id" | "status" | "createdAt" | "updatedAt">,
 ): Promise<string> => {
   try {
-    const { db, methods } = await getFirestore()
-    const { collection, addDoc, serverTimestamp } = methods
+    const db = getFirebaseFirestore()
+    if (!db) {
+      throw new Error("Firestore is not available")
+    }
 
     const docRef = await addDoc(collection(db, "loanApplications"), {
       ...data,
@@ -51,8 +77,10 @@ export const submitCreditRepairApplication = async (
   data: Omit<CreditRepairClient, "id" | "status" | "createdAt" | "updatedAt">,
 ): Promise<string> => {
   try {
-    const { db, methods } = await getFirestore()
-    const { collection, addDoc, serverTimestamp } = methods
+    const db = getFirebaseFirestore()
+    if (!db) {
+      throw new Error("Firestore is not available")
+    }
 
     const docRef = await addDoc(collection(db, "creditRepairClients"), {
       ...data,
@@ -71,8 +99,10 @@ export const submitCreditRepairApplication = async (
 // Get all loan applications with better error handling
 export const getLoanApplications = async (): Promise<LoanApplication[]> => {
   try {
-    const { db, methods } = await getFirestore()
-    const { collection, getDocs, query, orderBy } = methods
+    const db = getFirebaseFirestore()
+    if (!db) {
+      throw new Error("Firestore is not available")
+    }
 
     const q = query(collection(db, "loanApplications"), orderBy("createdAt", "desc"))
     const querySnapshot = await getDocs(q)
@@ -93,8 +123,10 @@ export const getLoanApplications = async (): Promise<LoanApplication[]> => {
 // Get all credit repair clients with better error handling
 export const getCreditRepairClients = async (): Promise<CreditRepairClient[]> => {
   try {
-    const { db, methods } = await getFirestore()
-    const { collection, getDocs, query, orderBy } = methods
+    const db = getFirebaseFirestore()
+    if (!db) {
+      throw new Error("Firestore is not available")
+    }
 
     const q = query(collection(db, "creditRepairClients"), orderBy("createdAt", "desc"))
     const querySnapshot = await getDocs(q)
@@ -115,8 +147,10 @@ export const getCreditRepairClients = async (): Promise<CreditRepairClient[]> =>
 // Update loan application with better error handling
 export const updateLoanApplication = async (id: string, data: Partial<LoanApplication>): Promise<boolean> => {
   try {
-    const { db, methods } = await getFirestore()
-    const { doc, updateDoc, serverTimestamp } = methods
+    const db = getFirebaseFirestore()
+    if (!db) {
+      throw new Error("Firestore is not available")
+    }
 
     const docRef = doc(db, "loanApplications", id)
 
@@ -135,8 +169,10 @@ export const updateLoanApplication = async (id: string, data: Partial<LoanApplic
 // Update credit repair client with better error handling
 export const updateCreditRepairClient = async (id: string, data: Partial<CreditRepairClient>): Promise<boolean> => {
   try {
-    const { db, methods } = await getFirestore()
-    const { doc, updateDoc, serverTimestamp } = methods
+    const db = getFirebaseFirestore()
+    if (!db) {
+      throw new Error("Firestore is not available")
+    }
 
     const docRef = doc(db, "creditRepairClients", id)
 
@@ -155,8 +191,10 @@ export const updateCreditRepairClient = async (id: string, data: Partial<CreditR
 // Delete loan application with better error handling
 export const deleteLoanApplication = async (id: string): Promise<boolean> => {
   try {
-    const { db, methods } = await getFirestore()
-    const { doc, deleteDoc } = methods
+    const db = getFirebaseFirestore()
+    if (!db) {
+      throw new Error("Firestore is not available")
+    }
 
     await deleteDoc(doc(db, "loanApplications", id))
 
@@ -170,8 +208,10 @@ export const deleteLoanApplication = async (id: string): Promise<boolean> => {
 // Delete credit repair client with better error handling
 export const deleteCreditRepairClient = async (id: string): Promise<boolean> => {
   try {
-    const { db, methods } = await getFirestore()
-    const { doc, deleteDoc } = methods
+    const db = getFirebaseFirestore()
+    if (!db) {
+      throw new Error("Firestore is not available")
+    }
 
     await deleteDoc(doc(db, "creditRepairClients", id))
 
