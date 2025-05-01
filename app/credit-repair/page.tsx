@@ -52,7 +52,7 @@ const benefits = [
 const testimonials = [
   {
     quote:
-      "The educational resources provided by Diamond Tier Capital helped me understand my business credit profile better.",
+      "The educational resources provided by Diamond Tier Solutions helped me understand my business credit profile better.",
     author: "Alex T., Tech Entrepreneur",
   },
   {
@@ -94,7 +94,7 @@ export default function CreditRepairPage() {
           <Link href="/">
             <Image
               src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/cropped-Diamond-Tier-Main-Logo-2400x1800-1-1-OtGxrajBZ6tB8DXOUuNBKwF5Ag3vaG.png"
-              alt="Diamond Tier Capital Logo"
+              alt="Diamond Tier Solutions Logo"
               width={150}
               height={40}
               priority

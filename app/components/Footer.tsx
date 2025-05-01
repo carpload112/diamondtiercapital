@@ -14,7 +14,7 @@ export default function Footer() {
             <Link href="/" className="flex items-center">
               <Image
                 src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/cropped-1679411819531-1-e1679413705921-8SSmbzT5LVluSgcI9bL9mGoYXvCRBa.png"
-                alt="Diamond Tier Capital"
+                alt="Diamond Tier Solutions"
                 width={40}
                 height={40}
                 className="mr-2"
@@ -115,10 +115,10 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 pt-8 border-t border-gray-800 text-center">
-          <p className="text-gray-400">© {new Date().getFullYear()} Diamond Tier Capital. All rights reserved.</p>
+          <p className="text-gray-400">© {new Date().getFullYear()} Diamond Tier Solutions. All rights reserved.</p>
           <p className="text-gray-500 text-sm mt-2">
-            Diamond Tier Capital provides consultation services only. We do not directly provide loans, credit cards, or
-            other financial products. All information is for educational purposes only.
+            Diamond Tier Solutions provides consultation services only. We do not directly provide loans, credit cards,
+            or other financial products. All information is for educational purposes only.
           </p>
         </div>
       </div>

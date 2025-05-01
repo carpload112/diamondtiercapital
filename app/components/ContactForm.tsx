@@ -36,8 +36,8 @@ export default function ContactForm() {
             </a>
           </p>
           <p className="mt-4 text-sm opacity-75">
-            Diamond Tier Capital provides consultation services only. We do not directly provide loans, credit cards, or
-            other financial products. All information is for educational purposes only.
+            Diamond Tier Solutions provides consultation services only. We do not directly provide loans, credit cards,
+            or other financial products. All information is for educational purposes only.
           </p>
         </motion.div>
       </div>

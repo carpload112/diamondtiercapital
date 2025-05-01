@@ -38,7 +38,7 @@ export default function AboutUsPage() {
               transition={{ duration: 0.8 }}
               className="text-4xl md:text-6xl font-bold mb-6"
             >
-              About Diamond Tier Capital
+              About Diamond Tier Solutions
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -76,7 +76,7 @@ export default function AboutUsPage() {
             >
               <h2 className="text-3xl font-bold mb-6">Our Mission</h2>
               <p className="text-lg mb-6">
-                At Diamond Tier Capital, we're committed to providing businesses with the educational resources and
+                At Diamond Tier Solutions, we're committed to providing businesses with the educational resources and
                 consultation services they need to make informed financial decisions. Our mission is to empower
                 entrepreneurs and business owners by offering guidance on funding solutions that may help support growth
                 and success.
