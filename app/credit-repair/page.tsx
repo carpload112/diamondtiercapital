@@ -8,7 +8,6 @@ import { ArrowRight, CheckCircle, Star, ArrowUp } from "lucide-react"
 import CalendlyModal from "../components/CalendlyModal"
 import CreditScoreDashboard from "../components/CreditScoreDashboard"
 import Image from "next/image"
-import Link from "next/link"
 
 const educationTopics = [
   {
@@ -88,28 +87,6 @@ export default function CreditRepairPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      {/* Sticky Header */}
-      <header className="sticky top-0 z-50 bg-white bg-opacity-90 backdrop-blur-md shadow-sm">
-        <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/">
-            <Image
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/cropped-Diamond-Tier-Main-Logo-2400x1800-1-1-OtGxrajBZ6tB8DXOUuNBKwF5Ag3vaG.png"
-              alt="Diamond Tier Solutions Logo"
-              width={150}
-              height={40}
-              priority
-            />
-          </Link>
-          <Button
-            variant="outline"
-            className="bg-blue-600 text-white hover:bg-blue-700"
-            onClick={() => setIsCalendlyOpen(true)}
-          >
-            Free Consultation
-          </Button>
-        </nav>
-      </header>
-
       {/* Hero Section */}
       <section className="relative py-12 overflow-hidden">
         <motion.div style={{ opacity }} className="absolute inset-0 z-0">
