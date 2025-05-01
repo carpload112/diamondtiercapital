@@ -99,11 +99,11 @@ export default function Header() {
   return (
     <header
       className={`fixed w-full z-50 transition-all duration-300 ${
-        isScrolled ? "bg-white shadow-lg py-2" : "bg-white/80 backdrop-blur-lg py-4"
+        isScrolled ? "bg-white shadow-lg" : "bg-white/80 backdrop-blur-lg"
       }`}
     >
       <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
             <Image
@@ -111,7 +111,7 @@ export default function Header() {
               alt="Diamond Tier Solutions"
               width={200}
               height={50}
-              className="h-10 w-auto"
+              className="h-8 w-auto"
               priority
             />
           </Link>
@@ -165,7 +165,8 @@ export default function Header() {
             ))}
 
             <Button
-              className="bg-blue-600 hover:bg-blue-700 text-white rounded-full"
+              variant="outline"
+              className="ml-4 border-blue-600 text-blue-600 hover:bg-blue-50"
               onClick={() => setIsCalendlyOpen(true)}
             >
               Schedule Call
@@ -214,7 +215,7 @@ export default function Header() {
                 ))}
                 <div className="px-5 pt-4">
                   <Button
-                    className="w-full justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-full"
+                    className="w-full justify-center"
                     onClick={() => {
                       setIsCalendlyOpen(true)
                       setMobileMenuOpen(false)
@@ -233,3 +234,4 @@ export default function Header() {
     </header>
   )
 }
+

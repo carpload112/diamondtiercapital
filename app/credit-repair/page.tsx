@@ -2,10 +2,13 @@
 
 import { useState, useEffect } from "react"
 import { motion, useScroll, useTransform } from "framer-motion"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowRight, CheckCircle, Star, ArrowUp, RefreshCcw } from "lucide-react"
-import ServicePageLayout from "../components/ServicePageLayout"
-import CreditRepairForm from "../components/CreditRepairForm"
+import { ArrowRight, CheckCircle, Star, ArrowUp } from "lucide-react"
+import CalendlyModal from "../components/CalendlyModal"
+import CreditScoreDashboard from "../components/CreditScoreDashboard"
+import Image from "next/image"
+import Link from "next/link"
 
 const caseStudies = [
   {
@@ -100,31 +103,71 @@ export default function CreditRepairPage() {
   }
 
   return (
-    <ServicePageLayout
-      title="Transform Your Credit Score"
-      subtitle="Expert credit repair services tailored for businesses. Boost your score, unlock opportunities."
-      icon={<RefreshCcw className="w-full h-full text-white/90 drop-shadow-lg" />}
-      primaryCTA="Start Your Journey"
-      secondaryCTA="Learn More"
-    >
-      {/* Application Form Section */}
-      <section className="py-20 bg-gradient-to-b from-white to-gray-50">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-12"
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-50 bg-white bg-opacity-90 backdrop-blur-md shadow-sm">
+        <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <Link href="/">
+            <Image
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/cropped-Diamond-Tier-Main-Logo-2400x1800-1-1-OtGxrajBZ6tB8DXOUuNBKwF5Ag3vaG.png"
+              alt="Diamond Tier Capital Logo"
+              width={150}
+              height={40}
+              priority
+            />
+          </Link>
+          <Button
+            variant="outline"
+            className="bg-blue-600 text-white hover:bg-blue-700"
+            onClick={() => setIsCalendlyOpen(true)}
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Start Your Credit Repair Journey Today</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Fill out the form below to begin your path to better credit and expanded business opportunities
-            </p>
-          </motion.div>
+            Free Consultation
+          </Button>
+        </nav>
+      </header>
 
-          <div className="max-w-2xl mx-auto">
-            <CreditRepairForm />
+      {/* Hero Section */}
+      <section className="relative py-12 overflow-hidden">
+        <motion.div style={{ opacity }} className="absolute inset-0 z-0">
+          <Image
+            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/how-it-works-01.jpg-3Xl1vFULfOfYaJucLehBRVri5K1ZPO.jpeg"
+            alt="Credit Repair Background"
+            layout="fill"
+            objectFit="cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-blue-900 bg-opacity-60" />
+        </motion.div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-6 py-12">
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              className="text-white lg:w-1/2"
+            >
+              <h1 className="text-3xl md:text-5xl font-bold mb-4">Transform Your Credit Score</h1>
+              <p className="text-lg mb-6">
+                Expert credit repair services tailored for businesses. Boost your score, unlock opportunities.
+              </p>
+              <Button
+                size="lg"
+                className="bg-white text-blue-600 hover:bg-blue-100"
+                onClick={() => setIsCalendlyOpen(true)}
+              >
+                Start Your Journey
+              </Button>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="lg:w-1/2"
+            >
+              <div className="scale-90 origin-top">
+                <CreditScoreDashboard />
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -336,6 +379,32 @@ export default function CreditRepairPage() {
         </div>
       </section>
 
+      {/* CTA Section */}
+      <section className="py-20 bg-blue-600 text-white">
+        <div className="container mx-auto px-4 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-8">Ready to Transform Your Credit?</h2>
+            <p className="text-xl mb-8 max-w-2xl mx-auto">
+              Take the first step towards financial freedom. Schedule your free consultation with our expert team today.
+            </p>
+            <Button
+              size="lg"
+              className="bg-white text-blue-600 hover:bg-blue-50 text-lg px-8 py-6 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105"
+              onClick={() => setIsCalendlyOpen(true)}
+            >
+              Get Your Free Credit Consultation <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </motion.div>
+        </div>
+      </section>
+
+      <CalendlyModal isOpen={isCalendlyOpen} onClose={() => setIsCalendlyOpen(false)} />
+
       {/* Scroll to Top Button */}
       <motion.button
         className={`fixed bottom-8 right-8 bg-blue-600 text-white p-3 rounded-full shadow-lg transition-opacity duration-300 ${
@@ -349,6 +418,7 @@ export default function CreditRepairPage() {
       >
         <ArrowUp className="h-6 w-6" />
       </motion.button>
-    </ServicePageLayout>
+    </div>
   )
 }
+

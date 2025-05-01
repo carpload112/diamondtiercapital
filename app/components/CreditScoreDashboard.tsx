@@ -2,18 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { motion } from "framer-motion"
-import dynamic from "next/dynamic"
-
-// Dynamically import recharts components with no SSR to avoid hydration issues
-const LineChart = dynamic(() => import("recharts").then((mod) => mod.LineChart), { ssr: false })
-const Line = dynamic(() => import("recharts").then((mod) => mod.Line), { ssr: false })
-const PieChart = dynamic(() => import("recharts").then((mod) => mod.PieChart), { ssr: false })
-const Pie = dynamic(() => import("recharts").then((mod) => mod.Pie), { ssr: false })
-const Cell = dynamic(() => import("recharts").then((mod) => mod.Cell), { ssr: false })
-const ResponsiveContainer = dynamic(() => import("recharts").then((mod) => mod.ResponsiveContainer), { ssr: false })
-const XAxis = dynamic(() => import("recharts").then((mod) => mod.XAxis), { ssr: false })
-const YAxis = dynamic(() => import("recharts").then((mod) => mod.YAxis), { ssr: false })
-const Tooltip = dynamic(() => import("recharts").then((mod) => mod.Tooltip), { ssr: false })
+import { LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
 
 const creditFactors = [
   { name: "Payment History", value: 35, color: "#1E3A8A" },
@@ -97,38 +86,36 @@ export default function CreditScoreDashboard() {
           </CardHeader>
           <CardContent>
             <div className="h-[150px]">
-              {typeof window !== "undefined" && (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={creditFactors}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={30}
-                      outerRadius={60}
-                      paddingAngle={2}
-                      dataKey="value"
-                    >
-                      {creditFactors.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          return (
-                            <div className="bg-white p-2 rounded-lg shadow border">
-                              <p className="text-sm font-medium">{payload[0].name}</p>
-                              <p className="text-sm text-gray-500">{`${payload[0].value}%`}</p>
-                            </div>
-                          )
-                        }
-                        return null
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              )}
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={creditFactors}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={30}
+                    outerRadius={60}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {creditFactors.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-white p-2 rounded-lg shadow border">
+                            <p className="text-sm font-medium">{payload[0].name}</p>
+                            <p className="text-sm text-gray-500">{`${payload[0].value}%`}</p>
+                          </div>
+                        )
+                      }
+                      return null
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
             <div className="grid grid-cols-2 gap-1 mt-2">
               {creditFactors.map((factor, index) => (
@@ -148,34 +135,32 @@ export default function CreditScoreDashboard() {
           </CardHeader>
           <CardContent>
             <div className="h-[150px]">
-              {typeof window !== "undefined" && (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={scoreHistory}>
-                    <XAxis dataKey="month" />
-                    <YAxis domain={[600, 850]} />
-                    <Tooltip
-                      content={({ active, payload, label }) => {
-                        if (active && payload && payload.length) {
-                          return (
-                            <div className="bg-white p-2 rounded-lg shadow border">
-                              <p className="text-sm font-medium">{label}</p>
-                              <p className="text-sm text-gray-500">Score: {payload[0].value}</p>
-                            </div>
-                          )
-                        }
-                        return null
-                      }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="score"
-                      stroke="#2563EB"
-                      strokeWidth={2}
-                      dot={{ fill: "#2563EB", strokeWidth: 2 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={scoreHistory}>
+                  <XAxis dataKey="month" />
+                  <YAxis domain={[600, 850]} />
+                  <Tooltip
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-white p-2 rounded-lg shadow border">
+                            <p className="text-sm font-medium">{label}</p>
+                            <p className="text-sm text-gray-500">Score: {payload[0].value}</p>
+                          </div>
+                        )
+                      }
+                      return null
+                    }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="score"
+                    stroke="#2563EB"
+                    strokeWidth={2}
+                    dot={{ fill: "#2563EB", strokeWidth: 2 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
@@ -183,3 +168,4 @@ export default function CreditScoreDashboard() {
     </div>
   )
 }
+

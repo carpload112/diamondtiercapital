@@ -2,18 +2,7 @@
 
 import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import dynamic from "next/dynamic"
-
-// Dynamically import recharts components with no SSR to avoid hydration issues
-const LineChart = dynamic(() => import("recharts").then((mod) => mod.LineChart), { ssr: false })
-const Line = dynamic(() => import("recharts").then((mod) => mod.Line), { ssr: false })
-const PieChart = dynamic(() => import("recharts").then((mod) => mod.PieChart), { ssr: false })
-const Pie = dynamic(() => import("recharts").then((mod) => mod.Pie), { ssr: false })
-const Cell = dynamic(() => import("recharts").then((mod) => mod.Cell), { ssr: false })
-const ResponsiveContainer = dynamic(() => import("recharts").then((mod) => mod.ResponsiveContainer), { ssr: false })
-const XAxis = dynamic(() => import("recharts").then((mod) => mod.XAxis), { ssr: false })
-const YAxis = dynamic(() => import("recharts").then((mod) => mod.YAxis), { ssr: false })
-const Tooltip = dynamic(() => import("recharts").then((mod) => mod.Tooltip), { ssr: false })
+import { LineChart, Line, ResponsiveContainer, PieChart, Pie, Cell, Tooltip, XAxis, YAxis } from "recharts"
 
 const scoreHistory = [
   { month: "Jan", score: 665 },
@@ -39,6 +28,10 @@ const creditScores = [
 ]
 
 export default function CreditRepairDashboard() {
+  if (!scoreHistory || !creditFactors || !creditScores) {
+    return null
+  }
+
   return (
     <section className="py-20 bg-gray-50">
       <div className="container mx-auto px-4">
@@ -98,22 +91,20 @@ export default function CreditRepairDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="h-[200px]">
-                  {typeof window !== "undefined" && (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={scoreHistory} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                        <XAxis dataKey="month" />
-                        <YAxis domain={[600, 850]} />
-                        <Tooltip />
-                        <Line
-                          type="monotone"
-                          dataKey="score"
-                          stroke="#2563EB"
-                          strokeWidth={2}
-                          dot={{ fill: "#2563EB", strokeWidth: 2 }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  )}
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={scoreHistory} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                      <XAxis dataKey="month" />
+                      <YAxis domain={[600, 850]} />
+                      <Tooltip />
+                      <Line
+                        type="monotone"
+                        dataKey="score"
+                        stroke="#2563EB"
+                        strokeWidth={2}
+                        dot={{ fill: "#2563EB", strokeWidth: 2 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
@@ -126,26 +117,24 @@ export default function CreditRepairDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">
-                  {typeof window !== "undefined" && (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={creditFactors}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={80}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {creditFactors.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  )}
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={creditFactors}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {creditFactors.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mt-6">
                   {creditFactors.map((factor, index) => (
@@ -186,3 +175,4 @@ export default function CreditRepairDashboard() {
     </section>
   )
 }
+

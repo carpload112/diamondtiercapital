@@ -6,7 +6,6 @@ import Footer from "./components/Footer"
 import { Toaster } from "@/components/ui/toaster"
 import type React from "react"
 import Script from "next/script"
-import { Providers } from "./providers"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -54,12 +53,10 @@ export default function RootLayout({
         <link rel="canonical" href="https://www.diamondtiercapital.com" />
       </head>
       <body className={`${inter.className} overflow-x-hidden`}>
-        <Providers>
-          <Header />
-          {children}
-          <Footer />
-          <Toaster />
-        </Providers>
+        <Header />
+        {children}
+        <Footer />
+        <Toaster />
       </body>
       <Script id="structured-data" type="application/ld+json">
         {`
@@ -92,3 +89,4 @@ export default function RootLayout({
     </html>
   )
 }
+
