@@ -3,49 +3,59 @@
 import { motion } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Percent, CreditCard, Building2, ShieldCheck } from "lucide-react"
+import { ArrowRight, Percent, CreditCard, Building2, ShieldCheck, GraduationCap } from "lucide-react"
 import Link from "next/link"
 
 const services = [
   {
-    title: "0% Credit Lines",
+    title: "Business Credit Card Consultation",
     description:
-      "Access up to $150,000 with 0% interest for up to 18 months. Perfect for immediate business needs and growth opportunities.",
-    icon: <Percent className="h-6 w-6" />,
+      "We help businesses understand credit card options that may be suitable for their specific needs and goals.",
+    icon: <CreditCard className="h-6 w-6" />,
     color: "bg-blue-50",
     textColor: "text-blue-600",
-    features: ["No interest for 18 months", "Quick approval", "Flexible usage"],
-    link: "/zero-percent-credit-lines",
-  },
-  {
-    title: "SBA Loans",
-    description:
-      "Government-backed loans with competitive rates and longer repayment terms. Ideal for long-term business investments.",
-    icon: <Building2 className="h-6 w-6" />,
-    color: "bg-green-50",
-    textColor: "text-green-600",
-    features: ["Low interest rates", "Longer terms", "Higher amounts"],
-    link: "/sba-loans",
-  },
-  {
-    title: "Credit Card Stacking",
-    description:
-      "Strategic credit card stacking to maximize your available credit and optimize your business spending power.",
-    icon: <CreditCard className="h-6 w-6" />,
-    color: "bg-purple-50",
-    textColor: "text-purple-600",
-    features: ["Multiple cards", "Rewards optimization", "Built credit history"],
+    features: ["Card comparison information", "Application guidance", "Strategy consultation"],
     link: "/business-credit-cards",
   },
   {
-    title: "Unsecured Loans",
+    title: "SBA Loan Information",
     description:
-      "Quick access to capital without collateral requirements. Perfect for businesses needing immediate funding.",
+      "We provide educational resources about Small Business Administration loan programs and guidance on the application process.",
+    icon: <Building2 className="h-6 w-6" />,
+    color: "bg-green-50",
+    textColor: "text-green-600",
+    features: ["Program education", "Documentation guidance", "Application information"],
+    link: "/sba-loans",
+  },
+  {
+    title: "Credit Education Services",
+    description:
+      "We offer educational resources to help businesses understand credit factors and build their business credit profiles.",
+    icon: <GraduationCap className="h-6 w-6" />,
+    color: "bg-purple-50",
+    textColor: "text-purple-600",
+    features: ["Credit profile review", "Educational resources", "Strategy development"],
+    link: "/credit-repair",
+  },
+  {
+    title: "Financing Consultation",
+    description:
+      "We provide consultation on various financing options that may be available to businesses based on their specific needs.",
     icon: <ShieldCheck className="h-6 w-6" />,
     color: "bg-orange-50",
     textColor: "text-orange-600",
-    features: ["No collateral needed", "Fast funding", "Flexible terms"],
+    features: ["Needs assessment", "Options overview", "Application guidance"],
     link: "/unsecured-loans",
+  },
+  {
+    title: "Introductory Rate Options",
+    description:
+      "We help businesses understand credit options that may offer introductory rates and terms suitable for their needs.",
+    icon: <Percent className="h-6 w-6" />,
+    color: "bg-indigo-50",
+    textColor: "text-indigo-600",
+    features: ["Rate comparison information", "Term explanation", "Qualification factors"],
+    link: "/zero-percent-credit-lines",
   },
 ]
 
@@ -59,11 +69,13 @@ export default function Services() {
           transition={{ duration: 0.5 }}
           className="text-center max-w-3xl mx-auto mb-16"
         >
-          <h2 className="text-4xl font-bold mb-4">Financial Solutions</h2>
-          <p className="text-xl text-gray-600">Tailored funding options to help your business grow and succeed</p>
+          <h2 className="text-4xl font-bold mb-4">Business Funding Consultation</h2>
+          <p className="text-xl text-gray-600">
+            We help businesses explore funding options that may align with their goals
+          </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {services.map((service, index) => (
             <motion.div
               key={index}
@@ -101,4 +113,3 @@ export default function Services() {
     </section>
   )
 }
-

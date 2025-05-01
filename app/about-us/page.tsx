@@ -3,7 +3,8 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { CheckCircle, Users, Briefcase, TrendingUp, Award } from "lucide-react"
+import { Users, Briefcase, TrendingUp, Award } from "lucide-react"
+import { CheckCircle } from "lucide-react"
 import Image from "next/image"
 import CalendlyModal from "../components/CalendlyModal"
 
@@ -26,7 +27,7 @@ export default function AboutUsPage() {
           }}
           style={{
             backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
+              "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23ffffff' fillOpacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
           }}
         />
         <div className="container mx-auto px-4 relative z-10">
@@ -45,7 +46,7 @@ export default function AboutUsPage() {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="text-xl md:text-2xl mb-8"
             >
-              Empowering businesses with innovative financial solutions since 2018
+              Providing business funding consultation services since 2018
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -75,14 +76,15 @@ export default function AboutUsPage() {
             >
               <h2 className="text-3xl font-bold mb-6">Our Mission</h2>
               <p className="text-lg mb-6">
-                At Diamond Tier Capital, we're committed to providing businesses with the financial tools and resources
-                they need to thrive. Our mission is to empower entrepreneurs and business owners by offering innovative
-                funding solutions that fuel growth and success.
+                At Diamond Tier Capital, we're committed to providing businesses with the educational resources and
+                consultation services they need to make informed financial decisions. Our mission is to empower
+                entrepreneurs and business owners by offering guidance on funding solutions that may help support growth
+                and success.
               </p>
               <p className="text-lg mb-6">
-                We believe that access to capital should be straightforward and tailored to each business's unique
-                needs. That's why we offer a diverse range of financial products, from SBA loans to 0% credit lines,
-                designed to meet the varying demands of modern businesses.
+                We believe that understanding funding options should be straightforward and tailored to each business's
+                unique needs. That's why we offer consultation on a diverse range of financial products, from SBA loans
+                to business credit cards, designed to help meet the varying demands of modern businesses.
               </p>
             </motion.div>
             <motion.div
@@ -139,7 +141,7 @@ export default function AboutUsPage() {
               {
                 icon: Users,
                 title: "Client-Centric",
-                description: "Our clients' success is at the heart of everything we do.",
+                description: "Our clients' needs are at the heart of everything we do.",
               },
             ].map((value, index) => (
               <motion.div
@@ -175,7 +177,7 @@ export default function AboutUsPage() {
 
           <div className="grid md:grid-cols-4 gap-8 mb-12">
             {[
-              { icon: Award, value: "$50M+", label: "Funding Secured" },
+              { icon: Award, value: "500+", label: "Clients Consulted" },
               { icon: Briefcase, value: "200+", label: "Businesses Served" },
               { icon: Users, value: "10+", label: "Expert Team Members" },
               { icon: CheckCircle, value: "95%", label: "Client Satisfaction" },
@@ -205,7 +207,7 @@ export default function AboutUsPage() {
               className="bg-white text-blue-600 hover:bg-blue-50 text-lg px-8 py-6"
               onClick={() => setIsCalendlyOpen(true)}
             >
-              Start Your Success Story
+              Schedule a Consultation
             </Button>
           </motion.div>
         </div>
@@ -215,4 +217,3 @@ export default function AboutUsPage() {
     </div>
   )
 }
-

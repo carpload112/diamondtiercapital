@@ -18,16 +18,16 @@ export default function ContactForm() {
           transition={{ duration: 0.5 }}
           className="max-w-2xl mx-auto text-center text-white"
         >
-          <h2 className="text-4xl font-bold mb-6">Don't Miss Out on Premium Funding 🚀</h2>
+          <h2 className="text-4xl font-bold mb-6">Schedule a Consultation</h2>
           <p className="text-xl mb-8">
-            Limited spots available for personalized consultations. Secure your business's future today!
+            Speak with our team to learn more about business funding options that may be available to you.
           </p>
           <Button
             size="lg"
             className="bg-white text-blue-600 hover:bg-blue-100 text-base sm:text-lg px-6 sm:px-12 py-4 sm:py-6 rounded-full shadow-lg transform transition duration-300 hover:scale-105 w-full sm:w-auto"
             onClick={() => setIsCalendlyOpen(true)}
           >
-            Schedule Your Free Consultation Now
+            Schedule Your Free Consultation
           </Button>
           <p className="mt-6 text-sm opacity-75">
             Or reach out directly:{" "}
@@ -35,10 +35,13 @@ export default function ContactForm() {
               info@diamondtier.solutions
             </a>
           </p>
+          <p className="mt-4 text-sm opacity-75">
+            Diamond Tier Capital provides consultation services only. We do not directly provide loans, credit cards, or
+            other financial products. All information is for educational purposes only.
+          </p>
         </motion.div>
       </div>
       <CalendlyModal isOpen={isCalendlyOpen} onClose={() => setIsCalendlyOpen(false)} />
     </section>
   )
 }
-

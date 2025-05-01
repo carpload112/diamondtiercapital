@@ -10,74 +10,58 @@ import CreditScoreDashboard from "../components/CreditScoreDashboard"
 import Image from "next/image"
 import Link from "next/link"
 
-const caseStudies = [
+const educationTopics = [
   {
-    name: "John D.",
-    profession: "Small Business Owner",
-    initialScore: 580,
-    finalScore: 720,
-    duration: "6 months",
-    description: "John was struggling to get approved for a business loan due to past financial difficulties.",
-    discrepanciesRemoved: [
-      "Late payment on credit card (60 days)",
-      "Incorrect account balance on personal loan",
-      "Outdated address information",
+    name: "Understanding Credit Reports",
+    description: "Learn how to read and interpret your credit reports from the major bureaus.",
+    benefits: [
+      "Identify what factors affect your credit score",
+      "Learn how to request your free annual credit reports",
+      "Understand the different sections of your credit report",
     ],
-    result: "Qualified for a $150,000 business expansion loan",
   },
   {
-    name: "Sarah M.",
-    profession: "Freelance Consultant",
-    initialScore: 620,
-    finalScore: 780,
-    duration: "8 months",
-    description: "As a freelancer, Sarah needed better credit to secure apartment leases and client contracts.",
-    discrepanciesRemoved: [
-      "Erroneous collection account",
-      "Duplicate student loan entry",
-      "Inaccurate credit utilization report",
+    name: "Credit Score Factors",
+    description: "Discover the key components that make up your credit score.",
+    benefits: [
+      "Learn about payment history and its impact",
+      "Understand credit utilization ratios",
+      "Discover how credit history length affects your score",
     ],
-    result: "Approved for premium rewards credit card with $25,000 limit",
   },
   {
-    name: "Michael R.",
-    profession: "Real Estate Investor",
-    initialScore: 540,
-    finalScore: 700,
-    duration: "9 months",
-    description: "Michael's poor credit was holding back his real estate investment plans.",
-    discrepanciesRemoved: [
-      "Fraudulent credit card account",
-      "Outdated tax lien information",
-      "Misreported loan payment history",
+    name: "Building Business Credit",
+    description: "Educational resources on establishing and building business credit.",
+    benefits: [
+      "Separating personal and business credit",
+      "Establishing trade lines with vendors",
+      "Reporting positive payment history to bureaus",
     ],
-    result: "Secured $500,000 in property investment funding",
   },
 ]
 
 const benefits = [
-  "Increased chances of loan approval",
-  "Lower interest rates on credit cards and loans",
-  "Improved negotiating power with lenders",
-  "Enhanced business opportunities",
-  "Easier approval for commercial leases",
-  "Reduced security deposits for utilities",
+  "Better understanding of credit factors",
+  "Knowledge of credit reporting processes",
+  "Improved financial literacy",
+  "Educational resources for business owners",
+  "Understanding of business credit profiles",
+  "Tools for monitoring credit changes",
 ]
 
 const testimonials = [
   {
     quote:
-      "The team at Diamond Tier Capital transformed my credit score and helped me secure crucial funding for my startup.",
+      "The educational resources provided by Diamond Tier Capital helped me understand my business credit profile better.",
     author: "Alex T., Tech Entrepreneur",
   },
   {
-    quote:
-      "I was skeptical at first, but the results speak for themselves. My credit score improved by over 150 points!",
+    quote: "Their credit education program gave me valuable insights into how to build my business credit properly.",
     author: "Linda M., Restaurant Owner",
   },
   {
     quote:
-      "Their expertise in business credit repair is unmatched. I highly recommend their services to any business owner.",
+      "The credit monitoring tools and educational materials have been extremely helpful for my business planning.",
     author: "Robert K., Real Estate Investor",
   },
 ]
@@ -131,7 +115,7 @@ export default function CreditRepairPage() {
         <motion.div style={{ opacity }} className="absolute inset-0 z-0">
           <Image
             src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/how-it-works-01.jpg-3Xl1vFULfOfYaJucLehBRVri5K1ZPO.jpeg"
-            alt="Credit Repair Background"
+            alt="Credit Education Background"
             layout="fill"
             objectFit="cover"
             priority
@@ -146,16 +130,16 @@ export default function CreditRepairPage() {
               transition={{ duration: 0.8 }}
               className="text-white lg:w-1/2"
             >
-              <h1 className="text-3xl md:text-5xl font-bold mb-4">Transform Your Credit Score</h1>
+              <h1 className="text-3xl md:text-5xl font-bold mb-4">Credit Education Services</h1>
               <p className="text-lg mb-6">
-                Expert credit repair services tailored for businesses. Boost your score, unlock opportunities.
+                Educational resources to help you understand credit factors and make informed financial decisions.
               </p>
               <Button
                 size="lg"
                 className="bg-white text-blue-600 hover:bg-blue-100"
                 onClick={() => setIsCalendlyOpen(true)}
               >
-                Start Your Journey
+                Learn More
               </Button>
             </motion.div>
             <motion.div
@@ -177,8 +161,8 @@ export default function CreditRepairPage() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { value: "500+", label: "Businesses Helped" },
-              { value: "150+", label: "Point Avg. Score Increase" },
+              { value: "500+", label: "Clients Educated" },
+              { value: "12+", label: "Educational Resources" },
               { value: "98%", label: "Client Satisfaction" },
             ].map((stat, index) => (
               <motion.div
@@ -210,25 +194,25 @@ export default function CreditRepairPage() {
             transition={{ duration: 0.8 }}
             className="text-3xl md:text-4xl font-bold mb-12 text-center"
           >
-            Our Credit Repair Process
+            Our Credit Education Process
           </motion.h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               {
-                title: "Comprehensive Analysis",
-                description: "We meticulously review your credit reports from all bureaus.",
+                title: "Credit Assessment",
+                description: "We help you understand how to review your current credit situation.",
               },
               {
-                title: "Strategic Planning",
-                description: "Our experts develop a tailored plan to address your unique situation.",
+                title: "Educational Resources",
+                description: "We provide materials to help you understand credit factors.",
               },
               {
-                title: "Dispute Resolution",
-                description: "We challenge inaccuracies and negotiate with creditors on your behalf.",
+                title: "Monitoring Tools",
+                description: "We offer tools to help you monitor changes to your credit profile.",
               },
               {
-                title: "Ongoing Optimization",
-                description: "Continuous monitoring and adjustments to maximize your credit score.",
+                title: "Ongoing Support",
+                description: "We provide continued educational support as you work on your credit knowledge.",
               },
             ].map((step, index) => (
               <motion.div
@@ -255,7 +239,7 @@ export default function CreditRepairPage() {
         </div>
       </section>
 
-      {/* Case Studies Section */}
+      {/* Education Topics Section */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <motion.h2
@@ -265,10 +249,10 @@ export default function CreditRepairPage() {
             transition={{ duration: 0.8 }}
             className="text-3xl md:text-4xl font-bold mb-12 text-center"
           >
-            Real Success Stories
+            Educational Resources
           </motion.h2>
           <div className="grid md:grid-cols-3 gap-8">
-            {caseStudies.map((study, index) => (
+            {educationTopics.map((topic, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
@@ -279,30 +263,19 @@ export default function CreditRepairPage() {
                 <Card className="h-full flex flex-col">
                   <CardHeader>
                     <div className="mb-4">
-                      <CardTitle className="text-xl">{study.name}</CardTitle>
-                      <p className="text-sm text-gray-500">{study.profession}</p>
+                      <CardTitle className="text-xl">{topic.name}</CardTitle>
                     </div>
-                    <div className="flex justify-between items-center mb-2">
-                      <div className="text-3xl font-bold text-red-500">{study.initialScore}</div>
-                      <ArrowRight className="text-gray-400" />
-                      <div className="text-3xl font-bold text-green-500">{study.finalScore}</div>
-                    </div>
-                    <p className="text-sm text-gray-500 text-center">Credit score improvement in {study.duration}</p>
                   </CardHeader>
                   <CardContent className="flex-grow">
-                    <p className="text-gray-600 mb-4">{study.description}</p>
-                    <h4 className="font-semibold mb-2">Discrepancies Removed:</h4>
+                    <p className="text-gray-600 mb-4">{topic.description}</p>
+                    <h4 className="font-semibold mb-2">What You'll Learn:</h4>
                     <ul className="list-disc pl-5 mb-4">
-                      {study.discrepanciesRemoved.map((item, i) => (
+                      {topic.benefits.map((item, i) => (
                         <li key={i} className="text-sm text-gray-600">
                           {item}
                         </li>
                       ))}
                     </ul>
-                    <div className="mt-auto">
-                      <h4 className="font-semibold mb-2">Result:</h4>
-                      <p className="text-green-600 font-medium">{study.result}</p>
-                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -321,7 +294,7 @@ export default function CreditRepairPage() {
             transition={{ duration: 0.8 }}
             className="text-3xl md:text-4xl font-bold mb-12 text-center"
           >
-            Benefits of Professional Credit Repair
+            Benefits of Credit Education
           </motion.h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {benefits.map((benefit, index) => (
@@ -388,16 +361,17 @@ export default function CreditRepairPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-8">Ready to Transform Your Credit?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-8">Ready to Learn More?</h2>
             <p className="text-xl mb-8 max-w-2xl mx-auto">
-              Take the first step towards financial freedom. Schedule your free consultation with our expert team today.
+              Schedule a consultation to discuss our educational resources and how they can help you understand credit
+              factors.
             </p>
             <Button
               size="lg"
               className="bg-white text-blue-600 hover:bg-blue-50 text-lg px-8 py-6 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105"
               onClick={() => setIsCalendlyOpen(true)}
             >
-              Get Your Free Credit Consultation <ArrowRight className="ml-2 h-5 w-5" />
+              Schedule Your Free Consultation <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </motion.div>
         </div>
@@ -421,4 +395,3 @@ export default function CreditRepairPage() {
     </div>
   )
 }
-

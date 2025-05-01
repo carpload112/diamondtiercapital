@@ -24,15 +24,15 @@ export default function BusinessCreditCardsPage() {
           }}
           style={{
             backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
+              "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23ffffff' fillOpacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
           }}
         />
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-              <h1 className="text-4xl md:text-6xl font-bold mb-6">Business Credit Cards</h1>
+              <h1 className="text-4xl md:text-6xl font-bold mb-6">Business Credit Card Information</h1>
               <p className="text-xl md:text-2xl mb-8 text-blue-100">
-                Maximize your purchasing power with strategic credit card stacking
+                Learn about business credit card options and strategies for your business
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button
@@ -41,7 +41,7 @@ export default function BusinessCreditCardsPage() {
                   className="text-blue-600 hover:text-blue-700 text-lg px-8 py-6"
                   onClick={() => setIsCalendlyOpen(true)}
                 >
-                  Explore Cards
+                  Learn More
                 </Button>
                 <Button
                   size="lg"
@@ -49,7 +49,7 @@ export default function BusinessCreditCardsPage() {
                   className="bg-transparent border-white text-white hover:bg-white/10 text-lg px-8 py-6"
                   onClick={() => setIsCalendlyOpen(true)}
                 >
-                  Learn More
+                  Schedule Consultation
                 </Button>
               </div>
             </motion.div>
@@ -99,9 +99,9 @@ export default function BusinessCreditCardsPage() {
             transition={{ duration: 0.8 }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Benefits of Our Credit Card Solutions</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">Benefits of Business Credit Cards</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Unlock powerful financial tools for your business growth
+              Understanding how business credit cards can be useful financial tools
             </p>
           </motion.div>
 
@@ -109,18 +109,18 @@ export default function BusinessCreditCardsPage() {
             {[
               {
                 icon: CreditCard,
-                title: "Multiple High-Limit Cards",
-                description: "Access to various cards with high credit limits for your business needs",
+                title: "Separate Business Expenses",
+                description: "Keep personal and business expenses separate for better financial management",
               },
               {
                 icon: Gift,
-                title: "Rewards Optimization",
-                description: "Earn maximum rewards on your business spending across different categories",
+                title: "Potential Rewards",
+                description: "Many business credit cards offer rewards programs for various spending categories",
               },
               {
                 icon: TrendingUp,
                 title: "Build Business Credit",
-                description: "Establish and improve your business credit profile with responsible use",
+                description: "Responsible use can help establish and build your business credit profile",
               },
             ].map((feature, index) => (
               <motion.div
@@ -139,16 +139,16 @@ export default function BusinessCreditCardsPage() {
         </div>
       </section>
 
-      {/* Credit Card Stacking Process */}
+      {/* Strategy Process */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center">Our Credit Card Stacking Process</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center">Our Consultation Process</h2>
           <div className="grid md:grid-cols-4 gap-8">
             {[
               { title: "Assess", description: "We evaluate your business profile and credit history." },
-              { title: "Strategize", description: "Develop a custom card stacking strategy for your needs." },
-              { title: "Apply", description: "We handle applications for multiple cards simultaneously." },
-              { title: "Maximize", description: "Learn how to optimize your new credit for business growth." },
+              { title: "Educate", description: "We provide information about business credit card options." },
+              { title: "Strategize", description: "We help develop a strategy that aligns with your business needs." },
+              { title: "Support", description: "We offer ongoing support for your business credit questions." },
             ].map((step, index) => (
               <motion.div
                 key={index}
@@ -179,7 +179,7 @@ export default function BusinessCreditCardsPage() {
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-6">Types of Business Credit Cards</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Explore the various credit card options available for your business
+              Learn about different business credit card options that may be available
             </p>
           </motion.div>
 
@@ -187,7 +187,7 @@ export default function BusinessCreditCardsPage() {
             {[
               "Cash Back Cards",
               "Travel Reward Cards",
-              "0% Intro APR Cards",
+              "Introductory Rate Cards",
               "Secured Business Cards",
               "Charge Cards",
               "Co-branded Cards",
@@ -211,9 +211,9 @@ export default function BusinessCreditCardsPage() {
       <section className="py-20 bg-blue-600 text-white">
         <div className="container mx-auto px-4 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <h2 className="text-3xl md:text-4xl font-bold mb-8">Ready to Boost Your Purchasing Power?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-8">Learn More About Business Credit Cards</h2>
             <p className="text-xl mb-8 max-w-2xl mx-auto">
-              Let's find the perfect credit card strategy for your business.
+              Schedule a consultation to discuss business credit card strategies for your company
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
@@ -222,7 +222,7 @@ export default function BusinessCreditCardsPage() {
                 className="text-blue-600 hover:text-blue-700 text-lg px-8 py-6"
                 onClick={() => setIsCalendlyOpen(true)}
               >
-                Get Started with Credit Card Stacking
+                Schedule Consultation
               </Button>
               <Button
                 size="lg"
@@ -230,7 +230,7 @@ export default function BusinessCreditCardsPage() {
                 className="bg-transparent border-white text-white hover:bg-white/10 text-lg px-8 py-6"
                 onClick={() => setIsCalendlyOpen(true)}
               >
-                Schedule Consultation
+                Learn More
               </Button>
             </div>
           </motion.div>
@@ -248,27 +248,27 @@ export default function BusinessCreditCardsPage() {
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-6">Frequently Asked Questions</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Get answers to common questions about business credit cards and our stacking strategy
+              Common questions about business credit cards and strategies
             </p>
           </motion.div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {[
               {
-                q: "What is credit card stacking?",
-                a: "Credit card stacking is the strategic process of applying for and using multiple business credit cards to maximize your overall credit limit and optimize rewards across different spending categories.",
+                q: "What is a business credit card strategy?",
+                a: "A business credit card strategy involves understanding how to effectively use business credit cards to manage expenses, potentially earn rewards, and build business credit with responsible use.",
               },
               {
-                q: "How many credit cards can I get through stacking?",
-                a: "The number of cards depends on your business's qualifications and needs. We typically recommend 3-5 cards for most businesses, but this can vary.",
+                q: "How many business credit cards should my business have?",
+                a: "The appropriate number of business credit cards depends on your specific business needs, spending patterns, and ability to manage multiple accounts responsibly.",
               },
               {
-                q: "Will applying for multiple cards hurt my credit score?",
-                a: "While there may be a temporary dip in your credit score due to multiple inquiries, responsible use of the new credit lines can ultimately improve your credit profile in the long term.",
+                q: "Will applying for business credit cards affect my personal credit?",
+                a: "Business credit card applications may involve a personal credit check, and some card issuers may report account activity to personal credit bureaus. We can discuss this in more detail during a consultation.",
               },
               {
-                q: "How do you determine which cards are best for my business?",
-                a: "We analyze your business spending patterns, credit profile, and financial goals to recommend a tailored mix of cards that will provide the most benefit in terms of credit limits, rewards, and features.",
+                q: "How do I choose the right business credit card?",
+                a: "Selecting the right business credit card involves considering factors such as your spending patterns, desired rewards or benefits, annual fees, and interest rates. We can help you understand these factors during a consultation.",
               },
             ].map((faq, index) => (
               <motion.div
@@ -289,4 +289,3 @@ export default function BusinessCreditCardsPage() {
     </div>
   )
 }
-

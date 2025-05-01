@@ -15,43 +15,43 @@ import {
   ShieldCheck,
   Users,
   Phone,
-  RefreshCcw,
+  GraduationCap,
 } from "lucide-react"
 import CalendlyModal from "./CalendlyModal"
 
 const menuItems = [
   {
-    title: "Products",
+    title: "Services",
     items: [
       {
-        name: "SBA Loans",
-        description: "Government-backed loans for business growth",
+        name: "SBA Loan Information",
+        description: "Learn about government-backed loan programs",
         href: "/sba-loans",
         icon: Building2,
       },
       {
-        name: "0% Credit Lines",
-        description: "Interest-free financing for up to 18 months",
+        name: "Introductory Rate Options",
+        description: "Information about credit options with introductory rates",
         href: "/zero-percent-credit-lines",
         icon: Percent,
       },
       {
-        name: "Unsecured Loans",
-        description: "Quick funding without collateral requirements",
+        name: "Unsecured Financing",
+        description: "Learn about financing without collateral requirements",
         href: "/unsecured-loans",
         icon: ShieldCheck,
       },
       {
         name: "Business Credit Cards",
-        description: "Strategic credit card stacking solutions",
+        description: "Information about business credit card options",
         href: "/business-credit-cards",
         icon: CreditCard,
       },
       {
-        name: "Credit Repair",
-        description: "Improve your credit score for better financing options",
+        name: "Credit Education",
+        description: "Educational resources about credit factors",
         href: "/credit-repair",
-        icon: RefreshCcw,
+        icon: GraduationCap,
       },
     ],
   },
@@ -169,7 +169,7 @@ export default function Header() {
               className="ml-4 border-blue-600 text-blue-600 hover:bg-blue-50"
               onClick={() => setIsCalendlyOpen(true)}
             >
-              Schedule Call
+              Schedule Consultation
             </Button>
           </div>
 
@@ -221,7 +221,7 @@ export default function Header() {
                       setMobileMenuOpen(false)
                     }}
                   >
-                    Schedule Call
+                    Schedule Consultation
                   </Button>
                 </div>
               </div>
@@ -234,4 +234,3 @@ export default function Header() {
     </header>
   )
 }
-

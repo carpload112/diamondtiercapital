@@ -41,9 +41,9 @@ export default function CreditRepairDashboard() {
           transition={{ duration: 0.5 }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl font-bold mb-4">Credit Repair Dashboard</h2>
+          <h2 className="text-3xl font-bold mb-4">Credit Education Dashboard</h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Track your credit improvement journey with our advanced monitoring tools
+            Educational tools to help you understand credit factors and monitor your progress
           </p>
         </motion.div>
 
@@ -55,7 +55,7 @@ export default function CreditRepairDashboard() {
           >
             <Card>
               <CardHeader>
-                <CardTitle>Credit Scores</CardTitle>
+                <CardTitle>Sample Credit Scores</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-3 gap-4">
@@ -82,12 +82,15 @@ export default function CreditRepairDashboard() {
                     </div>
                   ))}
                 </div>
+                <p className="text-xs text-gray-500 mt-4 text-center">
+                  This is a sample visualization for educational purposes only.
+                </p>
               </CardContent>
             </Card>
 
             <Card className="mt-6">
               <CardHeader>
-                <CardTitle>Score History</CardTitle>
+                <CardTitle>Sample Score History</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-[200px]">
@@ -106,6 +109,9 @@ export default function CreditRepairDashboard() {
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
+                <p className="text-xs text-gray-500 mt-4 text-center">
+                  This chart shows a sample progression of credit scores over time.
+                </p>
               </CardContent>
             </Card>
           </motion.div>
@@ -147,6 +153,9 @@ export default function CreditRepairDashboard() {
                     </div>
                   ))}
                 </div>
+                <p className="text-xs text-gray-500 mt-4 text-center">
+                  This chart shows the relative importance of different factors that may affect credit scores.
+                </p>
               </CardContent>
             </Card>
           </motion.div>
@@ -161,12 +170,12 @@ export default function CreditRepairDashboard() {
           >
             <img
               src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/3735562c-laptop2_10fq08t000000000000028-copy-MEbNcQykitEFNUlvQov9UAnIZ0s9bA.png"
-              alt="Credit Repair Dashboard Preview - Desktop"
+              alt="Credit Education Dashboard Preview - Desktop"
               className="w-1/2 rounded-lg shadow-xl hidden lg:block"
             />
             <img
               src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/627651ec-frame-289348_10e00cc000000000000028-copy-TAJwxnmrGpovFHLBWMpzF3ETZtHdMp.png"
-              alt="Credit Repair Dashboard Preview - Mobile"
+              alt="Credit Education Dashboard Preview - Mobile"
               className="w-full lg:w-1/3 rounded-lg shadow-xl"
             />
           </motion.div>
@@ -175,4 +184,3 @@ export default function CreditRepairDashboard() {
     </section>
   )
 }
-

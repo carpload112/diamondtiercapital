@@ -2,24 +2,24 @@
 
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { CreditCard, FileSearch, BarChart } from "lucide-react"
+import { GraduationCap, FileSearch, BarChart } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 const features = [
   {
-    icon: CreditCard,
-    title: "Boost Your Score",
-    description: "We'll help you increase your credit score through strategic interventions.",
+    icon: GraduationCap,
+    title: "Credit Education",
+    description: "We provide educational resources to help you understand factors that affect your credit.",
   },
   {
     icon: FileSearch,
-    title: "Dispute Inaccuracies",
-    description: "We'll identify and challenge incorrect items on your credit report.",
+    title: "Report Review Guidance",
+    description: "We offer information on how to review your credit reports for potential inaccuracies.",
   },
   {
     icon: BarChart,
-    title: "Track Progress",
-    description: "Monitor your credit improvement journey with our detailed analytics.",
+    title: "Progress Monitoring Tools",
+    description: "Access educational tools to help track your credit journey.",
   },
 ]
 
@@ -36,11 +36,11 @@ export default function CreditRepairSection() {
           className="max-w-4xl mx-auto text-center"
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
-            Repair Your Credit, Unlock Funding
+            Credit Education Services
           </h2>
           <p className="text-lg md:text-xl text-gray-600 mb-8">
-            Don't let poor credit hold you back. Our expert team is here to help you improve your score and qualify for
-            better business funding options.
+            Understanding your credit is an important part of your financial journey. Our team offers educational
+            resources to help you make informed decisions.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
@@ -64,15 +64,14 @@ export default function CreditRepairSection() {
               className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
               onClick={() => router.push("/credit-repair")}
             >
-              Start Your Credit Repair Journey
-              {/* <ArrowRight className="ml-2 h-5 w-5" /> */}
+              Learn About Credit Education
             </Button>
             <Button
               variant="outline"
               className="w-full sm:w-auto text-blue-600 border-blue-600 hover:bg-blue-100 px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
               onClick={() => router.push("/credit-repair")}
             >
-              Learn More
+              Explore Resources
             </Button>
           </div>
         </motion.div>
@@ -115,9 +114,8 @@ export default function CreditRepairSection() {
         animate={{ y: [0, -20, 0], rotate: [0, 360] }}
         transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
       >
-        <CreditCard size={40} />
+        <GraduationCap size={40} />
       </motion.div>
     </section>
   )
 }
-

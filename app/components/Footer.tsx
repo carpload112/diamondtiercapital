@@ -21,7 +21,7 @@ export default function Footer() {
               />
               <span className="text-2xl font-bold">Diamond Tier</span>
             </Link>
-            <p className="text-gray-400">Empowering businesses with innovative financial solutions</p>
+            <p className="text-gray-400">Providing business funding consultation services</p>
             <div className="flex space-x-4">
               <a
                 href="https://www.linkedin.com/company/diamond-tier-solutions/"
@@ -73,17 +73,17 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <Link href="/sba-loans" className="text-gray-400 hover:text-white transition-colors">
-                  SBA Loans
+                  SBA Loan Information
                 </Link>
               </li>
               <li>
                 <Link href="/zero-percent-credit-lines" className="text-gray-400 hover:text-white transition-colors">
-                  0% Credit Lines
+                  Introductory Rate Options
                 </Link>
               </li>
               <li>
                 <Link href="/unsecured-loans" className="text-gray-400 hover:text-white transition-colors">
-                  Unsecured Loans
+                  Unsecured Financing
                 </Link>
               </li>
               <li>
@@ -116,9 +116,12 @@ export default function Footer() {
 
         <div className="mt-12 pt-8 border-t border-gray-800 text-center">
           <p className="text-gray-400">© {new Date().getFullYear()} Diamond Tier Capital. All rights reserved.</p>
+          <p className="text-gray-500 text-sm mt-2">
+            Diamond Tier Capital provides consultation services only. We do not directly provide loans, credit cards, or
+            other financial products. All information is for educational purposes only.
+          </p>
         </div>
       </div>
     </footer>
   )
 }
-

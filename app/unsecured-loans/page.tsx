@@ -24,15 +24,15 @@ export default function UnsecuredLoansPage() {
           }}
           style={{
             backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
+              "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23ffffff' fillOpacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
           }}
         />
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-              <h1 className="text-4xl md:text-6xl font-bold mb-6">Unsecured Business Loans</h1>
+              <h1 className="text-4xl md:text-6xl font-bold mb-6">Unsecured Business Financing</h1>
               <p className="text-xl md:text-2xl mb-8 text-blue-100">
-                Quick access to capital without collateral requirements
+                Learn about financing options that may not require collateral
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button
@@ -41,7 +41,7 @@ export default function UnsecuredLoansPage() {
                   className="text-blue-600 hover:text-blue-700 text-lg px-8 py-6"
                   onClick={() => setIsCalendlyOpen(true)}
                 >
-                  Get Funded
+                  Learn More
                 </Button>
                 <Button
                   size="lg"
@@ -49,7 +49,7 @@ export default function UnsecuredLoansPage() {
                   className="bg-transparent border-white text-white hover:bg-white/10 text-lg px-8 py-6"
                   onClick={() => setIsCalendlyOpen(true)}
                 >
-                  Learn More
+                  Schedule Consultation
                 </Button>
               </div>
             </motion.div>
@@ -98,9 +98,9 @@ export default function UnsecuredLoansPage() {
             transition={{ duration: 0.8 }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Why Choose Unsecured Loans?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">About Unsecured Financing</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Discover the advantages of our unsecured business loans
+              Understanding financing options that may not require business assets as collateral
             </p>
           </motion.div>
 
@@ -108,18 +108,18 @@ export default function UnsecuredLoansPage() {
             {[
               {
                 icon: ShieldCheck,
-                title: "No Collateral Required",
-                description: "Get funded without putting your business assets at risk",
+                title: "No Collateral Requirement",
+                description: "These financing options typically don't require specific business assets as collateral",
               },
               {
                 icon: Clock,
-                title: "Fast Approval",
-                description: "Quick application process with decisions in as little as 24 hours",
+                title: "Application Process",
+                description: "Learn about the application process for unsecured business financing",
               },
               {
                 icon: TrendingUp,
-                title: "Flexible Use of Funds",
-                description: "Use the capital for any legitimate business purpose",
+                title: "Flexible Use",
+                description: "Funds may be used for various legitimate business purposes",
               },
             ].map((feature, index) => (
               <motion.div
@@ -138,15 +138,15 @@ export default function UnsecuredLoansPage() {
         </div>
       </section>
 
-      {/* Loan Process Section */}
+      {/* Process Section */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center">Our Unsecured Loan Process</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center">Our Consultation Process</h2>
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { title: "Apply Online", description: "Complete our simple application in minutes." },
-              { title: "Quick Decision", description: "Get approved within 24-48 hours." },
-              { title: "Receive Funds", description: "Funds deposited directly to your business account." },
+              { title: "Discuss Needs", description: "We learn about your business financing needs." },
+              { title: "Review Options", description: "We explain potential financing options that may be available." },
+              { title: "Provide Guidance", description: "We offer information to help you make informed decisions." },
             ].map((step, index) => (
               <motion.div
                 key={index}
@@ -175,20 +175,20 @@ export default function UnsecuredLoansPage() {
             transition={{ duration: 0.8 }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Eligibility Requirements</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">Common Considerations</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              See if you qualify for our unsecured business loans
+              Factors that may be considered in unsecured financing applications
             </p>
           </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-              "Minimum 6 months in business",
-              "$10,000+ in monthly revenue",
-              "550+ credit score",
-              "U.S. based business",
-              "No open bankruptcies",
-              "Valid business checking account",
+              "Business operating history",
+              "Monthly revenue",
+              "Credit profile",
+              "Business location",
+              "Industry type",
+              "Banking relationship",
             ].map((requirement, index) => (
               <motion.div
                 key={index}
@@ -209,9 +209,9 @@ export default function UnsecuredLoansPage() {
       <section className="py-20 bg-blue-600 text-white">
         <div className="container mx-auto px-4 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <h2 className="text-3xl md:text-4xl font-bold mb-8">Need Quick Business Funding?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-8">Learn About Business Financing Options</h2>
             <p className="text-xl mb-8 max-w-2xl mx-auto">
-              Apply now for our unsecured business loans and get the capital you need.
+              Schedule a consultation to discuss financing options that may be available for your business
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
@@ -220,7 +220,7 @@ export default function UnsecuredLoansPage() {
                 className="text-blue-600 hover:text-blue-700 text-lg px-8 py-6"
                 onClick={() => setIsCalendlyOpen(true)}
               >
-                Apply for Unsecured Loan
+                Schedule Consultation
               </Button>
               <Button
                 size="lg"
@@ -228,7 +228,7 @@ export default function UnsecuredLoansPage() {
                 className="bg-transparent border-white text-white hover:bg-white/10 text-lg px-8 py-6"
                 onClick={() => setIsCalendlyOpen(true)}
               >
-                Schedule Consultation
+                Learn More
               </Button>
             </div>
           </motion.div>
@@ -246,27 +246,27 @@ export default function UnsecuredLoansPage() {
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-6">Frequently Asked Questions</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Get answers to common questions about our unsecured business loans
+              Common questions about unsecured business financing
             </p>
           </motion.div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {[
               {
-                q: "How much can I borrow with an unsecured business loan?",
-                a: "Loan amounts typically range from $5,000 to $500,000, depending on your business's qualifications and needs.",
+                q: "How much financing may be available with unsecured options?",
+                a: "Financing amounts vary based on multiple factors including business qualifications, lender criteria, and specific financing products. We can discuss potential options during a consultation.",
               },
               {
-                q: "What can I use the unsecured loan for?",
-                a: "You can use the funds for various business purposes, including working capital, equipment purchases, expansion, or inventory.",
+                q: "What can unsecured financing be used for?",
+                a: "Unsecured financing can typically be used for various legitimate business purposes, including working capital, equipment purchases, expansion, or inventory, subject to lender terms.",
               },
               {
-                q: "How long does it take to get approved and funded?",
-                a: "Our streamlined process allows for approval within 24-48 hours, with funding possible in as little as 2-3 business days.",
+                q: "How long does the application process typically take?",
+                a: "Application processing times vary by lender and financing type. Some options may offer decisions within days, while others may take longer.",
               },
               {
-                q: "Do you require a personal guarantee?",
-                a: "While we don't require collateral, we may ask for a personal guarantee depending on the loan amount and your business's financial strength.",
+                q: "Is a personal guarantee required?",
+                a: "While unsecured financing may not require specific collateral, many lenders do require a personal guarantee. We can discuss this in more detail during a consultation.",
               },
             ].map((faq, index) => (
               <motion.div
@@ -287,4 +287,3 @@ export default function UnsecuredLoansPage() {
     </div>
   )
 }
-

@@ -25,15 +25,15 @@ export default function SBALoansPage() {
           }}
           style={{
             backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
+              "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23ffffff' fillOpacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
           }}
         />
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-              <h1 className="text-4xl md:text-6xl font-bold mb-6">SBA Loans for Your Business Growth</h1>
+              <h1 className="text-4xl md:text-6xl font-bold mb-6">SBA Loan Information</h1>
               <p className="text-xl md:text-2xl mb-8 text-blue-100">
-                Government-backed financing solutions with competitive rates and flexible terms
+                Learn about Small Business Administration loan programs and how they may benefit your business
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button
@@ -42,7 +42,7 @@ export default function SBALoansPage() {
                   className="text-blue-600 hover:text-blue-700 text-lg px-8 py-6"
                   onClick={() => setIsCalendlyOpen(true)}
                 >
-                  Get Started
+                  Learn More
                 </Button>
                 <Button
                   size="lg"
@@ -50,7 +50,7 @@ export default function SBALoansPage() {
                   className="bg-transparent border-white text-white hover:bg-white/10 text-lg px-8 py-6"
                   onClick={() => setIsCalendlyOpen(true)}
                 >
-                  Learn More
+                  Schedule Consultation
                 </Button>
               </div>
             </motion.div>
@@ -99,9 +99,9 @@ export default function SBALoansPage() {
             transition={{ duration: 0.8 }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Why Choose SBA Loans?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">About SBA Loans</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Access the funding you need with government-backed guarantees and favorable terms
+              SBA loans are government-backed loans designed to help small businesses access funding
             </p>
           </motion.div>
 
@@ -110,17 +110,17 @@ export default function SBALoansPage() {
               {
                 icon: Building2,
                 title: "Lower Down Payments",
-                description: "Minimal down payments compared to traditional business loans",
+                description: "SBA loans typically require smaller down payments compared to traditional business loans",
               },
               {
                 icon: DollarSign,
                 title: "Competitive Rates",
-                description: "Access to some of the most competitive interest rates in the market",
+                description: "SBA loans often feature competitive interest rates for qualified borrowers",
               },
               {
                 icon: BadgeCheck,
                 title: "Flexible Terms",
-                description: "Longer repayment terms to help manage your cash flow better",
+                description: "SBA loans may offer longer repayment terms to help manage cash flow",
               },
             ].map((feature, index) => (
               <motion.div
@@ -148,24 +148,24 @@ export default function SBALoansPage() {
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <h2 className="text-3xl md:text-4xl font-bold mb-8">Our SBA Loan Process</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-8">Understanding SBA Loans</h2>
               <div className="space-y-6">
                 {[
                   {
                     title: "Initial Consultation",
-                    description: "We assess your business needs and eligibility for SBA loans",
+                    description: "We discuss your business needs and potential SBA loan options",
                   },
                   {
-                    title: "Application Support",
-                    description: "Our experts guide you through the entire application process",
+                    title: "Application Information",
+                    description: "We provide guidance on the SBA loan application process",
                   },
                   {
-                    title: "Quick Processing",
-                    description: "Efficient processing and approval of your loan application",
+                    title: "Documentation Assistance",
+                    description: "We help you understand what documentation may be required",
                   },
                   {
-                    title: "Funding Distribution",
-                    description: "Rapid disbursement of funds once approved",
+                    title: "Ongoing Support",
+                    description: "We offer support throughout the application process",
                   },
                 ].map((step, index) => (
                   <motion.div
@@ -212,20 +212,20 @@ export default function SBALoansPage() {
             transition={{ duration: 0.8 }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">SBA Loan Requirements</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">SBA Loan Considerations</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Understanding what you need to qualify for an SBA loan
+              Factors that may be considered in SBA loan applications
             </p>
           </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-              "Good personal credit score (680+ recommended)",
-              "2+ years in business operation",
-              "Annual revenue of $100,000+",
-              "No recent bankruptcies or foreclosures",
-              "Current on government loans",
-              "Strong business plan and financials",
+              "Credit history and score",
+              "Time in business operation",
+              "Annual revenue",
+              "Business plan and financials",
+              "Industry experience",
+              "Collateral availability",
             ].map((requirement, index) => (
               <motion.div
                 key={index}
@@ -246,9 +246,9 @@ export default function SBALoansPage() {
       <section className="py-20 bg-blue-600 text-white">
         <div className="container mx-auto px-4 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <h2 className="text-3xl md:text-4xl font-bold mb-8">Ready to Grow Your Business?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-8">Learn More About SBA Loans</h2>
             <p className="text-xl mb-8 max-w-2xl mx-auto">
-              Let's discuss how an SBA loan can help fuel your business growth
+              Schedule a consultation to discuss how SBA loans might fit your business needs
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
@@ -257,7 +257,7 @@ export default function SBALoansPage() {
                 className="text-blue-600 hover:text-blue-700 text-lg px-8 py-6"
                 onClick={() => setIsCalendlyOpen(true)}
               >
-                Apply Now
+                Schedule Consultation
               </Button>
               <Button
                 size="lg"
@@ -265,7 +265,7 @@ export default function SBALoansPage() {
                 className="bg-transparent border-white text-white hover:bg-white/10 text-lg px-8 py-6"
                 onClick={() => setIsCalendlyOpen(true)}
               >
-                Schedule Consultation
+                Learn More
               </Button>
             </div>
           </motion.div>
@@ -282,26 +282,26 @@ export default function SBALoansPage() {
             className="text-center mb-16"
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-6">Frequently Asked Questions</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">Everything you need to know about SBA loans</p>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">Common questions about SBA loans</p>
           </motion.div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {[
               {
                 q: "What is an SBA loan?",
-                a: "An SBA loan is a government-backed loan that helps small businesses access funding with favorable terms and lower down payments.",
+                a: "An SBA loan is a government-backed loan program designed to help small businesses access funding with terms that may be more favorable than conventional loans.",
               },
               {
-                q: "How long does the approval process take?",
-                a: "The SBA loan approval process typically takes 30-90 days, depending on the loan type and completeness of your application.",
+                q: "How long does the application process typically take?",
+                a: "The SBA loan application process can vary depending on the loan type and completeness of your application. We can provide more specific information during a consultation.",
               },
               {
-                q: "What can I use an SBA loan for?",
-                a: "SBA loans can be used for working capital, equipment purchases, real estate acquisition, and business expansion.",
+                q: "What can SBA loans be used for?",
+                a: "SBA loans can typically be used for various business purposes such as working capital, equipment purchases, real estate acquisition, and business expansion.",
               },
               {
-                q: "What are the interest rates?",
-                a: "SBA loan interest rates are typically based on the prime rate plus a markup of 2.25% to 4.75%, depending on the loan type.",
+                q: "What are typical interest rates?",
+                a: "SBA loan interest rates are typically based on the prime rate plus a markup. Rates can vary based on loan type, term length, and borrower qualifications.",
               },
             ].map((faq, index) => (
               <motion.div
@@ -322,4 +322,3 @@ export default function SBALoansPage() {
     </div>
   )
 }
-

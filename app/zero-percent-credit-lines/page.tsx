@@ -24,15 +24,15 @@ export default function ZeroPercentCreditLinesPage() {
           }}
           style={{
             backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
+              "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23ffffff' fillOpacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
           }}
         />
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-              <h1 className="text-4xl md:text-6xl font-bold mb-6">0% Credit Lines</h1>
+              <h1 className="text-4xl md:text-6xl font-bold mb-6">Introductory Rate Credit Options</h1>
               <p className="text-xl md:text-2xl mb-8 text-blue-100">
-                Access flexible funding with no interest for up to 18 months
+                Learn about business credit options that may offer introductory rates
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button
@@ -41,7 +41,7 @@ export default function ZeroPercentCreditLinesPage() {
                   className="text-blue-600 hover:text-blue-700 text-lg px-8 py-6"
                   onClick={() => setIsCalendlyOpen(true)}
                 >
-                  Get Your Credit Line
+                  Learn More
                 </Button>
                 <Button
                   size="lg"
@@ -49,7 +49,7 @@ export default function ZeroPercentCreditLinesPage() {
                   className="bg-transparent border-white text-white hover:bg-white/10 text-lg px-8 py-6"
                   onClick={() => setIsCalendlyOpen(true)}
                 >
-                  Learn More
+                  Schedule Consultation
                 </Button>
               </div>
             </motion.div>
@@ -98,9 +98,9 @@ export default function ZeroPercentCreditLinesPage() {
             transition={{ duration: 0.8 }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Benefits of 0% Credit Lines</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">Benefits of Introductory Rate Credit Options</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Unlock the power of interest-free financing for your business growth
+              Understanding how introductory rate financing may benefit your business
             </p>
           </motion.div>
 
@@ -108,18 +108,18 @@ export default function ZeroPercentCreditLinesPage() {
             {[
               {
                 icon: Percent,
-                title: "0% Interest",
-                description: "No interest charges for up to 18 months on your credit line",
+                title: "Introductory Rates",
+                description: "Some credit options offer introductory rates for qualified applicants",
               },
               {
                 icon: CreditCard,
-                title: "Flexible Credit Limits",
-                description: "Access credit limits up to $150,000 for your business needs",
+                title: "Credit Options",
+                description: "Various credit limits may be available based on qualification factors",
               },
               {
                 icon: ShieldCheck,
-                title: "No Collateral Required",
-                description: "Unsecured credit lines with no need for business assets as collateral",
+                title: "Application Assistance",
+                description: "We can help you understand the application process for various credit options",
               },
             ].map((feature, index) => (
               <motion.div
@@ -141,13 +141,16 @@ export default function ZeroPercentCreditLinesPage() {
       {/* How It Works Section */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center">How It Works</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center">Our Consultation Process</h2>
           <div className="grid md:grid-cols-4 gap-8">
             {[
-              { title: "Apply", description: "Complete our simple online application in minutes." },
-              { title: "Get Approved", description: "Receive a decision within 24-48 hours." },
-              { title: "Access Funds", description: "Get immediate access to your credit line." },
-              { title: "Grow", description: "Use funds to fuel your business growth interest-free." },
+              { title: "Discuss Needs", description: "We learn about your business financing needs." },
+              { title: "Review Options", description: "We explain potential credit options that may be available." },
+              { title: "Application Guidance", description: "We provide information about application processes." },
+              {
+                title: "Ongoing Support",
+                description: "We offer continued support for your business credit questions.",
+              },
             ].map((step, index) => (
               <motion.div
                 key={index}
@@ -176,9 +179,9 @@ export default function ZeroPercentCreditLinesPage() {
             transition={{ duration: 0.8 }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">How You Can Use 0% Credit Lines</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">Potential Business Uses</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Explore the various ways our 0% credit lines can help your business thrive
+              How businesses may use credit options with introductory rates
             </p>
           </motion.div>
 
@@ -210,9 +213,9 @@ export default function ZeroPercentCreditLinesPage() {
       <section className="py-20 bg-blue-600 text-white">
         <div className="container mx-auto px-4 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <h2 className="text-3xl md:text-4xl font-bold mb-8">Ready to Access Interest-Free Funding?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-8">Learn More About Credit Options</h2>
             <p className="text-xl mb-8 max-w-2xl mx-auto">
-              Apply now and get the financial flexibility your business needs to thrive.
+              Schedule a consultation to discuss business credit options that may be available to you.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
@@ -221,7 +224,7 @@ export default function ZeroPercentCreditLinesPage() {
                 className="text-blue-600 hover:text-blue-700 text-lg px-8 py-6"
                 onClick={() => setIsCalendlyOpen(true)}
               >
-                Apply for 0% Credit Line
+                Schedule Consultation
               </Button>
               <Button
                 size="lg"
@@ -229,7 +232,7 @@ export default function ZeroPercentCreditLinesPage() {
                 className="bg-transparent border-white text-white hover:bg-white/10 text-lg px-8 py-6"
                 onClick={() => setIsCalendlyOpen(true)}
               >
-                Schedule Consultation
+                Learn More
               </Button>
             </div>
           </motion.div>
@@ -247,27 +250,27 @@ export default function ZeroPercentCreditLinesPage() {
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-6">Frequently Asked Questions</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Get answers to common questions about our 0% credit lines
+              Common questions about introductory rate credit options
             </p>
           </motion.div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {[
               {
-                q: "How long is the 0% interest period?",
-                a: "Our 0% interest period typically lasts up to 18 months, giving you ample time to use and repay the funds without accruing interest charges.",
+                q: "How long do introductory rates typically last?",
+                a: "Introductory rate periods vary by credit card issuer and specific offer. They may range from several months to over a year for qualified applicants.",
               },
               {
-                q: "What happens after the 0% period ends?",
-                a: "After the 0% period, any remaining balance will be subject to the standard interest rate. We'll provide clear information about the post-promotional rate before you apply.",
+                q: "What happens after the introductory period?",
+                a: "After the introductory period ends, the standard interest rate will typically apply to any remaining balance. It's important to understand the terms before applying.",
               },
               {
                 q: "Is there a credit check required?",
-                a: "Yes, we do perform a credit check as part of our approval process. However, we consider multiple factors beyond just credit score when making our decisions.",
+                a: "Yes, credit card issuers typically perform a credit check as part of their application process. Approval and terms are based on various factors including credit history.",
               },
               {
-                q: "Can I use the credit line for any business expense?",
-                a: "Yes, you can use the 0% credit line for virtually any legitimate business expense, from inventory purchases to marketing campaigns and beyond.",
+                q: "What can I use these credit options for?",
+                a: "Business credit cards can typically be used for various legitimate business expenses, subject to the card issuer's terms and conditions.",
               },
             ].map((faq, index) => (
               <motion.div
@@ -288,4 +291,3 @@ export default function ZeroPercentCreditLinesPage() {
     </div>
   )
 }
-

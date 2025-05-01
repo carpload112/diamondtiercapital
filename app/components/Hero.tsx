@@ -51,12 +51,12 @@ export default function Hero() {
             className="text-white text-center lg:text-left"
           >
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-4 md:mb-6">
-              Unlock Your Business
-              <span className="block text-blue-400 mt-2">Potential Today</span>
+              Business Funding
+              <span className="block text-blue-400 mt-2">Consultation</span>
             </h1>
             <p className="text-lg md:text-xl text-gray-300 mb-6 md:mb-8 max-w-lg mx-auto lg:mx-0">
-              Access premium business funding solutions including SBA loans, 0% credit lines, and unsecured financing
-              options.
+              We help businesses explore various funding options including SBA loans, business credit cards, and
+              financing alternatives that may be suitable for their needs.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Button
@@ -64,7 +64,7 @@ export default function Hero() {
                 className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-4 w-full sm:w-auto"
                 onClick={() => setIsCalendlyOpen(true)}
               >
-                Get Started →
+                Schedule Consultation →
               </Button>
               <Button
                 size="lg"
@@ -89,11 +89,11 @@ export default function Hero() {
             className="lg:block"
           >
             <div className="bg-white p-6 rounded-lg shadow-xl">
-              <h2 className="text-2xl font-bold mb-4 text-gray-800">Business Loan Calculator</h2>
+              <h2 className="text-2xl font-bold mb-4 text-gray-800">Payment Calculator</h2>
               <div className="space-y-4">
                 <div>
                   <label htmlFor="loanAmount" className="block text-sm font-medium text-gray-700 mb-1">
-                    Loan Amount
+                    Principal Amount
                   </label>
                   <Input
                     type="number"
@@ -105,7 +105,7 @@ export default function Hero() {
                 </div>
                 <div>
                   <label htmlFor="loanTerm" className="block text-sm font-medium text-gray-700 mb-1">
-                    Loan Term (months)
+                    Term (months)
                   </label>
                   <Input
                     type="number"
@@ -129,11 +129,11 @@ export default function Hero() {
                 </div>
                 <div>
                   <label htmlFor="loanType" className="block text-sm font-medium text-gray-700 mb-1">
-                    Loan Type
+                    Funding Type
                   </label>
                   <Select value={loanType} onValueChange={setLoanType}>
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select loan type" />
+                      <SelectValue placeholder="Select funding type" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="SBA 7(a)">SBA 7(a)</SelectItem>
@@ -147,12 +147,16 @@ export default function Hero() {
                   <h3 className="text-lg font-semibold mb-2 text-gray-800">Estimated Monthly Payment</h3>
                   <p className="text-3xl font-bold text-blue-600">${calculateMonthlyPayment()}</p>
                   <p className="text-sm text-gray-600 mt-2">Total Interest: ${totalInterest()}</p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    This is only an estimate for educational purposes. Actual terms, rates, and eligibility may vary
+                    based on multiple factors including credit history, business performance, and lender criteria.
+                  </p>
                 </div>
                 <Button
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                   onClick={() => setIsCalendlyOpen(true)}
                 >
-                  Apply Now
+                  Schedule Consultation
                 </Button>
               </div>
             </div>
@@ -164,4 +168,3 @@ export default function Hero() {
     </section>
   )
 }
-

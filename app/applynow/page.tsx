@@ -31,12 +31,12 @@ const formSteps = [
     ],
   },
   {
-    title: "Loan Information",
+    title: "Funding Information",
     fields: [
-      { name: "loanAmount", label: "Desired Loan Amount", type: "number", placeholder: "50000" },
+      { name: "fundingAmount", label: "Desired Funding Amount", type: "number", placeholder: "50000" },
       {
-        name: "loanPurpose",
-        label: "Loan Purpose",
+        name: "fundingPurpose",
+        label: "Funding Purpose",
         type: "select",
         options: ["Working Capital", "Equipment Purchase", "Real Estate", "Debt Refinancing"],
       },
@@ -97,7 +97,7 @@ export default function ApplyNow() {
         className="w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden"
       >
         <div className="p-8">
-          <h1 className="text-3xl font-bold text-center mb-6 text-blue-600">SBA Loan Application</h1>
+          <h1 className="text-3xl font-bold text-center mb-6 text-blue-600">Funding Consultation Request</h1>
           <Progress value={((currentStep + 1) / formSteps.length) * 100} className="mb-6" />
           <AnimatePresence mode="wait">
             <motion.div
@@ -124,4 +124,3 @@ export default function ApplyNow() {
     </div>
   )
 }
-

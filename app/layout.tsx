@@ -10,18 +10,18 @@ import Script from "next/script"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Diamond Tier Capital - Premium Business Funding Solutions",
+  title: "Diamond Tier Capital - Business Funding Consultation",
   description:
-    "Expert financial solutions for business growth: SBA loans, 0% credit lines, unsecured loans, and credit card stacking. Get funded fast with Diamond Tier Capital.",
-  keywords: "business funding, SBA loans, 0% credit lines, unsecured loans, credit card stacking, business finance",
+    "Business funding consultation services: Information about SBA loans, business credit cards, and financing options. Schedule a consultation with Diamond Tier Capital.",
+  keywords: "business funding consultation, SBA loans, business credit cards, financing options, funding education",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "https://www.diamondtiercapital.com",
     siteName: "Diamond Tier Capital",
-    title: "Diamond Tier Capital - Premium Business Funding Solutions",
+    title: "Diamond Tier Capital - Business Funding Consultation",
     description:
-      "Expert financial solutions for business growth: SBA loans, 0% credit lines, unsecured loans, and credit card stacking.",
+      "Business funding consultation services: Information about SBA loans, business credit cards, and financing options.",
     images: [
       {
         url: "https://www.diamondtiercapital.com/og-image.jpg",
@@ -33,9 +33,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Diamond Tier Capital - Premium Business Funding Solutions",
+    title: "Diamond Tier Capital - Business Funding Consultation",
     description:
-      "Expert financial solutions for business growth: SBA loans, 0% credit lines, unsecured loans, and credit card stacking.",
+      "Business funding consultation services: Information about SBA loans, business credit cards, and financing options.",
     images: ["https://www.diamondtiercapital.com/twitter-image.jpg"],
     creator: "@DiamondTierCap",
   },
@@ -64,7 +64,7 @@ export default function RootLayout({
             "@context": "https://schema.org",
             "@type": "FinancialService",
             "name": "Diamond Tier Capital",
-            "description": "Expert financial solutions for business growth: SBA loans, 0% credit lines, unsecured loans, and credit card stacking.",
+            "description": "Business funding consultation services: Information about SBA loans, business credit cards  "Business funding consultation services: Information about SBA loans, business credit cards, and financing options.",
             "url": "https://www.diamondtiercapital.com",
             "logo": "https://www.diamondtiercapital.com/logo.png",
             "sameAs": [
@@ -82,11 +82,11 @@ export default function RootLayout({
             },
             "telephone": "+1-800-123-4567",
             "openingHours": "Mo-Fr 09:00-17:00",
-            "areaServed": "United States"
+            "areaServed": "United States",
+            "disclaimer": "Diamond Tier Capital provides consultation services only. We do not directly provide loans, credit cards, or other financial products."
           }
         `}
       </Script>
     </html>
   )
 }
-

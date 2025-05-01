@@ -6,18 +6,18 @@ import Image from "next/image"
 const steps = [
   {
     title: "Free Consultation",
-    description: "Tell us about your business needs",
+    description: "Discuss your business needs and goals",
     emoji: "🤝",
   },
   {
-    title: "Get Approved",
-    description: "Quick approval process with best rates",
+    title: "Review Options",
+    description: "Explore potential funding solutions",
     emoji: "✅",
   },
   {
-    title: "Access Funds",
-    description: "Immediate access to your financing",
-    emoji: "💸",
+    title: "Application Guidance",
+    description: "Receive support throughout the process",
+    emoji: "📝",
   },
 ]
 
@@ -60,7 +60,7 @@ export default function HowItWorks() {
           >
             <Image
               src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/benefits_of_business_loans-CALUvAhKQ2axz3O42wERaRACy8Wdlc.webp"
-              alt="Business Loan Process"
+              alt="Business Consultation Process"
               width={600}
               height={400}
               className="rounded-2xl shadow-xl"
@@ -71,4 +71,3 @@ export default function HowItWorks() {
     </section>
   )
 }
-

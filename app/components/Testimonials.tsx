@@ -1,3 +1,5 @@
+"use client"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { motion } from "framer-motion"
@@ -7,14 +9,14 @@ const testimonials = [
     name: "John Doe",
     company: "Tech Innovators Inc.",
     content:
-      "Diamond Tier Capital helped us secure the funding we needed to scale our operations. Their expertise in business credit card stacking was invaluable.",
+      "Diamond Tier Capital provided valuable guidance on business funding options. Their expertise in business credit education was very helpful.",
     avatar: "JD",
   },
   {
     name: "Jane Smith",
     company: "Green Energy Solutions",
     content:
-      "The 0% line of credit we obtained through Diamond Tier Capital allowed us to manage our cash flow effectively during our expansion phase.",
+      "The consultation services from Diamond Tier Capital helped us understand our financing options during our expansion phase.",
     avatar: "JS",
   },
 ]
@@ -56,4 +58,3 @@ export default function Testimonials() {
     </section>
   )
 }
-

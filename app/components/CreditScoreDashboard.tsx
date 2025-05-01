@@ -38,12 +38,12 @@ export default function CreditScoreDashboard() {
           />
         </div>
 
-        <h2 className="text-lg font-bold mb-3">Dashboard</h2>
+        <h2 className="text-lg font-bold mb-3">Credit Education Dashboard</h2>
 
         {/* Credit Scores Section */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-lg">Credit Scores</CardTitle>
+            <CardTitle className="text-lg">Sample Credit Scores</CardTitle>
           </CardHeader>
           <CardContent className="py-2">
             <div className="grid grid-cols-3 gap-2">
@@ -131,7 +131,7 @@ export default function CreditScoreDashboard() {
         {/* Score History Chart */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Score History</CardTitle>
+            <CardTitle className="text-lg">Sample Score History</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[150px]">
@@ -162,10 +162,12 @@ export default function CreditScoreDashboard() {
                 </LineChart>
               </ResponsiveContainer>
             </div>
+            <p className="text-xs text-gray-500 mt-2 text-center">
+              This is a sample visualization for educational purposes only.
+            </p>
           </CardContent>
         </Card>
       </div>
     </div>
   )
 }
-

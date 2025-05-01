@@ -1,11 +1,13 @@
+"use client"
+
 import { CheckCircle } from "lucide-react"
 import { motion } from "framer-motion"
 
 const benefits = [
-  "Tailored financial solutions for your business needs",
-  "Expert guidance throughout the application process",
-  "Quick approval and funding times",
-  "Competitive rates and flexible terms",
+  "Personalized consultation for your business needs",
+  "Educational resources about funding options",
+  "Guidance throughout the application process",
+  "Information about competitive rates and terms",
   "Dedicated support team for ongoing assistance",
 ]
 
@@ -33,8 +35,8 @@ export default function Benefits() {
           </div>
           <div className="w-full md:w-1/2 mt-8 md:mt-0">
             <motion.img
-              src="/placeholder.svg?height=400&width=400"
-              alt="Business growth illustration"
+              src="/business-consultation.png"
+              alt="Business consultation illustration"
               className="mx-auto rounded-lg shadow-lg"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -46,4 +48,3 @@ export default function Benefits() {
     </section>
   )
 }
-
