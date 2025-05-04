@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { CheckCircle, CreditCard, Percent, ShieldCheck } from "lucide-react"
 import CalendlyModal from "../components/CalendlyModal"
 import { useScrollTop } from "@/hooks/use-scroll-top"
+import Image from "next/image"
 
 export default function ZeroPercentCreditLinesPage() {
   const [isCalendlyOpen, setIsCalendlyOpen] = useState(false)
@@ -15,6 +16,16 @@ export default function ZeroPercentCreditLinesPage() {
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-blue-700 to-blue-600 text-white py-20 md:py-28 overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/6-Investment-Loans-for-Beginners-in-Real-Estate-uN2JjkoVzKvTlaaQzC05vsfhqNGUIH.webp"
+            alt="Real estate investment with house model and coins"
+            fill
+            className="object-cover opacity-30"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 to-blue-800/80" />
+        </div>
         <motion.div
           className="absolute inset-0"
           initial={{ opacity: 0 }}

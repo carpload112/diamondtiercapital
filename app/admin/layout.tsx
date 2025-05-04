@@ -18,6 +18,7 @@ export default function AdminLayout({
   const router = useRouter()
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -39,103 +40,62 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="flex flex-col md:flex-row min-h-screen">
       {/* Sidebar for desktop */}
-      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-slate-200">
-        <div className="p-6 border-b border-slate-200">
-          <h1 className="text-xl font-bold text-slate-900">Admin Dashboard</h1>
+      <div className="w-full md:w-64 bg-gray-100 border-r border-gray-200 md:min-h-screen">
+        <div className="p-4">
+          <div className="flex items-center justify-between md:justify-start">
+            <h1 className="text-xl font-bold text-gray-800">Admin Dashboard</h1>
+            <button
+              className="md:hidden p-2 rounded-md hover:bg-gray-200"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
         </div>
-        <nav className="flex-1 p-4">
-          <ul className="space-y-1">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
-              return (
-                <li key={item.name}>
-                  <Link
-                    href={item.href}
-                    className={`flex items-center px-4 py-3 rounded-md transition-colors ${
-                      isActive ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-slate-100"
-                    }`}
-                  >
-                    <item.icon className="h-5 w-5 mr-3" />
-                    {item.name}
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        </nav>
-        <div className="p-4 border-t border-slate-200">
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-            onClick={() => {
-              logout()
-              router.push("/admin")
-            }}
-          >
-            <LogOut className="h-5 w-5 mr-3" />
-            Logout
-          </Button>
-        </div>
-      </aside>
 
-      {/* Mobile menu */}
-      <div
-        className={`fixed inset-0 bg-slate-900/50 z-40 md:hidden ${isMobileMenuOpen ? "block" : "hidden"}`}
-        onClick={() => setIsMobileMenuOpen(false)}
-      ></div>
-
-      <div
-        className={`fixed inset-y-0 left-0 w-64 bg-white z-50 transform transition-transform duration-300 ease-in-out md:hidden ${
-          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div className="p-4 border-b border-slate-200 flex justify-between items-center">
-          <h1 className="text-lg font-bold text-slate-900">Admin Dashboard</h1>
-          <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
-        <nav className="p-4">
-          <ul className="space-y-1">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
-              return (
-                <li key={item.name}>
-                  <Link
-                    href={item.href}
-                    className={`flex items-center px-4 py-3 rounded-md transition-colors ${
-                      isActive ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-slate-100"
-                    }`}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <item.icon className="h-5 w-5 mr-3" />
-                    {item.name}
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        </nav>
-        <div className="p-4 border-t border-slate-200">
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-            onClick={() => {
-              logout()
-              router.push("/admin")
-              setIsMobileMenuOpen(false)
-            }}
-          >
-            <LogOut className="h-5 w-5 mr-3" />
-            Logout
-          </Button>
+        <div className={`${mobileMenuOpen ? "block" : "hidden"} md:block`}>
+          <nav className="mt-2 px-2">
+            <ul className="space-y-1">
+              {navItems.map((item) => {
+                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
+                return (
+                  <li key={item.name}>
+                    <Link
+                      href={item.href}
+                      className={`flex items-center px-4 py-3 rounded-md transition-colors ${
+                        isActive ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-slate-100"
+                      }`}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <item.icon className="h-5 w-5 mr-3" />
+                      {item.name}
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          </nav>
+          <div className="p-4 border-t border-slate-200">
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+              onClick={() => {
+                logout()
+                router.push("/admin")
+                setMobileMenuOpen(false)
+              }}
+            >
+              <LogOut className="h-5 w-5 mr-3" />
+              Logout
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col">
+      <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-4 md:p-6">
         {/* Top header */}
         <header className="bg-white border-b border-slate-200 p-4 flex items-center justify-between">
           <div className="flex items-center">
@@ -180,8 +140,8 @@ export default function AdminLayout({
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-6 overflow-auto">{children}</main>
-      </div>
+        {children}
+      </main>
     </div>
   )
 }

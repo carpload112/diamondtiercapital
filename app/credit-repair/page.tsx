@@ -77,8 +77,8 @@ export default function CreditRepairPage() {
         {/* Background with overlay */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/how-it-works-01.jpg-3Xl1vFULfOfYaJucLehBRVri5K1ZPO.jpeg"
-            alt="Credit Education Background"
+            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/6-Investment-Loans-for-Beginners-in-Real-Estate-uN2JjkoVzKvTlaaQzC05vsfhqNGUIH.webp"
+            alt="Real estate investment with house model and coins"
             fill
             className="object-cover"
             priority

@@ -35,6 +35,28 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 
+// Helper function to format dates responsively
+const formatDate = (dateString: string) => {
+  if (!dateString) return "N/A"
+
+  // Use a simpler format on mobile
+  if (typeof window !== "undefined" && window.innerWidth < 640) {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    })
+  }
+
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+}
+
 export default function ApplicationDetailPage({ params }: { params: { id: string } }) {
   const { id } = params
   const router = useRouter()
@@ -248,17 +270,6 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
     }
   }
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "N/A"
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-  }
-
   const formatCurrency = (amount: string | number) => {
     if (!amount) return "N/A"
     return new Intl.NumberFormat("en-US", {
@@ -314,10 +325,10 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-48 sm:h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-slate-500">Loading application details...</p>
+          <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-sm sm:text-base text-slate-500">Loading application details...</p>
         </div>
       </div>
     )
@@ -325,10 +336,12 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
 
   if (!application) {
     return (
-      <div className="bg-white rounded-lg shadow p-6 text-center">
-        <h2 className="text-xl font-medium text-slate-900 mb-2">Application Not Found</h2>
-        <p className="text-slate-500 mb-6">The application you're looking for doesn't exist or has been removed.</p>
-        <Button asChild>
+      <div className="bg-white rounded-lg shadow p-4 sm:p-6 text-center">
+        <h2 className="text-lg sm:text-xl font-medium text-slate-900 mb-2">Application Not Found</h2>
+        <p className="text-sm sm:text-base text-slate-500 mb-4 sm:mb-6">
+          The application you're looking for doesn't exist or has been removed.
+        </p>
+        <Button asChild size="sm" className="h-9 sm:h-10">
           <Link href="/admin/applications">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Applications
@@ -517,25 +530,25 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
       </div>
 
       {/* Application Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-md text-white p-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-md text-white p-4 sm:p-6">
+        <div className="flex flex-col gap-4">
           <div>
-            <h1 className="text-2xl font-bold">
+            <h1 className="text-xl sm:text-2xl font-bold">
               Application #{application.reference_id || application.id.substring(0, 8).toUpperCase()}
             </h1>
-            <p className="text-blue-100 mt-1">
+            <p className="text-blue-100 mt-1 text-sm sm:text-base">
               Submitted {formatDate(application.submitted_at || application.created_at)}
             </p>
             <div className="flex items-center mt-2">
               {getStatusIcon(status)}
-              <span className="ml-2 font-medium">
+              <span className="ml-2 font-medium text-sm sm:text-base">
                 Status: {status.charAt(0).toUpperCase() + status.slice(1).replace("_", " ")}
               </span>
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-full sm:w-40 bg-white/10 border-white/20 text-white">
+              <SelectTrigger className="w-full bg-white/10 border-white/20 text-white h-10">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
@@ -545,7 +558,11 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                 <SelectItem value="rejected">Rejected</SelectItem>
               </SelectContent>
             </Select>
-            <Button onClick={updateApplication} disabled={updating} className="bg-white text-blue-700 hover:bg-blue-50">
+            <Button
+              onClick={updateApplication}
+              disabled={updating}
+              className="bg-white text-blue-700 hover:bg-blue-50 h-10 w-full sm:w-auto"
+            >
               {updating ? "Updating..." : "Update Status"}
             </Button>
           </div>
@@ -553,7 +570,7 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
       </div>
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6">
         {/* Left Column - Applicant & Business */}
         <div className="lg:col-span-2 space-y-6">
           {/* Applicant Details */}
@@ -576,32 +593,28 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
               )}
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Full Name</p>
-                    <p className="font-medium">{applicantName}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Email Address</p>
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-gray-400" />
-                      <p>{email}</p>
-                    </div>
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Full Name</p>
+                  <p className="font-medium">{applicantName}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Email Address</p>
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-gray-400" />
+                    <p className="text-sm break-all">{email}</p>
                   </div>
                 </div>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Phone Number</p>
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-gray-400" />
-                      <p>{phone}</p>
-                    </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Phone Number</p>
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-gray-400" />
+                    <p className="text-sm">{phone}</p>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Preferred Contact Method</p>
-                    <p>{preferredContact}</p>
-                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Preferred Contact Method</p>
+                  <p className="text-sm">{preferredContact}</p>
                 </div>
               </div>
             </CardContent>
@@ -617,45 +630,41 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
               <CardDescription>Information about the applicant's business</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Business Name</p>
-                    <p className="font-medium">{businessName}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Business Type</p>
-                    <div className="flex items-center gap-2">
-                      <Briefcase className="h-4 w-4 text-gray-400" />
-                      <p>{businessType}</p>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Industry</p>
-                    <p>{industry}</p>
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Business Name</p>
+                  <p className="font-medium">{businessName}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Business Type</p>
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="h-4 w-4 text-gray-400" />
+                    <p className="text-sm">{businessType}</p>
                   </div>
                 </div>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Years in Business</p>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-gray-400" />
-                      <p>{yearsInBusiness}</p>
-                    </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Industry</p>
+                  <p className="text-sm">{industry}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Years in Business</p>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-gray-400" />
+                    <p className="text-sm">{yearsInBusiness}</p>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Annual Revenue</p>
-                    <div className="flex items-center gap-2">
-                      <BarChart className="h-4 w-4 text-gray-400" />
-                      <p>{annualRevenue !== "N/A" ? formatCurrency(annualRevenue) : "N/A"}</p>
-                    </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Annual Revenue</p>
+                  <div className="flex items-center gap-2">
+                    <BarChart className="h-4 w-4 text-gray-400" />
+                    <p className="text-sm">{annualRevenue !== "N/A" ? formatCurrency(annualRevenue) : "N/A"}</p>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Credit Score</p>
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="h-4 w-4 text-gray-400" />
-                      <p>{creditScore}</p>
-                    </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Credit Score</p>
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="h-4 w-4 text-gray-400" />
+                    <p className="text-sm">{creditScore}</p>
                   </div>
                 </div>
               </div>
@@ -672,34 +681,30 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
               <CardDescription>Details about the requested funding</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Funding Amount</p>
-                    <p className="text-xl font-semibold text-blue-700">
-                      {fundingAmount !== "N/A" ? formatCurrency(fundingAmount) : "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Funding Purpose</p>
-                    <div className="flex items-center gap-2">
-                      <Target className="h-4 w-4 text-gray-400" />
-                      <p>{fundingPurpose}</p>
-                    </div>
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Funding Amount</p>
+                  <p className="text-lg sm:text-xl font-semibold text-blue-700">
+                    {fundingAmount !== "N/A" ? formatCurrency(fundingAmount) : "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Funding Purpose</p>
+                  <div className="flex items-center gap-2">
+                    <Target className="h-4 w-4 text-gray-400" />
+                    <p className="text-sm">{fundingPurpose}</p>
                   </div>
                 </div>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Timeframe</p>
-                    <div className="flex items-center gap-2">
-                      <Clock4 className="h-4 w-4 text-gray-400" />
-                      <p>{timeframe}</p>
-                    </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Timeframe</p>
+                  <div className="flex items-center gap-2">
+                    <Clock4 className="h-4 w-4 text-gray-400" />
+                    <p className="text-sm">{timeframe}</p>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Collateral Available</p>
-                    <p>{collateral}</p>
-                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Collateral Available</p>
+                  <p className="text-sm">{collateral}</p>
                 </div>
               </div>
             </CardContent>
@@ -721,7 +726,7 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     {getStatusIcon(status)}
-                    <span className="font-medium">
+                    <span className="font-medium text-sm">
                       {status.charAt(0).toUpperCase() + status.slice(1).replace("_", " ")}
                     </span>
                   </div>
@@ -734,7 +739,7 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                   <p className="text-sm font-medium text-gray-500 mb-2">Update Status</p>
                   <div className="space-y-3">
                     <Select value={status} onValueChange={setStatus}>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-10">
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                       <SelectContent>
@@ -744,7 +749,7 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                         <SelectItem value="rejected">Rejected</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button onClick={updateApplication} disabled={updating} className="w-full">
+                    <Button onClick={updateApplication} disabled={updating} className="w-full h-10">
                       {updating ? "Updating..." : "Update Status"}
                     </Button>
                   </div>
@@ -787,7 +792,7 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
               <div className="space-y-3">
                 <div>
                   <p className="text-sm font-medium text-gray-500">Heard About Us</p>
-                  <p>{heardAboutUs}</p>
+                  <p className="text-sm">{heardAboutUs}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Marketing Consent</p>
@@ -795,12 +800,12 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                     {marketingConsent ? (
                       <>
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                        <span>Yes</span>
+                        <span className="text-sm">Yes</span>
                       </>
                     ) : (
                       <>
                         <XCircleIcon className="h-4 w-4 text-red-500" />
-                        <span>No</span>
+                        <span className="text-sm">No</span>
                       </>
                     )}
                   </div>
@@ -811,12 +816,12 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                     {termsAgreed ? (
                       <>
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                        <span>Yes</span>
+                        <span className="text-sm">Yes</span>
                       </>
                     ) : (
                       <>
                         <XCircleIcon className="h-4 w-4 text-red-500" />
-                        <span>No</span>
+                        <span className="text-sm">No</span>
                       </>
                     )}
                   </div>
@@ -824,7 +829,7 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                 {additionalComments !== "None provided" && (
                   <div>
                     <p className="text-sm font-medium text-gray-500">Additional Comments</p>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{additionalComments}</p>
+                    <p className="text-xs sm:text-sm text-gray-700 whitespace-pre-wrap">{additionalComments}</p>
                   </div>
                 )}
               </div>
@@ -834,7 +839,7 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
       </div>
 
       {/* Application ID Footer */}
-      <div className="text-sm text-gray-500 pt-4 border-t border-gray-200">
+      <div className="text-xs sm:text-sm text-gray-500 pt-4 border-t border-gray-200">
         <p>Application ID: {application.id}</p>
         <p>Last Updated: {formatDate(application.updated_at || application.created_at)}</p>
       </div>

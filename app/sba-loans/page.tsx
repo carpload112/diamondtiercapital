@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { ScrollToTop } from "@/components/ui/scroll-to-top"
 import Link from "next/link"
+import Image from "next/image"
 
 export default function SBALoansPage() {
   const [isVisible, setIsVisible] = useState(false)
@@ -22,6 +23,35 @@ export default function SBALoansPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      <div className="relative pt-32 pb-20 md:pt-40 md:pb-32 bg-blue-600 text-white">
+        {/* Background with overlay */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/6-Investment-Loans-for-Beginners-in-Real-Estate-uN2JjkoVzKvTlaaQzC05vsfhqNGUIH.webp"
+            alt="Real estate investment with house model and coins"
+            fill
+            className="object-cover opacity-30"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/95 via-blue-900/90 to-blue-900/80" />
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isVisible ? 1 : 0 }}
+          transition={{ duration: 0.5 }}
+          className="container mx-auto px-4 py-16 relative z-10"
+        >
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">SBA Loans</h1>
+            <p className="text-xl text-blue-100 mb-8">
+              Small Business Administration (SBA) loans are government-backed loans designed to help small businesses
+              access funding with favorable terms.
+            </p>
+          </div>
+        </motion.div>
+      </div>
+
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: isVisible ? 1 : 0 }}
