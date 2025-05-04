@@ -226,6 +226,14 @@ export default function Footer() {
 
             <div className="text-center md:text-right">
               <p className="text-slate-400 text-sm">© {currentYear} Diamond Tier Solutions. All rights reserved.</p>
+              <div className="mt-2 text-sm space-x-4">
+                <Link href="/privacy-policy" className="text-slate-400 hover:text-white transition-colors">
+                  Privacy Policy
+                </Link>
+                <Link href="/terms-of-service" className="text-slate-400 hover:text-white transition-colors">
+                  Terms of Service
+                </Link>
+              </div>
             </div>
           </div>
 

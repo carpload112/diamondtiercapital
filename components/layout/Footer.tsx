@@ -119,10 +119,10 @@ export default function Footer() {
             <p>© {currentYear} Diamond Tier Capital. All rights reserved.</p>
             <div className="mt-2 md:mt-0 space-x-4">
               <Link href="/privacy-policy" className="hover:text-white">
-                Privacy
+                Privacy Policy
               </Link>
               <Link href="/terms-of-service" className="hover:text-white">
-                Terms
+                Terms of Service
               </Link>
               <Link href="/disclaimer" className="hover:text-white">
                 Disclaimer
