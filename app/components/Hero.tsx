@@ -111,6 +111,9 @@ export default function Hero() {
                   const servicesSection = document.getElementById("services")
                   if (servicesSection) {
                     servicesSection.scrollIntoView({ behavior: "smooth" })
+                  } else {
+                    // Fallback if services section is not found
+                    window.location.href = "/#services"
                   }
                 }}
               >

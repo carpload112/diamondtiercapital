@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
-import CalendlyModal from "./CalendlyModal"
+import CalendlyModal from "@/components/layout/CalendlyModal"
 import { ArrowRight, Calendar, Mail, Phone } from "lucide-react"
 
 export default function ContactForm() {

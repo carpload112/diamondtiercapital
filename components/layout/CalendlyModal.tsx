@@ -1,4 +1,4 @@
-"\"use client"
+"use client"
 
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
@@ -43,7 +43,7 @@ export default function CalendlyModal({ isOpen, onClose }: CalendlyModalProps) {
           )}
 
           <iframe
-            src="https://calendly.com/diamondtiercapital/30min"
+            src="https://calendly.com/diamondtiersolutions/"
             width="100%"
             height="100%"
             frameBorder="0"

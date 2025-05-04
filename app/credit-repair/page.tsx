@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { CheckCircle, ArrowRight, Star } from "lucide-react"
-import CalendlyModal from "@/components/CalendlyModal"
+import CalendlyModal from "@/components/layout/CalendlyModal"
 
 const educationTopics = [
   {

@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { CheckCircle } from "lucide-react"
-import CalendlyModal from "../components/CalendlyModal"
+import CalendlyModal from "@/components/layout/CalendlyModal"
 import Link from "next/link"
 
 export default function SBALoansPage() {
@@ -164,9 +164,9 @@ export default function SBALoansPage() {
             funding your business needs to grow.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/applynow">
-              <Button className="bg-white text-blue-800 hover:bg-blue-50 w-full sm:w-auto">Apply Now</Button>
-            </Link>
+            <Button className="bg-white text-blue-800 hover:bg-blue-50 w-full sm:w-auto" asChild>
+              <Link href="/applynow">Apply Now</Link>
+            </Button>
             <Button
               variant="outline"
               className="border-white text-white hover:bg-white/10 w-full sm:w-auto"

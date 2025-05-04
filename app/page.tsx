@@ -1,11 +1,17 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { ArrowRight, CheckCircle, CreditCard, Building2, Percent, ShieldCheck, GraduationCap } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useState } from "react"
+import CalendlyModal from "@/components/layout/CalendlyModal"
 
 export default function Home() {
+  const [isCalendlyOpen, setIsCalendlyOpen] = useState(false)
+
   return (
     <>
       {/* Hero Section */}
@@ -34,13 +40,19 @@ export default function Home() {
                 financing alternatives tailored to your specific needs.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Button size="lg" className="text-lg px-8 py-6">
+                <Button size="lg" className="text-lg px-8 py-6" onClick={() => setIsCalendlyOpen(true)}>
                   Schedule Consultation
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
                   className="border-white text-white hover:bg-white/10 text-lg px-8 py-6"
+                  onClick={() => {
+                    const servicesSection = document.getElementById("services")
+                    if (servicesSection) {
+                      servicesSection.scrollIntoView({ behavior: "smooth" })
+                    }
+                  }}
                 >
                   Explore Services
                 </Button>
@@ -132,7 +144,9 @@ export default function Home() {
                   </TabsContent>
                 </Tabs>
                 <div className="mt-6">
-                  <Button className="w-full">Schedule Consultation</Button>
+                  <Button className="w-full" onClick={() => setIsCalendlyOpen(true)}>
+                    Schedule Consultation
+                  </Button>
                 </div>
                 <p className="text-xs text-gray-500 mt-4 text-center">
                   This calculator is for educational purposes only. Actual rates and terms may vary.
@@ -144,7 +158,7 @@ export default function Home() {
       </section>
 
       {/* Services Section */}
-      <section className="section bg-white">
+      <section className="section bg-white" id="services">
         <div className="container">
           <div className="section-title">
             <h2 className="mb-4">Business Funding Consultation</h2>
@@ -335,7 +349,12 @@ export default function Home() {
           <p className="text-xl mb-8 max-w-2xl mx-auto text-primary-foreground/90">
             Schedule a consultation with our team to discuss business funding options that may be available to you.
           </p>
-          <Button size="lg" variant="secondary" className="text-lg px-8 py-6 bg-white text-primary hover:bg-gray-100">
+          <Button
+            size="lg"
+            variant="secondary"
+            className="text-lg px-8 py-6 bg-white text-primary hover:bg-gray-100"
+            onClick={() => setIsCalendlyOpen(true)}
+          >
             Schedule Your Free Consultation
           </Button>
         </div>
@@ -368,6 +387,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      <CalendlyModal isOpen={isCalendlyOpen} onClose={() => setIsCalendlyOpen(false)} />
     </>
   )
 }

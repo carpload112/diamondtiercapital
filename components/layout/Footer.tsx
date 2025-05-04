@@ -99,10 +99,6 @@ export function Footer() {
         {/* Copyright */}
         <div className="mt-8 pt-6 border-t border-gray-800 text-center">
           <p className="text-xs text-gray-500">&copy; {currentYear} Diamond Tier Capital. All rights reserved.</p>
-          <p className="text-xs text-gray-600 mt-2 max-w-3xl mx-auto">
-            Diamond Tier Capital provides consultation services only. We do not directly provide loans, credit cards, or
-            other financial products. All information is for educational purposes only.
-          </p>
         </div>
       </div>
     </footer>

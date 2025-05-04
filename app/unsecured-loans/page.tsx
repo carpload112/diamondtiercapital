@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { CheckCircle, Banknote, Clock, ShieldCheck, ArrowRight } from "lucide-react"
-import CalendlyModal from "../components/CalendlyModal"
+import CalendlyModal from "@/components/layout/CalendlyModal"
 
 export default function UnsecuredLoansPage() {
   const [isCalendlyOpen, setIsCalendlyOpen] = useState(false)

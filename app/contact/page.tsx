@@ -3,7 +3,7 @@
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
-import CalendlyModal from "../components/CalendlyModal"
+import CalendlyModal from "@/components/layout/CalendlyModal"
 import { Mail, Phone, MapPin, Clock } from "lucide-react"
 
 export default function ContactPage() {

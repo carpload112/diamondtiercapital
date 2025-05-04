@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { CheckCircle, CreditCard, Percent, ShieldCheck, ArrowRight } from "lucide-react"
-import CalendlyModal from "@/components/layout/CalendlyModal" // Fixed import path
+import CalendlyModal from "@/components/layout/CalendlyModal"
 
 export default function ZeroPercentCreditLinesPage() {
   const [isCalendlyOpen, setIsCalendlyOpen] = useState(false)

@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { CheckCircle, CreditCard, ArrowRight } from "lucide-react"
-import CalendlyModal from "@/components/CalendlyModal"
+import CalendlyModal from "@/components/layout/CalendlyModal" // Fixed import path
 
 const cardTypes = [
   {
