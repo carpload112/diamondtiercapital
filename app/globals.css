@@ -4,82 +4,216 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Primary brand colors - refined blue palette */
+    --primary: 220 70% 40%; /* Rich blue */
+    --primary-foreground: 0 0% 100%; /* White */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* Secondary colors */
+    --secondary: 220 30% 96%; /* Light blue */
+    --secondary-foreground: 220 70% 40%; /* Rich blue */
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    /* Accent colors */
+    --accent: 250 70% 50%; /* Purple accent */
+    --accent-foreground: 0 0% 100%; /* White */
 
-    --primary: 207 84% 57%;
-    --primary-foreground: 210 40% 98%;
+    /* Neutral colors */
+    --background: 0 0% 100%; /* White */
+    --foreground: 220 25% 15%; /* Dark blue-gray */
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* UI component colors */
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 220 25% 15%; /* Dark blue-gray */
+    --popover: 0 0% 100%; /* White */
+    --popover-foreground: 220 25% 15%; /* Dark blue-gray */
+    --muted: 220 10% 96%; /* Very light blue-gray */
+    --muted-foreground: 220 10% 45%; /* Medium blue-gray */
+    --border: 220 20% 90%; /* Light blue-gray */
+    --input: 220 20% 90%; /* Light blue-gray */
+    --ring: 220 70% 40%; /* Rich blue */
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Destructive colors */
+    --destructive: 0 84% 60%; /* Red */
+    --destructive-foreground: 0 0% 100%; /* White */
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 207 84% 57%;
+    /* Success colors */
+    --success: 142 72% 29%; /* Green */
+    --success-foreground: 0 0% 100%; /* White */
 
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --primary: 220 70% 50%; /* Brighter blue for dark mode */
+    --primary-foreground: 0 0% 100%; /* White */
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --secondary: 220 30% 15%; /* Dark blue */
+    --secondary-foreground: 220 30% 90%; /* Light blue-gray */
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --accent: 250 70% 60%; /* Brighter purple for dark mode */
+    --accent-foreground: 0 0% 100%; /* White */
 
-    --primary: 207 84% 57%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --background: 220 25% 10%; /* Very dark blue */
+    --foreground: 220 10% 90%; /* Light gray */
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --card: 220 25% 12%; /* Dark blue */
+    --card-foreground: 220 10% 90%; /* Light gray */
+    --popover: 220 25% 12%; /* Dark blue */
+    --popover-foreground: 220 10% 90%; /* Light gray */
+    --muted: 220 20% 20%; /* Dark blue-gray */
+    --muted-foreground: 220 10% 70%; /* Medium light gray */
+    --border: 220 20% 25%; /* Dark blue-gray */
+    --input: 220 20% 25%; /* Dark blue-gray */
+    --ring: 220 70% 50%; /* Brighter blue */
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --destructive: 0 62% 30%; /* Dark red */
+    --destructive-foreground: 0 0% 100%; /* White */
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 207 84% 57%;
+    --success: 142 72% 29%; /* Green */
+    --success-foreground: 0 0% 100%; /* White */
   }
 }
 
 @layer base {
+  html {
+    font-size: 15px; /* Slightly smaller base font size */
+  }
+
+  * {
+    @apply border-border;
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    line-height: 1.5;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold tracking-tight;
+    line-height: 1.2;
+  }
+
+  h1 {
+    @apply text-2xl sm:text-3xl md:text-4xl lg:text-5xl;
+  }
+
+  h2 {
+    @apply text-xl sm:text-2xl md:text-3xl;
+  }
+
+  h3 {
+    @apply text-lg sm:text-xl;
+  }
+
+  h4 {
+    @apply text-base sm:text-lg;
+  }
+
+  p {
+    @apply leading-relaxed text-sm sm:text-base;
+  }
+
+  .text-sm {
+    font-size: 0.8125rem; /* 13px */
+  }
+
+  .text-xs {
+    font-size: 0.75rem; /* 12px */
   }
 }
 
 @layer components {
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#4299E1] to-[#63B3ED];
+  .container-tight {
+    @apply container max-w-5xl mx-auto px-4 sm:px-6;
+  }
+
+  .section {
+    @apply py-12 md:py-20;
+  }
+
+  .section-title {
+    @apply text-center mb-10;
+  }
+
+  .section-title h2 {
+    @apply relative inline-block font-bold;
+  }
+
+  .section-title h2:after {
+    content: "";
+    @apply absolute bottom-0 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-primary rounded-full mt-2;
+  }
+
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  }
+
+  /* Enhanced button styles */
+  .btn-glow {
+    @apply relative overflow-hidden;
+  }
+
+  .btn-glow:after {
+    content: "";
+    @apply absolute inset-0 rounded-md bg-white/20 opacity-0 transition-opacity duration-500;
+  }
+
+  .btn-glow:hover:after {
+    @apply opacity-100;
+  }
+
+  /* Glass effect */
+  .glass {
+    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-lg;
+  }
+
+  /* Card styles */
+  .card-modern {
+    @apply rounded-xl border border-border/40 bg-card p-5 shadow-sm transition-all duration-200 hover:shadow-md;
+  }
+
+  /* Gradient backgrounds */
+  .bg-gradient-primary {
+    @apply bg-gradient-to-r from-primary to-accent;
+  }
+
+  .bg-gradient-light {
+    @apply bg-gradient-to-r from-secondary to-secondary/50;
+  }
+
+  /* Button sizes */
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs;
+  }
+
+  .btn-md {
+    @apply px-4 py-2 text-sm;
+  }
+
+  .btn-lg {
+    @apply px-5 py-2.5 text-base;
   }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .text-shadow {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .text-shadow-lg {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
   }
 }

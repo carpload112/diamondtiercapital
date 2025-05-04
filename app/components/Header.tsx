@@ -96,6 +96,23 @@ export default function Header() {
     setActiveDropdown(null)
   }
 
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (
+        mobileMenuOpen &&
+        !target.closest('[aria-label="Toggle menu"]') &&
+        !target.closest(".mobile-menu-container")
+      ) {
+        setMobileMenuOpen(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [mobileMenuOpen])
+
   return (
     <header
       className={`fixed w-full z-50 transition-all duration-300 ${
@@ -166,7 +183,7 @@ export default function Header() {
 
             <Button
               variant="outline"
-              className="ml-4 border-blue-600 text-blue-600 hover:bg-blue-50"
+              className="ml-4 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
               onClick={() => setIsCalendlyOpen(true)}
             >
               Schedule Consultation
@@ -180,6 +197,7 @@ export default function Header() {
               size="icon"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle menu"
+              aria-expanded={mobileMenuOpen}
             >
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
@@ -194,20 +212,20 @@ export default function Header() {
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
-              className="lg:hidden overflow-hidden"
+              className="lg:hidden overflow-hidden bg-white shadow-lg fixed inset-x-0 top-20 z-50 mobile-menu-container"
             >
-              <div className="pt-2 pb-4 space-y-1">
+              <div className="pt-2 pb-4 space-y-1 max-h-[80vh] overflow-y-auto">
                 {menuItems.map((section) => (
                   <div key={section.title} className="px-2">
-                    <div className="text-sm font-semibold text-gray-500 px-3 py-2">{section.title}</div>
+                    <div className="text-sm font-semibold text-primary px-3 py-2">{section.title}</div>
                     {section.items.map((item) => (
                       <Link
                         key={item.name}
                         href={item.href}
-                        className="flex items-center px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                        className="flex items-center px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-blue-50 rounded-lg"
                         onClick={() => setMobileMenuOpen(false)}
                       >
-                        <item.icon className="h-5 w-5 mr-3 text-blue-600" />
+                        <item.icon className="h-5 w-5 mr-3 text-primary" />
                         {item.name}
                       </Link>
                     ))}
@@ -215,7 +233,7 @@ export default function Header() {
                 ))}
                 <div className="px-5 pt-4">
                   <Button
-                    className="w-full justify-center"
+                    className="w-full justify-center bg-primary text-white hover:bg-primary/90"
                     onClick={() => {
                       setIsCalendlyOpen(true)
                       setMobileMenuOpen(false)

@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { motion, useScroll, useTransform } from "framer-motion"
+import { useState } from "react"
+import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowRight, CheckCircle, Star, ArrowUp } from "lucide-react"
-import CalendlyModal from "../components/CalendlyModal"
-import CreditScoreDashboard from "../components/CreditScoreDashboard"
+import CalendlyModal from "@/components/CalendlyModal"
+import CreditScoreDashboard from "@/components/credit/CreditScoreDashboard"
 import Image from "next/image"
 
 const educationTopics = [
@@ -51,7 +51,7 @@ const benefits = [
 const testimonials = [
   {
     quote:
-      "The educational resources provided by Diamond Tier Solutions helped me understand my business credit profile better.",
+      "The educational resources provided by Diamond Tier Capital helped me understand my business credit profile better.",
     author: "Alex T., Tech Entrepreneur",
   },
   {
@@ -69,111 +69,86 @@ export default function CreditRepairPage() {
   const [isCalendlyOpen, setIsCalendlyOpen] = useState(false)
   const [showScrollTop, setShowScrollTop] = useState(false)
 
-  const { scrollYProgress } = useScroll()
-  const opacity = useTransform(scrollYProgress, [0, 0.1], [1, 0])
-
-  useEffect(() => {
+  // Handle scroll to top button visibility
+  useState(() => {
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 300)
     }
 
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+  })
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <>
       {/* Hero Section */}
-      <section className="relative py-12 overflow-hidden">
-        <motion.div style={{ opacity }} className="absolute inset-0 z-0">
+      <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden">
+        {/* Background with overlay */}
+        <div className="absolute inset-0 z-0">
           <Image
             src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/how-it-works-01.jpg-3Xl1vFULfOfYaJucLehBRVri5K1ZPO.jpeg"
             alt="Credit Education Background"
-            layout="fill"
-            objectFit="cover"
+            fill
+            className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-blue-900 bg-opacity-60" />
-        </motion.div>
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-6 py-12">
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              className="text-white lg:w-1/2"
-            >
-              <h1 className="text-3xl md:text-5xl font-bold mb-4">Credit Education Services</h1>
-              <p className="text-lg mb-6">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/95 via-blue-900/90 to-blue-900/80" />
+        </div>
+
+        <div className="container relative z-10">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+            <div className="text-white lg:w-1/2">
+              <h1 className="text-4xl md:text-5xl font-bold mb-6">Credit Education Services</h1>
+              <p className="text-lg md:text-xl text-blue-100 mb-8">
                 Educational resources to help you understand credit factors and make informed financial decisions.
               </p>
-              <Button
-                size="lg"
-                className="bg-white text-blue-600 hover:bg-blue-100"
-                onClick={() => setIsCalendlyOpen(true)}
-              >
-                Learn More
+              <Button size="lg" variant="secondary" onClick={() => setIsCalendlyOpen(true)}>
+                Schedule a Consultation
               </Button>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="lg:w-1/2"
-            >
+            </div>
+            <div className="lg:w-1/2">
               <div className="scale-90 origin-top">
                 <CreditScoreDashboard />
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Stats Section */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
+      <section className="section bg-white">
+        <div className="container">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               { value: "500+", label: "Clients Educated" },
               { value: "12+", label: "Educational Resources" },
               { value: "98%", label: "Client Satisfaction" },
             ].map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Card>
-                  <CardContent className="text-center py-6">
-                    <p className="text-4xl font-bold text-blue-600 mb-2">{stat.value}</p>
-                    <p className="text-gray-600">{stat.label}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
+              <Card key={index} className="border-none shadow-card text-center">
+                <CardContent className="pt-6 pb-6">
+                  <p className="text-4xl font-bold text-primary mb-2">{stat.value}</p>
+                  <p className="text-muted-foreground">{stat.label}</p>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
       </section>
 
       {/* Process Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="text-3xl md:text-4xl font-bold mb-12 text-center"
-          >
-            Our Credit Education Process
-          </motion.h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <section className="section bg-secondary">
+        <div className="container">
+          <div className="section-title">
+            <h2 className="mb-4">Our Credit Education Process</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              A structured approach to help you understand and improve your credit
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12">
             {[
               {
                 title: "Credit Assessment",
@@ -192,165 +167,115 @@ export default function CreditRepairPage() {
                 description: "We provide continued educational support as you work on your credit knowledge.",
               },
             ].map((step, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Card className="h-full">
-                  <CardHeader>
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-xl mb-4">
-                      {index + 1}
-                    </div>
-                    <CardTitle>{step.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-600">{step.description}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
+              <Card key={index} className="border-none shadow-card h-full">
+                <CardHeader>
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold text-xl mb-4">
+                    {index + 1}
+                  </div>
+                  <CardTitle>{step.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">{step.description}</p>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
       </section>
 
       {/* Education Topics Section */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="text-3xl md:text-4xl font-bold mb-12 text-center"
-          >
-            Educational Resources
-          </motion.h2>
-          <div className="grid md:grid-cols-3 gap-8">
+      <section className="section bg-white">
+        <div className="container">
+          <div className="section-title">
+            <h2 className="mb-4">Educational Resources</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Comprehensive materials to help you understand credit factors
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8 mt-12">
             {educationTopics.map((topic, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Card className="h-full flex flex-col">
-                  <CardHeader>
-                    <div className="mb-4">
-                      <CardTitle className="text-xl">{topic.name}</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <p className="text-gray-600 mb-4">{topic.description}</p>
+              <Card key={index} className="border-none shadow-card h-full">
+                <CardHeader>
+                  <CardTitle className="text-xl">{topic.name}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-muted-foreground">{topic.description}</p>
+                  <div>
                     <h4 className="font-semibold mb-2">What You'll Learn:</h4>
-                    <ul className="list-disc pl-5 mb-4">
+                    <ul className="space-y-1">
                       {topic.benefits.map((item, i) => (
-                        <li key={i} className="text-sm text-gray-600">
-                          {item}
+                        <li key={i} className="flex items-start">
+                          <CheckCircle className="h-4 w-4 text-primary mr-2 mt-1 flex-shrink-0" />
+                          <span className="text-sm text-muted-foreground">{item}</span>
                         </li>
                       ))}
                     </ul>
-                  </CardContent>
-                </Card>
-              </motion.div>
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
       </section>
 
       {/* Benefits Section */}
-      <section className="py-20 bg-blue-600 text-white">
-        <div className="container mx-auto px-4">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="text-3xl md:text-4xl font-bold mb-12 text-center"
-          >
-            Benefits of Credit Education
-          </motion.h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <section className="section bg-primary text-white">
+        <div className="container">
+          <div className="section-title">
+            <h2 className="mb-4">Benefits of Credit Education</h2>
+            <p className="text-xl text-primary-foreground/90 max-w-3xl mx-auto">
+              Understanding your credit can lead to better financial decisions
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
             {benefits.map((benefit, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="flex items-start bg-white bg-opacity-10 p-6 rounded-lg"
-              >
-                <CheckCircle className="h-6 w-6 text-green-400 mr-4 flex-shrink-0 mt-1" />
-                <p className="text-lg">{benefit}</p>
-              </motion.div>
+              <div key={index} className="flex items-start bg-white/10 p-6 rounded-lg">
+                <CheckCircle className="h-5 w-5 text-white mr-3 mt-0.5 flex-shrink-0" />
+                <p>{benefit}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="text-3xl md:text-4xl font-bold mb-12 text-center"
-          >
-            What Our Clients Say
-          </motion.h2>
-          <div className="grid md:grid-cols-3 gap-8">
+      <section className="section bg-secondary">
+        <div className="container">
+          <div className="section-title">
+            <h2 className="mb-4">What Our Clients Say</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Hear from businesses we've helped with credit education
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8 mt-12">
             {testimonials.map((testimonial, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Card className="h-full">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center mb-4">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                      ))}
-                    </div>
-                    <p className="text-gray-600 mb-4">&ldquo;{testimonial.quote}&rdquo;</p>
-                    <p className="font-semibold">{testimonial.author}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
+              <Card key={index} className="border-none shadow-card">
+                <CardContent className="pt-6">
+                  <div className="flex items-center mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
+                    ))}
+                  </div>
+                  <p className="text-muted-foreground mb-4 italic">"{testimonial.quote}"</p>
+                  <p className="font-semibold">{testimonial.author}</p>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-blue-600 text-white">
-        <div className="container mx-auto px-4 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-8">Ready to Learn More?</h2>
-            <p className="text-xl mb-8 max-w-2xl mx-auto">
-              Schedule a consultation to discuss our educational resources and how they can help you understand credit
-              factors.
-            </p>
-            <Button
-              size="lg"
-              className="bg-white text-blue-600 hover:bg-blue-50 text-lg px-8 py-6 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105"
-              onClick={() => setIsCalendlyOpen(true)}
-            >
-              Schedule Your Free Consultation <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </motion.div>
+      <section className="section bg-primary text-white">
+        <div className="container text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Learn More?</h2>
+          <p className="text-xl mb-8 max-w-2xl mx-auto text-primary-foreground/90">
+            Schedule a consultation to discuss our educational resources and how they can help you understand credit
+            factors.
+          </p>
+          <Button size="lg" variant="secondary" className="text-lg px-8 py-6 bg-white text-primary hover:bg-gray-100">
+            Schedule Your Free Consultation <ArrowRight className="ml-2 h-5 w-5" />
+          </Button>
         </div>
       </section>
 
@@ -358,8 +283,8 @@ export default function CreditRepairPage() {
 
       {/* Scroll to Top Button */}
       <motion.button
-        className={`fixed bottom-8 right-8 bg-blue-600 text-white p-3 rounded-full shadow-lg transition-opacity duration-300 ${
-          showScrollTop ? "opacity-100" : "opacity-0"
+        className={`fixed bottom-8 right-8 bg-primary/90 text-white p-3 rounded-full shadow-lg transition-opacity duration-300 ${
+          showScrollTop ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
         onClick={scrollToTop}
         initial={{ opacity: 0 }}
@@ -367,8 +292,8 @@ export default function CreditRepairPage() {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
       >
-        <ArrowUp className="h-6 w-6" />
+        <ArrowUp className="h-5 w-5" />
       </motion.button>
-    </div>
+    </>
   )
 }

@@ -9,36 +9,82 @@ import CalendlyModal from "../components/CalendlyModal"
 export default function ZeroPercentCreditLinesPage() {
   const [isCalendlyOpen, setIsCalendlyOpen] = useState(false)
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
       {/* Hero Section */}
-      <section className="relative bg-blue-600 text-white py-20 md:py-32 overflow-hidden">
+      <section className="relative bg-gradient-to-r from-blue-700 to-blue-600 text-white py-20 md:py-28 overflow-hidden">
         <motion.div
-          className="absolute inset-0 opacity-10"
-          animate={{
-            backgroundPosition: ["0% 0%", "100% 100%"],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Number.POSITIVE_INFINITY,
-            repeatType: "reverse",
-          }}
-          style={{
-            backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23ffffff' fillOpacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
-          }}
-        />
+          className="absolute inset-0"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.5 }}
+        >
+          {/* Premium gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700"></div>
+
+          {/* Professional pattern overlay */}
+          <div
+            className="absolute inset-0 opacity-10"
+            style={{
+              backgroundImage: `linear-gradient(135deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%, 
+                                transparent 50%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.1) 75%, 
+                                transparent 75%, transparent)`,
+              backgroundSize: "100px 100px",
+            }}
+          ></div>
+
+          {/* Elegant light beams */}
+          <div className="absolute inset-0 overflow-hidden">
+            <motion.div
+              className="absolute -top-[10%] -right-[10%] w-[50%] h-[40%] bg-blue-400/10 blur-[80px] rounded-full"
+              animate={{
+                opacity: [0.4, 0.6, 0.4],
+              }}
+              transition={{
+                duration: 8,
+                repeat: Number.POSITIVE_INFINITY,
+                repeatType: "reverse",
+                ease: "easeInOut",
+              }}
+            />
+            <motion.div
+              className="absolute -bottom-[10%] -left-[10%] w-[50%] h-[40%] bg-blue-300/10 blur-[80px] rounded-full"
+              animate={{
+                opacity: [0.3, 0.5, 0.3],
+              }}
+              transition={{
+                duration: 10,
+                repeat: Number.POSITIVE_INFINITY,
+                repeatType: "reverse",
+                ease: "easeInOut",
+                delay: 2,
+              }}
+            />
+          </div>
+
+          {/* Subtle animated dots */}
+          <div className="absolute inset-0" aria-hidden="true">
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px)`,
+                backgroundSize: "30px 30px",
+              }}
+            ></div>
+          </div>
+        </motion.div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-              <h1 className="text-4xl md:text-6xl font-bold mb-6">Introductory Rate Credit Options</h1>
-              <p className="text-xl md:text-2xl mb-8 text-blue-100">
+              <h1 className="text-3xl md:text-5xl font-bold mb-6 text-white drop-shadow-sm">
+                Introductory Rate Credit Options
+              </h1>
+              <p className="text-lg md:text-xl mb-8 text-blue-50">
                 Learn about business credit options that may offer introductory rates
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button
                   size="lg"
-                  variant="secondary"
-                  className="text-blue-600 hover:text-blue-700 text-lg px-8 py-6"
+                  className="bg-white text-blue-700 hover:bg-blue-50 hover:text-blue-800 shadow-lg"
                   onClick={() => setIsCalendlyOpen(true)}
                 >
                   Learn More
@@ -46,7 +92,7 @@ export default function ZeroPercentCreditLinesPage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="bg-transparent border-white text-white hover:bg-white/10 text-lg px-8 py-6"
+                  className="border-white text-white hover:bg-white/10 shadow-md"
                   onClick={() => setIsCalendlyOpen(true)}
                 >
                   Schedule Consultation
@@ -90,21 +136,23 @@ export default function ZeroPercentCreditLinesPage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20">
+      <section className="py-16 md:py-20">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-center mb-16"
+            className="text-center mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Benefits of Introductory Rate Credit Options</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-slate-800">
+              Benefits of Introductory Rate Credit Options
+            </h2>
+            <p className="text-lg text-slate-600 max-w-3xl mx-auto">
               Understanding how introductory rate financing may benefit your business
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-6 md:gap-8">
             {[
               {
                 icon: Percent,
@@ -127,11 +175,13 @@ export default function ZeroPercentCreditLinesPage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow"
+                className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-6 border border-slate-100"
               >
-                <feature.icon className="h-12 w-12 text-blue-600 mb-4" />
-                <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
-                <p className="text-gray-600">{feature.description}</p>
+                <div className="bg-blue-50 p-3 rounded-full w-14 h-14 flex items-center justify-center mb-4">
+                  <feature.icon className="h-8 w-8 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-slate-800">{feature.title}</h3>
+                <p className="text-slate-600">{feature.description}</p>
               </motion.div>
             ))}
           </div>
@@ -139,10 +189,10 @@ export default function ZeroPercentCreditLinesPage() {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-20 bg-white">
+      <section className="py-16 md:py-20 bg-white">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center">Our Consultation Process</h2>
-          <div className="grid md:grid-cols-4 gap-8">
+          <h2 className="text-2xl md:text-3xl font-bold mb-10 text-center text-slate-800">Our Consultation Process</h2>
+          <div className="grid md:grid-cols-4 gap-6 md:gap-8">
             {[
               { title: "Discuss Needs", description: "We learn about your business financing needs." },
               { title: "Review Options", description: "We explain potential credit options that may be available." },
@@ -157,13 +207,13 @@ export default function ZeroPercentCreditLinesPage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-gray-50 p-6 rounded-lg shadow-md text-center"
+                className="bg-slate-50 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow text-center border border-slate-100"
               >
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-xl mb-4 mx-auto">
+                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl mb-4 mx-auto shadow-md">
                   {index + 1}
                 </div>
-                <h3 className="text-xl font-semibold mb-4">{step.title}</h3>
-                <p className="text-gray-600">{step.description}</p>
+                <h3 className="text-lg font-semibold mb-3 text-slate-800">{step.title}</h3>
+                <p className="text-slate-600">{step.description}</p>
               </motion.div>
             ))}
           </div>
@@ -171,21 +221,21 @@ export default function ZeroPercentCreditLinesPage() {
       </section>
 
       {/* Use Cases Section */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-16 md:py-20 bg-slate-50">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-center mb-16"
+            className="text-center mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Potential Business Uses</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-slate-800">Potential Business Uses</h2>
+            <p className="text-lg text-slate-600 max-w-3xl mx-auto">
               How businesses may use credit options with introductory rates
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               "Inventory purchases",
               "Equipment upgrades",
@@ -199,10 +249,12 @@ export default function ZeroPercentCreditLinesPage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-white p-6 rounded-lg shadow-md"
+                className="bg-white p-5 rounded-lg shadow-sm hover:shadow-md transition-shadow border border-slate-100"
               >
-                <CheckCircle className="h-8 w-8 text-green-500 mb-4" />
-                <p className="text-gray-800 font-semibold">{useCase}</p>
+                <div className="flex items-center">
+                  <CheckCircle className="h-6 w-6 text-green-500 mr-3 flex-shrink-0" />
+                  <p className="text-slate-800 font-medium">{useCase}</p>
+                </div>
               </motion.div>
             ))}
           </div>
@@ -210,18 +262,17 @@ export default function ZeroPercentCreditLinesPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-blue-600 text-white">
+      <section className="py-16 md:py-20 bg-gradient-to-r from-blue-700 to-blue-600 text-white">
         <div className="container mx-auto px-4 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <h2 className="text-3xl md:text-4xl font-bold mb-8">Learn More About Credit Options</h2>
-            <p className="text-xl mb-8 max-w-2xl mx-auto">
+            <h2 className="text-2xl md:text-3xl font-bold mb-6">Learn More About Credit Options</h2>
+            <p className="text-lg mb-8 max-w-2xl mx-auto text-blue-50">
               Schedule a consultation to discuss business credit options that may be available to you.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
                 size="lg"
-                variant="secondary"
-                className="text-blue-600 hover:text-blue-700 text-lg px-8 py-6"
+                className="bg-white text-blue-700 hover:bg-blue-50 hover:text-blue-800 shadow-lg"
                 onClick={() => setIsCalendlyOpen(true)}
               >
                 Schedule Consultation
@@ -229,7 +280,7 @@ export default function ZeroPercentCreditLinesPage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="bg-transparent border-white text-white hover:bg-white/10 text-lg px-8 py-6"
+                className="border-white text-white hover:bg-white/10 shadow-md"
                 onClick={() => setIsCalendlyOpen(true)}
               >
                 Learn More
@@ -240,21 +291,21 @@ export default function ZeroPercentCreditLinesPage() {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-20">
+      <section className="py-16 md:py-20">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-center mb-16"
+            className="text-center mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Frequently Asked Questions</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-slate-800">Frequently Asked Questions</h2>
+            <p className="text-lg text-slate-600 max-w-3xl mx-auto">
               Common questions about introductory rate credit options
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             {[
               {
                 q: "How long do introductory rates typically last?",
@@ -278,10 +329,10 @@ export default function ZeroPercentCreditLinesPage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-white p-6 rounded-lg shadow-md"
+                className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-slate-100"
               >
-                <h3 className="text-xl font-bold mb-3">{faq.q}</h3>
-                <p className="text-gray-600">{faq.a}</p>
+                <h3 className="text-lg font-bold mb-3 text-slate-800">{faq.q}</h3>
+                <p className="text-slate-600">{faq.a}</p>
               </motion.div>
             ))}
           </div>
