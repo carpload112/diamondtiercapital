@@ -1,423 +1,256 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowRight, CheckCircle, Building2, ArrowUp } from "lucide-react"
-import CalendlyModal from "@/components/CalendlyModal"
-import Image from "next/image"
+import { ScrollToTop } from "@/components/ui/scroll-to-top"
 import Link from "next/link"
 
-const sbaLoanTypes = [
-  {
-    name: "SBA 7(a) Loans",
-    description: "The SBA's primary program for providing financial assistance to small businesses.",
-    features: [
-      "Loan amounts up to $5 million",
-      "Can be used for working capital, equipment, real estate",
-      "Longer repayment terms than conventional loans",
-      "Lower down payments and flexible requirements",
-    ],
-  },
-  {
-    name: "SBA 504 Loans",
-    description: "Designed to provide financing for major fixed assets that promote business growth and job creation.",
-    features: [
-      "Used primarily for real estate and equipment",
-      "Up to $5.5 million for eligible projects",
-      "Lower down payments (typically 10%)",
-      "Long-term, fixed-rate financing",
-    ],
-  },
-  {
-    name: "SBA Microloans",
-    description: "Provides small, short-term loans to small businesses and certain non-profit childcare centers.",
-    features: [
-      "Loans up to $50,000",
-      "Average loan amount around $13,000",
-      "Shorter repayment terms (up to 6 years)",
-      "Can be used for working capital, supplies, equipment",
-    ],
-  },
-]
-
-const eligibilityRequirements = [
-  "Operate as a for-profit business",
-  "Do business in the United States",
-  "Have reasonable owner equity to invest",
-  "Use alternative financial resources first",
-  "Demonstrate a need for the loan",
-  "Use the funds for a sound business purpose",
-  "Not be delinquent on any existing debt obligations",
-]
-
-const applicationProcess = [
-  {
-    title: "Preparation",
-    description:
-      "Gather necessary documentation including business financial statements, tax returns, and business plans.",
-  },
-  {
-    title: "Find a Lender",
-    description: "Locate an SBA-approved lender that participates in the SBA loan program you're interested in.",
-  },
-  {
-    title: "Application Submission",
-    description: "Complete the application with your lender, who will then submit it to the SBA for approval.",
-  },
-  {
-    title: "Underwriting",
-    description: "The lender reviews your application, conducts due diligence, and makes a decision.",
-  },
-  {
-    title: "Closing",
-    description: "If approved, review and sign loan documents, after which funds will be disbursed.",
-  },
-]
-
 export default function SBALoansPage() {
-  const [isCalendlyOpen, setIsCalendlyOpen] = useState(false)
-  const [showScrollTop, setShowScrollTop] = useState(false)
+  const [isVisible, setIsVisible] = useState(false)
 
-  // Handle scroll to top button visibility
-  useState(() => {
+  useEffect(() => {
+    setIsVisible(true)
+
     const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 300)
+      // Any scroll handling logic here
     }
 
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
-  })
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }
+  }, [])
 
   return (
-    <>
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden">
-        {/* Background with overlay */}
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/how-it-works-01.jpg-3Xl1vFULfOfYaJucLehBRVri5K1ZPO.jpeg"
-            alt="SBA Loans Background"
-            fill
-            className="object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/95 via-blue-900/90 to-blue-900/80" />
-        </div>
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isVisible ? 1 : 0 }}
+        transition={{ duration: 0.5 }}
+        className="container mx-auto px-4 py-16"
+      >
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-4xl md:text-5xl font-bold text-blue-900 mb-6">SBA Loans</h1>
+          <p className="text-xl text-gray-700 mb-8">
+            Small Business Administration (SBA) loans are government-backed loans designed to help small businesses
+            access funding with favorable terms.
+          </p>
 
-        <div className="container relative z-10">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
-            <div className="text-white lg:w-1/2">
-              <h1 className="text-4xl md:text-5xl font-bold mb-6">SBA Loan Information</h1>
-              <p className="text-lg md:text-xl text-blue-100 mb-8">
-                Educational resources about Small Business Administration loan programs and guidance on the application
-                process.
-              </p>
-              <Button
-                size="lg"
-                variant="secondary"
-                className="bg-white text-primary hover:bg-gray-100"
-                onClick={() => setIsCalendlyOpen(true)}
-              >
-                Schedule a Consultation
-              </Button>
-            </div>
-            <div className="lg:w-1/2">
-              <Card className="border-none shadow-xl">
-                <CardHeader className="bg-primary text-white">
-                  <CardTitle className="text-xl">SBA Loan Programs Overview</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <ul className="space-y-4">
-                    <li className="flex items-start">
-                      <Building2 className="h-5 w-5 text-primary mr-3 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <span className="font-semibold">SBA 7(a) Loans:</span>
-                        <span className="text-muted-foreground"> General small business loans up to $5 million</span>
-                      </div>
-                    </li>
-                    <li className="flex items-start">
-                      <Building2 className="h-5 w-5 text-primary mr-3 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <span className="font-semibold">SBA 504 Loans:</span>
-                        <span className="text-muted-foreground"> Fixed asset financing up to $5.5 million</span>
-                      </div>
-                    </li>
-                    <li className="flex items-start">
-                      <Building2 className="h-5 w-5 text-primary mr-3 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <span className="font-semibold">SBA Microloans:</span>
-                        <span className="text-muted-foreground"> Small loans up to $50,000</span>
-                      </div>
-                    </li>
-                  </ul>
-                  <div className="mt-6 pt-6 border-t border-gray-200">
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Diamond Tier Capital provides consultation services to help businesses understand SBA loan
-                      options. We do not directly provide loans.
-                    </p>
-                    <Button className="w-full" onClick={() => setIsCalendlyOpen(true)}>
-                      Learn More About SBA Loans
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+          <div className="bg-white rounded-lg shadow-xl p-8 mb-12">
+            <h2 className="text-2xl font-semibold text-blue-800 mb-4">Types of SBA Loans We Can Help With</h2>
+
+            <div className="space-y-6">
+              <div className="border-l-4 border-blue-500 pl-4">
+                <h3 className="text-xl font-medium text-blue-700">SBA 7(a) Loans</h3>
+                <p className="text-gray-600 mt-2">
+                  The most common SBA loan program, offering up to $5 million for various business purposes including
+                  working capital, equipment, and real estate.
+                </p>
+              </div>
+
+              <div className="border-l-4 border-blue-500 pl-4">
+                <h3 className="text-xl font-medium text-blue-700">SBA 504 Loans</h3>
+                <p className="text-gray-600 mt-2">
+                  Designed for major fixed asset purchases like real estate and equipment, with loans up to $5.5
+                  million.
+                </p>
+              </div>
+
+              <div className="border-l-4 border-blue-500 pl-4">
+                <h3 className="text-xl font-medium text-blue-700">SBA Microloans</h3>
+                <p className="text-gray-600 mt-2">
+                  Smaller loans up to $50,000 for startups, small businesses, and certain non-profit childcare centers.
+                </p>
+              </div>
+
+              <div className="border-l-4 border-blue-500 pl-4">
+                <h3 className="text-xl font-medium text-blue-700">SBA Express Loans</h3>
+                <p className="text-gray-600 mt-2">
+                  Expedited loan processing for amounts up to $500,000 with a response within 36 hours.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* SBA Loan Types Section */}
-      <section className="section bg-white">
-        <div className="container">
-          <div className="section-title">
-            <h2 className="mb-4">SBA Loan Programs</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Educational information about different SBA loan programs available to small businesses
-            </p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8 mt-12">
-            {sbaLoanTypes.map((loanType, index) => (
-              <Card key={index} className="border-none shadow-card h-full">
-                <CardHeader>
-                  <CardTitle className="text-xl">{loanType.name}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-muted-foreground">{loanType.description}</p>
-                  <div>
-                    <h4 className="font-semibold mb-2">Key Features:</h4>
-                    <ul className="space-y-1">
-                      {loanType.features.map((feature, i) => (
-                        <li key={i} className="flex items-start">
-                          <CheckCircle className="h-4 w-4 text-primary mr-2 mt-1 flex-shrink-0" />
-                          <span className="text-sm text-muted-foreground">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+          <div className="bg-blue-50 rounded-lg p-8 mb-12">
+            <h2 className="text-2xl font-semibold text-blue-800 mb-4">Benefits of SBA Loans</h2>
 
-      {/* Eligibility Requirements Section */}
-      <section className="section bg-secondary">
-        <div className="container">
-          <div className="section-title">
-            <h2 className="mb-4">General SBA Loan Eligibility</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Basic requirements that businesses typically need to meet for SBA loan consideration
-            </p>
+            <ul className="grid md:grid-cols-2 gap-4">
+              <li className="flex items-start">
+                <div className="bg-blue-100 p-2 rounded-full mr-3 mt-1">
+                  <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                </div>
+                <span className="text-gray-700">Lower down payments</span>
+              </li>
+              <li className="flex items-start">
+                <div className="bg-blue-100 p-2 rounded-full mr-3 mt-1">
+                  <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                </div>
+                <span className="text-gray-700">Longer repayment terms</span>
+              </li>
+              <li className="flex items-start">
+                <div className="bg-blue-100 p-2 rounded-full mr-3 mt-1">
+                  <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                </div>
+                <span className="text-gray-700">Competitive interest rates</span>
+              </li>
+              <li className="flex items-start">
+                <div className="bg-blue-100 p-2 rounded-full mr-3 mt-1">
+                  <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                </div>
+                <span className="text-gray-700">No balloon payments</span>
+              </li>
+              <li className="flex items-start">
+                <div className="bg-blue-100 p-2 rounded-full mr-3 mt-1">
+                  <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                </div>
+                <span className="text-gray-700">Counseling and education resources</span>
+              </li>
+              <li className="flex items-start">
+                <div className="bg-blue-100 p-2 rounded-full mr-3 mt-1">
+                  <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                </div>
+                <span className="text-gray-700">No prepayment penalties</span>
+              </li>
+            </ul>
           </div>
-          <div className="mt-12 max-w-3xl mx-auto">
-            <Card className="border-none shadow-card">
-              <CardContent className="p-6">
-                <ul className="space-y-4">
-                  {eligibilityRequirements.map((requirement, index) => (
-                    <li key={index} className="flex items-start">
-                      <CheckCircle className="h-5 w-5 text-primary mr-3 mt-0.5 flex-shrink-0" />
-                      <span>{requirement}</span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <p className="text-sm text-muted-foreground">
-                    Note: Eligibility requirements can vary by specific loan program and lender. This information is for
-                    educational purposes only.
+
+          <div className="bg-white rounded-lg shadow-xl p-8 mb-12">
+            <h2 className="text-2xl font-semibold text-blue-800 mb-4">How We Help You Secure SBA Loans</h2>
+
+            <div className="space-y-6">
+              <div className="flex flex-col md:flex-row gap-4 items-start">
+                <div className="bg-blue-100 rounded-full p-3 text-blue-600 font-bold text-xl w-10 h-10 flex items-center justify-center shrink-0">
+                  1
+                </div>
+                <div>
+                  <h3 className="text-xl font-medium text-blue-700">Eligibility Assessment</h3>
+                  <p className="text-gray-600 mt-1">
+                    We evaluate your business to determine which SBA loan programs you qualify for based on your
+                    business size, industry, and financial history.
                   </p>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
+              </div>
 
-      {/* Application Process Section */}
-      <section className="section bg-white">
-        <div className="container">
-          <div className="section-title">
-            <h2 className="mb-4">SBA Loan Application Process</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              General overview of the steps involved in applying for an SBA loan
+              <div className="flex flex-col md:flex-row gap-4 items-start">
+                <div className="bg-blue-100 rounded-full p-3 text-blue-600 font-bold text-xl w-10 h-10 flex items-center justify-center shrink-0">
+                  2
+                </div>
+                <div>
+                  <h3 className="text-xl font-medium text-blue-700">Application Preparation</h3>
+                  <p className="text-gray-600 mt-1">
+                    Our team helps you prepare a comprehensive application package, including business plans, financial
+                    statements, and all required documentation.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col md:flex-row gap-4 items-start">
+                <div className="bg-blue-100 rounded-full p-3 text-blue-600 font-bold text-xl w-10 h-10 flex items-center justify-center shrink-0">
+                  3
+                </div>
+                <div>
+                  <h3 className="text-xl font-medium text-blue-700">Lender Matching</h3>
+                  <p className="text-gray-600 mt-1">
+                    We connect you with SBA-approved lenders who are most likely to approve your loan based on your
+                    business profile and needs.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col md:flex-row gap-4 items-start">
+                <div className="bg-blue-100 rounded-full p-3 text-blue-600 font-bold text-xl w-10 h-10 flex items-center justify-center shrink-0">
+                  4
+                </div>
+                <div>
+                  <h3 className="text-xl font-medium text-blue-700">Application Submission & Follow-up</h3>
+                  <p className="text-gray-600 mt-1">
+                    We guide you through the submission process and handle follow-up communications with lenders to
+                    ensure your application moves forward.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col md:flex-row gap-4 items-start">
+                <div className="bg-blue-100 rounded-full p-3 text-blue-600 font-bold text-xl w-10 h-10 flex items-center justify-center shrink-0">
+                  5
+                </div>
+                <div>
+                  <h3 className="text-xl font-medium text-blue-700">Closing Support</h3>
+                  <p className="text-gray-600 mt-1">
+                    Once approved, we help you understand the terms and conditions and provide support through the
+                    closing process.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-blue-600 text-white rounded-lg p-8 mb-12">
+            <h2 className="text-2xl font-semibold mb-4">Ready to Explore SBA Loan Options?</h2>
+            <p className="mb-6">
+              Our team of SBA loan specialists is ready to help you navigate the application process and secure the
+              funding your business needs to grow.
             </p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6 mt-12">
-            {applicationProcess.map((step, index) => (
-              <Card key={index} className="border-none shadow-card h-full">
-                <CardContent className="p-6">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold text-xl mb-4">
-                    {index + 1}
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2">{step.title}</h3>
-                  <p className="text-sm text-muted-foreground">{step.description}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Required Documentation Section */}
-      <section className="section bg-secondary">
-        <div className="container">
-          <div className="section-title">
-            <h2 className="mb-4">Common Documentation Requirements</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Documents typically needed when applying for an SBA loan
-            </p>
-          </div>
-          <div className="grid md:grid-cols-2 gap-8 mt-12 max-w-4xl mx-auto">
-            <Card className="border-none shadow-card h-full">
-              <CardHeader>
-                <CardTitle className="text-lg">Business Documents</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {[
-                    "Business financial statements",
-                    "Business tax returns (3 years)",
-                    "Business licenses and registrations",
-                    "Business plan and projections",
-                    "Business debt schedule",
-                    "Legal contracts and agreements",
-                  ].map((item, index) => (
-                    <li key={index} className="flex items-start">
-                      <CheckCircle className="h-4 w-4 text-primary mr-2 mt-1 flex-shrink-0" />
-                      <span className="text-sm">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-            <Card className="border-none shadow-card h-full">
-              <CardHeader>
-                <CardTitle className="text-lg">Personal Documents</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {[
-                    "Personal tax returns (3 years)",
-                    "Personal financial statement",
-                    "Resume or business biography",
-                    "Personal credit report",
-                    "Personal identification",
-                    "Statement of personal history",
-                  ].map((item, index) => (
-                    <li key={index} className="flex items-start">
-                      <CheckCircle className="h-4 w-4 text-primary mr-2 mt-1 flex-shrink-0" />
-                      <span className="text-sm">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="section bg-primary text-white">
-        <div className="container text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Learn More About SBA Loans?</h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto text-primary-foreground/90">
-            Schedule a consultation to discuss SBA loan options and how they may fit your business needs.
-          </p>
-          <Button
-            size="lg"
-            variant="secondary"
-            className="text-lg px-8 py-6 bg-white text-primary hover:bg-gray-100"
-            onClick={() => setIsCalendlyOpen(true)}
-          >
-            Schedule Your Free Consultation <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
-        </div>
-      </section>
-
-      {/* Resources Section */}
-      <section className="section bg-white">
-        <div className="container">
-          <div className="section-title">
-            <h2 className="mb-4">Additional SBA Resources</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Helpful links to official SBA resources for more information
-            </p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-6 mt-12 max-w-4xl mx-auto">
-            <Card className="border-none shadow-card">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-3">SBA Official Website</h3>
-                <p className="text-muted-foreground mb-4">
-                  Access official information about SBA loan programs directly from the source.
-                </p>
-                <Button variant="outline" className="w-full hover:bg-primary hover:text-white" asChild>
-                  <Link href="https://www.sba.gov/funding-programs/loans" target="_blank" rel="noopener noreferrer">
-                    Visit SBA Website <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link href="/applynow">
+                <Button className="bg-white text-blue-600 hover:bg-blue-50 w-full sm:w-auto">Apply Now</Button>
+              </Link>
+              <Link href="/contact">
+                <Button variant="outline" className="border-white text-white hover:bg-blue-700 w-full sm:w-auto">
+                  Schedule a Consultation
                 </Button>
-              </CardContent>
-            </Card>
-            <Card className="border-none shadow-card">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-3">Lender Match</h3>
-                <p className="text-muted-foreground mb-4">
-                  SBA's tool to connect small businesses with SBA-approved lenders.
-                </p>
-                <Button variant="outline" className="w-full hover:bg-primary hover:text-white" asChild>
-                  <Link
-                    href="https://www.sba.gov/funding-programs/loans/lender-match"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Find Lenders <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-            <Card className="border-none shadow-card">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-3">SBA Local Assistance</h3>
-                <p className="text-muted-foreground mb-4">
-                  Find local SBA offices and resource partners for in-person assistance.
-                </p>
-                <Button variant="outline" className="w-full hover:bg-primary hover:text-white" asChild>
-                  <Link href="https://www.sba.gov/local-assistance" target="_blank" rel="noopener noreferrer">
-                    Find Local Help <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
+              </Link>
+            </div>
           </div>
-          <div className="mt-12 text-center">
-            <p className="text-muted-foreground max-w-3xl mx-auto">
-              Diamond Tier Capital provides consultation services only. We do not directly provide loans, credit cards,
-              or other financial products. All information is for educational purposes only.
+
+          <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+            <p className="text-sm text-gray-500">
+              <strong>Disclaimer:</strong> Diamond Tier Capital provides consultation services only and does not
+              directly provide loans, credit cards, or other financial products. All information is for educational
+              purposes only. SBA loans are subject to approval by SBA-approved lenders based on their criteria and the
+              SBA's guidelines.
             </p>
           </div>
         </div>
-      </section>
+      </motion.div>
 
-      <CalendlyModal isOpen={isCalendlyOpen} onClose={() => setIsCalendlyOpen(false)} />
-
-      {/* Scroll to Top Button */}
-      <motion.button
-        className={`fixed bottom-8 right-8 bg-primary/90 text-white p-3 rounded-full shadow-lg transition-opacity duration-300 ${
-          showScrollTop ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-        onClick={scrollToTop}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: showScrollTop ? 1 : 0 }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-      >
-        <ArrowUp className="h-5 w-5" />
-      </motion.button>
-    </>
+      <ScrollToTop />
+    </div>
   )
 }

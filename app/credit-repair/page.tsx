@@ -8,6 +8,7 @@ import { ArrowRight, CheckCircle, Star, ArrowUp } from "lucide-react"
 import CalendlyModal from "@/components/CalendlyModal"
 import CreditScoreDashboard from "@/components/credit/CreditScoreDashboard"
 import Image from "next/image"
+import { useScrollTop } from "@/hooks/use-scroll-top"
 
 const educationTopics = [
   {
@@ -67,21 +68,7 @@ const testimonials = [
 
 export default function CreditRepairPage() {
   const [isCalendlyOpen, setIsCalendlyOpen] = useState(false)
-  const [showScrollTop, setShowScrollTop] = useState(false)
-
-  // Handle scroll to top button visibility
-  useState(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 300)
-    }
-
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  })
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }
+  const { showScrollTop, scrollToTop } = useScrollTop(300)
 
   return (
     <>

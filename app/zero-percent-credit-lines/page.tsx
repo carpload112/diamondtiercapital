@@ -1,13 +1,16 @@
 "use client"
 
+import { useState } from "react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { CheckCircle, CreditCard, Percent, ShieldCheck } from "lucide-react"
-import { useState } from "react"
 import CalendlyModal from "../components/CalendlyModal"
+import { useScrollTop } from "@/hooks/use-scroll-top"
 
 export default function ZeroPercentCreditLinesPage() {
   const [isCalendlyOpen, setIsCalendlyOpen] = useState(false)
+  const { showScrollTop, scrollToTop } = useScrollTop(300)
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
       {/* Hero Section */}

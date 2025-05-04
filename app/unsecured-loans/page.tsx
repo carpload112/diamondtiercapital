@@ -1,13 +1,16 @@
 "use client"
 
+import { useState } from "react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { CheckCircle, Banknote, Clock, ShieldCheck, TrendingUp } from "lucide-react"
-import { useState } from "react"
 import CalendlyModal from "../components/CalendlyModal"
+import { useScrollTop } from "@/hooks/use-scroll-top"
 
 export default function UnsecuredLoansPage() {
   const [isCalendlyOpen, setIsCalendlyOpen] = useState(false)
+  const { showScrollTop, scrollToTop } = useScrollTop(300)
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       {/* Hero Section */}
