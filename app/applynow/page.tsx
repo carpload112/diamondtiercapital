@@ -6,12 +6,13 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowRight, CheckCircle, CreditCard, DollarSign } from "lucide-react"
+import { ArrowRight, CheckCircle, CreditCard, DollarSign, ArrowLeft, Loader2 } from "lucide-react"
 import FormStep from "../components/FormStep"
 import FormProgress from "../components/FormProgress"
 import MobileStepper from "../components/MobileStepper"
 import ApplicationSuccess from "../components/ApplicationSuccess"
 import { useToast } from "@/components/ui/use-toast"
+import { submitApplication } from "@/lib/supabase/actions"
 
 // Define the form steps with improved descriptions and tooltips
 const formSteps = [
@@ -39,6 +40,13 @@ const formSteps = [
         label: "Phone Number",
         type: "tel",
         placeholder: "(123) 456-7890",
+        required: true,
+      },
+      {
+        name: "preferredContact",
+        label: "Preferred Contact Method",
+        type: "select",
+        options: ["Email", "Phone", "Text"],
         required: true,
       },
     ],
@@ -77,6 +85,62 @@ const formSteps = [
           "Real Estate",
           "Other",
         ],
+        required: true,
+      },
+      {
+        name: "yearsInBusiness",
+        label: "Years in Business",
+        type: "select",
+        options: ["Less than 1 year", "1-2 years", "3-5 years", "5+ years"],
+        required: true,
+      },
+      {
+        name: "ein",
+        label: "EIN (Optional)",
+        type: "text",
+        placeholder: "XX-XXXXXXX",
+        required: false,
+      },
+    ],
+  },
+  {
+    title: "Financial Information",
+    description: "Tell us about your finances",
+    icon: "LineChart",
+    fields: [
+      {
+        name: "annualRevenue",
+        label: "Annual Business Revenue",
+        type: "select",
+        options: [
+          "Pre-revenue",
+          "Under $100,000",
+          "$100,000 - $250,000",
+          "$250,000 - $500,000",
+          "$500,000 - $1 million",
+          "Over $1 million",
+        ],
+        required: true,
+      },
+      {
+        name: "creditScore",
+        label: "Estimated Personal Credit Score",
+        type: "select",
+        options: ["Excellent (750+)", "Good (700-749)", "Fair (650-699)", "Poor (Below 650)", "Not Sure"],
+        required: true,
+      },
+      {
+        name: "monthlyProfit",
+        label: "Average Monthly Profit",
+        type: "select",
+        options: ["Not profitable yet", "Under $5,000", "$5,000 - $10,000", "$10,000 - $25,000", "Over $25,000"],
+        required: true,
+      },
+      {
+        name: "bankruptcy",
+        label: "Have you filed for bankruptcy in the last 7 years?",
+        type: "radio",
+        options: ["Yes", "No"],
         required: true,
       },
     ],
@@ -120,6 +184,48 @@ const formSteps = [
           "Long-term (6+ months)",
         ],
         required: true,
+      },
+      {
+        name: "collateral",
+        label: "Do you have collateral available?",
+        type: "radio",
+        options: ["Yes", "No", "Not Sure"],
+        required: true,
+      },
+    ],
+  },
+  {
+    title: "Additional Information",
+    description: "Final details",
+    icon: "FileText",
+    fields: [
+      {
+        name: "hearAboutUs",
+        label: "How did you hear about us?",
+        type: "select",
+        options: ["Search Engine", "Social Media", "Referral", "Advertisement", "Other"],
+        required: true,
+      },
+      {
+        name: "additionalInfo",
+        label: "Additional Information",
+        type: "textarea",
+        placeholder: "Anything else you'd like us to know?",
+        required: false,
+      },
+      {
+        name: "termsAgreed",
+        label: "Terms & Conditions",
+        type: "checkbox",
+        placeholder: "I agree to the Terms of Service and Privacy Policy",
+        required: true,
+      },
+      {
+        name: "marketingConsent",
+        label: "Marketing Consent",
+        type: "checkbox",
+        placeholder: "I consent to receive marketing communications",
+        required: false,
       },
     ],
   },
@@ -218,25 +324,26 @@ export default function ApplyNowPage() {
     setIsSubmitting(true)
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      // Submit to database using the server action
+      const result = await submitApplication(formData)
 
-      // Generate a reference ID
-      const refId = Math.random().toString(36).substring(2, 10).toUpperCase()
-      setReferenceId(refId)
+      if (result.success) {
+        // Set the reference ID from the database
+        setReferenceId(result.referenceId)
 
-      // Show success state
-      setIsComplete(true)
+        // Show success state
+        setIsComplete(true)
 
-      // Log form data (in production, this would be sent to your API)
-      console.log("Form submitted:", formData)
-
-      toast({
-        title: "Application Submitted!",
-        description: "We've received your application and will contact you soon.",
-        variant: "default",
-      })
+        toast({
+          title: "Application Submitted!",
+          description: "We've received your application and will contact you soon.",
+          variant: "default",
+        })
+      } else {
+        throw new Error(result.error || "Failed to submit application")
+      }
     } catch (error) {
+      console.error("Error submitting application:", error)
       toast({
         title: "Submission Failed",
         description: "There was an error submitting your application. Please try again.",
@@ -442,7 +549,7 @@ export default function ApplyNowPage() {
                         variant="outline"
                         className="gap-2"
                       >
-                        <ArrowRight className="h-4 w-4 rotate-180" />
+                        <ArrowLeft className="h-4 w-4" />
                         <span>Back</span>
                       </Button>
 
@@ -452,7 +559,10 @@ export default function ApplyNowPage() {
 
                       <Button onClick={nextStep} disabled={isSubmitting} className="gap-2">
                         {isSubmitting ? (
-                          <span>Processing...</span>
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Processing...</span>
+                          </>
                         ) : currentStep === formSteps.length - 1 ? (
                           <>
                             <span>Submit Application</span>
