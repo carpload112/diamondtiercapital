@@ -14,11 +14,13 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="inline-block mb-4">
               <Image
-                src="/images/diamond-tier-logo.png"
+                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/cropped-Diamond-Tier-Main-Logo-2400x1800-1-1-OtGxrajBZ6tB8DXOUuNBKwF5Ag3vaG.png"
                 alt="Diamond Tier Capital"
-                width={120}
+                width={160}
                 height={40}
                 className="h-8 w-auto"
+                loading="lazy"
+                quality={90}
               />
             </Link>
             <p className="text-gray-400 text-sm mb-4">

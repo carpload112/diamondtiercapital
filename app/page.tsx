@@ -24,6 +24,8 @@ export default function Home() {
             fill
             className="object-cover"
             priority
+            quality={85}
+            sizes="100vw"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-gray-900/95 via-gray-900/90 to-gray-900/80" />
         </div>
@@ -283,6 +285,9 @@ export default function Home() {
                 width={600}
                 height={400}
                 className="rounded-2xl shadow-xl"
+                loading="lazy"
+                quality={85}
+                sizes="(max-width: 768px) 100vw, 600px"
               />
             </div>
           </div>
