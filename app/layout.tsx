@@ -7,6 +7,7 @@ import { Header } from "@/components/layout/Header"
 import { Footer } from "@/components/layout/Footer"
 import { Toaster } from "@/components/ui/toaster"
 import { ScrollToTop } from "@/components/ui/scroll-to-top"
+import { PageWrapper } from "@/components/layout/PageWrapper"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -27,7 +28,9 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <Header />
-          <main className="min-h-screen">{children}</main>
+          <main className="min-h-screen">
+            <PageWrapper>{children}</PageWrapper>
+          </main>
           <Footer />
           <Toaster />
           <ScrollToTop />

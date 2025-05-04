@@ -1,201 +1,126 @@
 "use client"
 
 import { useState } from "react"
-import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { CheckCircle, Banknote, Clock, ShieldCheck, TrendingUp } from "lucide-react"
+import { CheckCircle, Banknote, Clock, ShieldCheck, ArrowRight } from "lucide-react"
 import CalendlyModal from "../components/CalendlyModal"
-import { useScrollTop } from "@/hooks/use-scroll-top"
-import Image from "next/image"
 
 export default function UnsecuredLoansPage() {
   const [isCalendlyOpen, setIsCalendlyOpen] = useState(false)
-  const { showScrollTop, scrollToTop } = useScrollTop(300)
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-      {/* Hero Section */}
-      <section className="relative bg-blue-600 text-white py-20 md:py-32 overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/6-Investment-Loans-for-Beginners-in-Real-Estate-uN2JjkoVzKvTlaaQzC05vsfhqNGUIH.webp"
-            alt="Real estate investment with house model and coins"
-            fill
-            className="object-cover opacity-30"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 to-blue-800/80" />
+    <div className="min-h-screen bg-white pt-4">
+      {/* New Hero Section - Simple and Mobile-First */}
+      <section className="bg-blue-700 pt-16 pb-12 md:pt-24 md:pb-20">
+        <div className="container px-4 mx-auto">
+          <div className="max-w-xl mx-auto text-center">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">Unsecured Business Financing</h1>
+            <p className="text-lg text-blue-100 mb-8">Learn about financing options that may not require collateral</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button
+                className="bg-white text-blue-700 hover:bg-blue-50 w-full sm:w-auto"
+                onClick={() => setIsCalendlyOpen(true)}
+              >
+                Learn More
+              </Button>
+              <Button
+                variant="outline"
+                className="border-white text-white hover:bg-white/10 w-full sm:w-auto"
+                onClick={() => setIsCalendlyOpen(true)}
+              >
+                Schedule Consultation
+              </Button>
+            </div>
+          </div>
         </div>
-        <motion.div
-          className="absolute inset-0 opacity-10"
-          animate={{
-            backgroundPosition: ["0% 0%", "100% 100%"],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Number.POSITIVE_INFINITY,
-            repeatType: "reverse",
-          }}
-          style={{
-            backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23ffffff' fillOpacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
-          }}
-        />
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-              <h1 className="text-4xl md:text-6xl font-bold mb-6">Unsecured Business Financing</h1>
-              <p className="text-xl md:text-2xl mb-8 text-blue-100">
-                Learn about financing options that may not require collateral
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button
-                  size="lg"
-                  variant="secondary"
-                  className="text-blue-600 hover:text-blue-700 text-lg px-8 py-6"
-                  onClick={() => setIsCalendlyOpen(true)}
-                >
-                  Learn More
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="bg-transparent border-white text-white hover:bg-white/10 text-lg px-8 py-6"
-                  onClick={() => setIsCalendlyOpen(true)}
-                >
-                  Schedule Consultation
-                </Button>
+      </section>
+
+      {/* Key Features Section */}
+      <section className="py-12 md:py-16 bg-gray-50">
+        <div className="container px-4 mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">Key Features</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                <ShieldCheck className="h-6 w-6 text-blue-700" />
               </div>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8 }}
-              className="relative h-[300px] md:h-[400px] flex items-center justify-center"
-            >
-              <motion.div
-                className="relative w-48 h-48"
-                animate={{
-                  y: [0, -20, 0],
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Number.POSITIVE_INFINITY,
-                  ease: "easeInOut",
-                }}
-              >
-                <Banknote className="w-full h-full text-white/90 drop-shadow-lg" />
-              </motion.div>
-              <motion.div
-                className="absolute inset-0 bg-blue-400/20 rounded-full blur-3xl"
-                animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [0.5, 0.3, 0.5],
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Number.POSITIVE_INFINITY,
-                  ease: "easeInOut",
-                }}
-              />
-            </motion.div>
+              <h3 className="text-xl font-semibold mb-2">No Collateral Requirement</h3>
+              <p className="text-gray-600">
+                These financing options typically don't require specific business assets as collateral.
+              </p>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                <Clock className="h-6 w-6 text-blue-700" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Streamlined Process</h3>
+              <p className="text-gray-600">
+                Learn about the application process for unsecured business financing options.
+              </p>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                <Banknote className="h-6 w-6 text-blue-700" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Flexible Use</h3>
+              <p className="text-gray-600">
+                Funds may be used for various legitimate business purposes based on your needs.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">About Unsecured Financing</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Understanding financing options that may not require business assets as collateral
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: ShieldCheck,
-                title: "No Collateral Requirement",
-                description: "These financing options typically don't require specific business assets as collateral",
-              },
-              {
-                icon: Clock,
-                title: "Application Process",
-                description: "Learn about the application process for unsecured business financing",
-              },
-              {
-                icon: TrendingUp,
-                title: "Flexible Use",
-                description: "Funds may be used for various legitimate business purposes",
-              },
-            ].map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow"
-              >
-                <feature.icon className="h-12 w-12 text-blue-600 mb-4" />
-                <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
-                <p className="text-gray-600">{feature.description}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Process Section */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center">Our Consultation Process</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { title: "Discuss Needs", description: "We learn about your business financing needs." },
-              { title: "Review Options", description: "We explain potential financing options that may be available." },
-              { title: "Provide Guidance", description: "We offer information to help you make informed decisions." },
-            ].map((step, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-gray-50 p-6 rounded-lg shadow-md text-center"
-              >
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-xl mb-4 mx-auto">
-                  {index + 1}
+      {/* Consultation Process Section */}
+      <section className="py-12 md:py-16 bg-white">
+        <div className="container px-4 mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">Our Consultation Process</h2>
+          <div className="max-w-4xl mx-auto">
+            <div className="space-y-8">
+              {[
+                {
+                  step: 1,
+                  title: "Discuss Your Needs",
+                  description: "We learn about your business financing needs and goals.",
+                },
+                {
+                  step: 2,
+                  title: "Review Financing Options",
+                  description: "We explain potential financing options that may be available for your situation.",
+                },
+                {
+                  step: 3,
+                  title: "Provide Educational Resources",
+                  description: "We offer information to help you make informed decisions about your financing.",
+                },
+                {
+                  step: 4,
+                  title: "Ongoing Support",
+                  description: "We provide continued educational support as you explore financing options.",
+                },
+              ].map((item) => (
+                <div key={item.step} className="flex items-start">
+                  <div className="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center flex-shrink-0 mt-1">
+                    <span className="font-bold">{item.step}</span>
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-xl font-semibold mb-1">{item.title}</h3>
+                    <p className="text-gray-600">{item.description}</p>
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold mb-4">{step.title}</h3>
-                <p className="text-gray-600">{step.description}</p>
-              </motion.div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Eligibility Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Common Considerations</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Factors that may be considered in unsecured financing applications
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {/* Common Considerations Section */}
+      <section className="py-12 md:py-16 bg-gray-50">
+        <div className="container px-4 mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">Common Considerations</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
               "Business operating history",
               "Monthly revenue",
@@ -203,68 +128,21 @@ export default function UnsecuredLoansPage() {
               "Business location",
               "Industry type",
               "Banking relationship",
-            ].map((requirement, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-white p-6 rounded-lg shadow-md"
-              >
-                <CheckCircle className="h-8 w-8 text-green-500 mb-4" />
-                <p className="text-gray-800">{requirement}</p>
-              </motion.div>
+            ].map((item, index) => (
+              <div key={index} className="bg-white p-4 rounded-lg shadow-sm flex items-center">
+                <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                <p className="font-medium">{item}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-blue-600 text-white">
-        <div className="container mx-auto px-4 text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <h2 className="text-3xl md:text-4xl font-bold mb-8">Learn About Business Financing Options</h2>
-            <p className="text-xl mb-8 max-w-2xl mx-auto">
-              Schedule a consultation to discuss financing options that may be available for your business
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                variant="secondary"
-                className="text-blue-600 hover:text-blue-700 text-lg px-8 py-6"
-                onClick={() => setIsCalendlyOpen(true)}
-              >
-                Schedule Consultation
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="bg-transparent border-white text-white hover:bg-white/10 text-lg px-8 py-6"
-                onClick={() => setIsCalendlyOpen(true)}
-              >
-                Learn More
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
       {/* FAQ Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Frequently Asked Questions</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Common questions about unsecured business financing
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+      <section className="py-12 md:py-16 bg-white">
+        <div className="container px-4 mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">Frequently Asked Questions</h2>
+          <div className="max-w-3xl mx-auto space-y-6">
             {[
               {
                 q: "How much financing may be available with unsecured options?",
@@ -283,20 +161,41 @@ export default function UnsecuredLoansPage() {
                 a: "While unsecured financing may not require specific collateral, many lenders do require a personal guarantee. We can discuss this in more detail during a consultation.",
               },
             ].map((faq, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-white p-6 rounded-lg shadow-md"
-              >
-                <h3 className="text-xl font-bold mb-3">{faq.q}</h3>
+              <div key={index} className="bg-gray-50 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold mb-2">{faq.q}</h3>
                 <p className="text-gray-600">{faq.a}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
       </section>
+
+      {/* CTA Section */}
+      <section className="py-12 md:py-16 bg-blue-700 text-white">
+        <div className="container px-4 mx-auto text-center">
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to Learn More?</h2>
+          <p className="text-xl mb-8 max-w-2xl mx-auto">
+            Schedule a consultation to discuss financing options that may be available for your business.
+          </p>
+          <Button size="lg" className="bg-white text-blue-700 hover:bg-blue-50" onClick={() => setIsCalendlyOpen(true)}>
+            Schedule Your Free Consultation <ArrowRight className="ml-2 h-5 w-5" />
+          </Button>
+        </div>
+      </section>
+
+      {/* Disclaimer */}
+      <section className="py-8 bg-gray-50">
+        <div className="container px-4 mx-auto">
+          <div className="max-w-3xl mx-auto">
+            <p className="text-sm text-gray-500 text-center">
+              <strong>Disclaimer:</strong> Diamond Tier Capital provides consultation services only and does not
+              directly provide loans or other financial products. All information is for educational purposes only. Loan
+              approval is subject to lender criteria, and terms and conditions may vary.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <CalendlyModal isOpen={isCalendlyOpen} onClose={() => setIsCalendlyOpen(false)} />
     </div>
   )

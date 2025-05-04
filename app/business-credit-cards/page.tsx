@@ -1,12 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowRight, CheckCircle, CreditCard, ArrowUp } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { CheckCircle, CreditCard, ArrowRight } from "lucide-react"
 import CalendlyModal from "@/components/CalendlyModal"
-import Image from "next/image"
 
 const cardTypes = [
   {
@@ -50,154 +48,96 @@ const benefits = [
   "Potential tax benefits from business expenses",
 ]
 
-const considerations = [
-  {
-    title: "Annual Fees",
-    description: "Consider whether the card's benefits justify any annual fee it may charge.",
-  },
-  {
-    title: "Interest Rates",
-    description: "Compare APRs, especially if you may carry a balance occasionally.",
-  },
-  {
-    title: "Rewards Structure",
-    description: "Choose rewards that align with your business spending patterns.",
-  },
-  {
-    title: "Credit Requirements",
-    description: "Be aware of the credit score typically needed for approval.",
-  },
-  {
-    title: "Personal Guarantee",
-    description: "Most small business cards require a personal guarantee from the business owner.",
-  },
-]
-
 export default function BusinessCreditCardsPage() {
   const [isCalendlyOpen, setIsCalendlyOpen] = useState(false)
-  const [showScrollTop, setShowScrollTop] = useState(false)
-
-  // Handle scroll to top button visibility
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 300)
-    }
-
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
-
-  const scrollToTop = () => {
-    if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, behavior: "smooth" })
-    }
-  }
 
   return (
-    <>
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden">
-        {/* Background with overlay */}
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/6-Investment-Loans-for-Beginners-in-Real-Estate-uN2JjkoVzKvTlaaQzC05vsfhqNGUIH.webp"
-            alt="Real estate investment with house model and coins"
-            fill
-            className="object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/95 via-blue-900/90 to-blue-900/80" />
-        </div>
-
-        <div className="container relative z-10">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
-            <div className="text-white lg:w-1/2">
-              <h1 className="text-4xl md:text-5xl font-bold mb-6">Business Credit Card Information</h1>
-              <p className="text-lg md:text-xl text-blue-100 mb-8">
-                Educational resources about business credit card options and how they may benefit your business.
-              </p>
+    <div className="min-h-screen bg-white pt-8">
+      {/* New Hero Section - Simple and Mobile-First */}
+      <section className="bg-blue-600 pt-16 pb-12 md:pt-24 md:pb-20">
+        <div className="container px-4 mx-auto">
+          <div className="max-w-xl mx-auto text-center">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">Business Credit Card Information</h1>
+            <p className="text-lg text-blue-100 mb-8">
+              Educational resources about business credit card options and how they may benefit your business
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button
-                size="lg"
-                variant="secondary"
-                className="bg-white text-primary hover:bg-gray-100"
+                className="bg-white text-blue-600 hover:bg-blue-50 w-full sm:w-auto"
                 onClick={() => setIsCalendlyOpen(true)}
               >
-                Schedule a Consultation
+                Learn More
               </Button>
-            </div>
-            <div className="lg:w-1/2">
-              <Card className="border-none shadow-xl">
-                <CardHeader className="bg-primary text-white">
-                  <CardTitle className="text-xl">Business Credit Card Overview</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <ul className="space-y-4">
-                    <li className="flex items-start">
-                      <CreditCard className="h-5 w-5 text-primary mr-3 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <span className="font-semibold">Cash Back Cards:</span>
-                        <span className="text-muted-foreground"> Earn cash back on business purchases</span>
-                      </div>
-                    </li>
-                    <li className="flex items-start">
-                      <CreditCard className="h-5 w-5 text-primary mr-3 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <span className="font-semibold">Travel Reward Cards:</span>
-                        <span className="text-muted-foreground"> Earn points or miles for business travel</span>
-                      </div>
-                    </li>
-                    <li className="flex items-start">
-                      <CreditCard className="h-5 w-5 text-primary mr-3 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <span className="font-semibold">Low Interest Cards:</span>
-                        <span className="text-muted-foreground"> Better rates for carrying balances</span>
-                      </div>
-                    </li>
-                  </ul>
-                  <div className="mt-6 pt-6 border-t border-gray-200">
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Diamond Tier Capital provides consultation services to help businesses understand credit card
-                      options. We do not directly provide credit cards.
-                    </p>
-                    <Button className="w-full" onClick={() => setIsCalendlyOpen(true)}>
-                      Learn More About Business Credit Cards
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <Button
+                variant="outline"
+                className="border-white text-white hover:bg-white/10 w-full sm:w-auto"
+                onClick={() => setIsCalendlyOpen(true)}
+              >
+                Schedule Consultation
+              </Button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Card Types Section */}
-      <section className="section bg-white">
-        <div className="container">
-          <div className="section-title">
-            <h2 className="mb-4">Types of Business Credit Cards</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Educational information about different business credit card options
-            </p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8 mt-12">
-            {cardTypes.map((cardType, index) => (
-              <Card key={index} className="border-none shadow-card h-full">
-                <CardHeader>
-                  <CardTitle className="text-xl">{cardType.name}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-muted-foreground">{cardType.description}</p>
-                  <div>
-                    <h4 className="font-semibold mb-2">Key Features:</h4>
-                    <ul className="space-y-1">
-                      {cardType.features.map((feature, i) => (
-                        <li key={i} className="flex items-start">
-                          <CheckCircle className="h-4 w-4 text-primary mr-2 mt-1 flex-shrink-0" />
-                          <span className="text-sm text-muted-foreground">{feature}</span>
-                        </li>
-                      ))}
+      {/* Overview Section */}
+      <section className="py-12 md:py-16 bg-gray-50">
+        <div className="container px-4 mx-auto">
+          <div className="max-w-3xl mx-auto">
+            <Card className="border-none shadow-md">
+              <CardContent className="p-6">
+                <div className="flex flex-col md:flex-row md:items-center gap-6">
+                  <div className="md:w-1/4 flex justify-center">
+                    <CreditCard className="h-24 w-24 text-blue-600" />
+                  </div>
+                  <div className="md:w-3/4">
+                    <h2 className="text-2xl font-bold mb-4">Business Credit Card Overview</h2>
+                    <p className="text-gray-600 mb-4">
+                      Business credit cards are designed specifically for business use, offering features and benefits
+                      tailored to business needs. They can help separate business and personal expenses while providing
+                      rewards and benefits for business spending.
+                    </p>
+                    <ul className="space-y-2">
+                      <li className="flex items-start">
+                        <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>Cash back on business purchases</span>
+                      </li>
+                      <li className="flex items-start">
+                        <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>Travel rewards for business trips</span>
+                      </li>
+                      <li className="flex items-start">
+                        <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>Expense management tools</span>
+                      </li>
                     </ul>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Card Types Section */}
+      <section className="py-12 md:py-16 bg-white">
+        <div className="container px-4 mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">Types of Business Credit Cards</h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            {cardTypes.map((cardType, index) => (
+              <Card key={index} className="border-none shadow-sm h-full">
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-semibold mb-3">{cardType.name}</h3>
+                  <p className="text-gray-600 mb-4">{cardType.description}</p>
+                  <h4 className="font-medium mb-2">Key Features:</h4>
+                  <ul className="space-y-1">
+                    {cardType.features.map((feature, i) => (
+                      <li key={i} className="flex items-start">
+                        <CheckCircle className="h-4 w-4 text-green-500 mr-2 mt-1 flex-shrink-0" />
+                        <span className="text-sm text-gray-600">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </CardContent>
               </Card>
             ))}
@@ -206,202 +146,126 @@ export default function BusinessCreditCardsPage() {
       </section>
 
       {/* Benefits Section */}
-      <section className="section bg-primary text-white">
-        <div className="container">
-          <div className="section-title">
-            <h2 className="mb-4">Benefits of Business Credit Cards</h2>
-            <p className="text-xl text-primary-foreground/90 max-w-3xl mx-auto">
-              Potential advantages of using business credit cards for your company
-            </p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
+      <section className="py-12 md:py-16 bg-gray-50">
+        <div className="container px-4 mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">Benefits of Business Credit Cards</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {benefits.map((benefit, index) => (
-              <div key={index} className="flex items-start bg-white/10 p-6 rounded-lg">
-                <CheckCircle className="h-5 w-5 text-white mr-3 mt-0.5 flex-shrink-0" />
-                <p>{benefit}</p>
+              <div key={index} className="bg-white p-4 rounded-lg shadow-sm flex items-center">
+                <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                <p className="font-medium">{benefit}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Considerations Section */}
-      <section className="section bg-secondary">
-        <div className="container">
-          <div className="section-title">
-            <h2 className="mb-4">Important Considerations</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Factors to consider when evaluating business credit card options
-            </p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
-            {considerations.map((item, index) => (
-              <Card key={index} className="border-none shadow-card h-full">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold mb-3">{item.title}</h3>
-                  <p className="text-muted-foreground">{item.description}</p>
-                </CardContent>
-              </Card>
-            ))}
+      {/* Application Process Section */}
+      <section className="py-12 md:py-16 bg-white">
+        <div className="container px-4 mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">Application Process</h2>
+          <div className="max-w-4xl mx-auto">
+            <div className="space-y-8">
+              {[
+                {
+                  step: 1,
+                  title: "Research Options",
+                  description: "Compare different business credit cards to find the best fit for your business needs.",
+                },
+                {
+                  step: 2,
+                  title: "Gather Documentation",
+                  description: "Prepare business and personal financial information needed for the application.",
+                },
+                {
+                  step: 3,
+                  title: "Submit Application",
+                  description: "Complete the application with accurate business and personal information.",
+                },
+                {
+                  step: 4,
+                  title: "Receive Decision",
+                  description: "Wait for approval, which may be instant or take several business days.",
+                },
+              ].map((item) => (
+                <div key={item.step} className="flex items-start">
+                  <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center flex-shrink-0 mt-1">
+                    <span className="font-bold">{item.step}</span>
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-xl font-semibold mb-1">{item.title}</h3>
+                    <p className="text-gray-600">{item.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Application Process Section */}
-      <section className="section bg-white">
-        <div className="container">
-          <div className="section-title">
-            <h2 className="mb-4">Application Process</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              General overview of the business credit card application process
-            </p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
+      {/* Important Considerations Section */}
+      <section className="py-12 md:py-16 bg-gray-50">
+        <div className="container px-4 mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">Important Considerations</h2>
+          <div className="max-w-3xl mx-auto space-y-6">
             {[
               {
-                title: "Research Options",
-                description: "Compare different business credit cards to find the best fit for your business needs.",
+                title: "Annual Fees",
+                description: "Consider whether the card's benefits justify any annual fee it may charge.",
               },
               {
-                title: "Gather Documentation",
-                description: "Prepare business and personal financial information needed for the application.",
+                title: "Interest Rates",
+                description: "Compare APRs, especially if you may carry a balance occasionally.",
               },
               {
-                title: "Submit Application",
-                description: "Complete the application with accurate business and personal information.",
+                title: "Rewards Structure",
+                description: "Choose rewards that align with your business spending patterns.",
               },
               {
-                title: "Receive Decision",
-                description: "Wait for approval, which may be instant or take several business days.",
+                title: "Credit Requirements",
+                description: "Be aware of the credit score typically needed for approval.",
               },
-            ].map((step, index) => (
-              <Card key={index} className="border-none shadow-card h-full">
-                <CardContent className="p-6">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold text-xl mb-4">
-                    {index + 1}
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2">{step.title}</h3>
-                  <p className="text-sm text-muted-foreground">{step.description}</p>
-                </CardContent>
-              </Card>
+              {
+                title: "Personal Guarantee",
+                description: "Most small business cards require a personal guarantee from the business owner.",
+              },
+            ].map((item, index) => (
+              <div key={index} className="bg-white p-6 rounded-lg shadow-sm">
+                <h3 className="text-lg font-semibold mb-2">{item.title}</h3>
+                <p className="text-gray-600">{item.description}</p>
+              </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Common Requirements Section */}
-      <section className="section bg-secondary">
-        <div className="container">
-          <div className="section-title">
-            <h2 className="mb-4">Common Application Requirements</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Information typically needed when applying for a business credit card
-            </p>
-          </div>
-          <div className="grid md:grid-cols-2 gap-8 mt-12 max-w-4xl mx-auto">
-            <Card className="border-none shadow-card h-full">
-              <CardHeader>
-                <CardTitle className="text-lg">Business Information</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {[
-                    "Legal business name",
-                    "Business address and phone number",
-                    "Tax identification number (EIN)",
-                    "Business structure (LLC, corporation, etc.)",
-                    "Years in business",
-                    "Annual business revenue",
-                    "Number of employees",
-                  ].map((item, index) => (
-                    <li key={index} className="flex items-start">
-                      <CheckCircle className="h-4 w-4 text-primary mr-2 mt-1 flex-shrink-0" />
-                      <span className="text-sm">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-            <Card className="border-none shadow-card h-full">
-              <CardHeader>
-                <CardTitle className="text-lg">Personal Information</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {[
-                    "Name and contact information",
-                    "Social Security number",
-                    "Personal income",
-                    "Role in the business",
-                    "Personal credit score",
-                    "Home address",
-                    "Date of birth",
-                  ].map((item, index) => (
-                    <li key={index} className="flex items-start">
-                      <CheckCircle className="h-4 w-4 text-primary mr-2 mt-1 flex-shrink-0" />
-                      <span className="text-sm">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="section bg-primary text-white">
-        <div className="container text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Learn More About Business Credit Cards?</h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto text-primary-foreground/90">
+      <section className="py-12 md:py-16 bg-blue-600 text-white">
+        <div className="container px-4 mx-auto text-center">
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to Learn More?</h2>
+          <p className="text-xl mb-8 max-w-2xl mx-auto">
             Schedule a consultation to discuss business credit card options and how they may fit your business needs.
           </p>
-          <Button
-            size="lg"
-            variant="secondary"
-            className="text-lg px-8 py-6 bg-white text-primary hover:bg-gray-100"
-            onClick={() => setIsCalendlyOpen(true)}
-          >
+          <Button size="lg" className="bg-white text-blue-600 hover:bg-blue-50" onClick={() => setIsCalendlyOpen(true)}>
             Schedule Your Free Consultation <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
         </div>
       </section>
 
-      {/* Disclaimer Section */}
-      <section className="section bg-white">
-        <div className="container">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-2xl font-bold mb-4">Important Disclaimer</h2>
-            <Card className="border-none shadow-card">
-              <CardContent className="p-6">
-                <p className="text-muted-foreground">
-                  Diamond Tier Capital provides consultation services only. We do not directly provide credit cards or
-                  other financial products. The information provided is for educational purposes only and should not be
-                  considered financial advice. Credit card approval is subject to the issuer's criteria, and terms and
-                  conditions may vary. We recommend consulting with a financial advisor before making financial
-                  decisions.
-                </p>
-              </CardContent>
-            </Card>
+      {/* Disclaimer */}
+      <section className="py-8 bg-gray-50">
+        <div className="container px-4 mx-auto">
+          <div className="max-w-3xl mx-auto">
+            <p className="text-sm text-gray-500 text-center">
+              <strong>Disclaimer:</strong> Diamond Tier Capital provides consultation services only and does not
+              directly provide credit cards or other financial products. All information is for educational purposes
+              only. Credit card approval is subject to the issuer's criteria, and terms and conditions may vary.
+            </p>
           </div>
         </div>
       </section>
 
       <CalendlyModal isOpen={isCalendlyOpen} onClose={() => setIsCalendlyOpen(false)} />
-
-      {/* Scroll to Top Button */}
-      <motion.button
-        className={`fixed bottom-8 right-8 bg-primary/90 text-white p-3 rounded-full shadow-lg transition-opacity duration-300 ${
-          showScrollTop ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-        onClick={scrollToTop}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: showScrollTop ? 1 : 0 }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-      >
-        <ArrowUp className="h-5 w-5" />
-      </motion.button>
-    </>
+    </div>
   )
 }

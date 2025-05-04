@@ -1,14 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowRight, CheckCircle, Star, ArrowUp } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { CheckCircle, ArrowRight, Star } from "lucide-react"
 import CalendlyModal from "@/components/CalendlyModal"
-import CreditScoreDashboard from "@/components/credit/CreditScoreDashboard"
-import Image from "next/image"
-import { useScrollTop } from "@/hooks/use-scroll-top"
 
 const educationTopics = [
   {
@@ -68,57 +64,49 @@ const testimonials = [
 
 export default function CreditRepairPage() {
   const [isCalendlyOpen, setIsCalendlyOpen] = useState(false)
-  const { showScrollTop, scrollToTop } = useScrollTop(300)
 
   return (
-    <>
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden">
-        {/* Background with overlay */}
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/6-Investment-Loans-for-Beginners-in-Real-Estate-uN2JjkoVzKvTlaaQzC05vsfhqNGUIH.webp"
-            alt="Real estate investment with house model and coins"
-            fill
-            className="object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/95 via-blue-900/90 to-blue-900/80" />
-        </div>
-
-        <div className="container relative z-10">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
-            <div className="text-white lg:w-1/2">
-              <h1 className="text-4xl md:text-5xl font-bold mb-6">Credit Education Services</h1>
-              <p className="text-lg md:text-xl text-blue-100 mb-8">
-                Educational resources to help you understand credit factors and make informed financial decisions.
-              </p>
-              <Button size="lg" variant="secondary" onClick={() => setIsCalendlyOpen(true)}>
-                Schedule a Consultation
+    <div className="min-h-screen bg-white pt-4">
+      {/* New Hero Section - Simple and Mobile-First */}
+      <section className="bg-blue-700 pt-16 pb-12 md:pt-24 md:pb-20">
+        <div className="container px-4 mx-auto">
+          <div className="max-w-xl mx-auto text-center">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">Credit Education Services</h1>
+            <p className="text-lg text-blue-100 mb-8">
+              Educational resources to help you understand credit factors and make informed financial decisions
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button
+                className="bg-white text-blue-700 hover:bg-blue-50 w-full sm:w-auto"
+                onClick={() => setIsCalendlyOpen(true)}
+              >
+                Learn More
               </Button>
-            </div>
-            <div className="lg:w-1/2">
-              <div className="scale-90 origin-top">
-                <CreditScoreDashboard />
-              </div>
+              <Button
+                variant="outline"
+                className="border-white text-white hover:bg-white/10 w-full sm:w-auto"
+                onClick={() => setIsCalendlyOpen(true)}
+              >
+                Schedule Consultation
+              </Button>
             </div>
           </div>
         </div>
       </section>
 
       {/* Stats Section */}
-      <section className="section bg-white">
-        <div className="container">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <section className="py-12 md:py-16 bg-gray-50">
+        <div className="container px-4 mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               { value: "500+", label: "Clients Educated" },
               { value: "12+", label: "Educational Resources" },
               { value: "98%", label: "Client Satisfaction" },
             ].map((stat, index) => (
-              <Card key={index} className="border-none shadow-card text-center">
-                <CardContent className="pt-6 pb-6">
-                  <p className="text-4xl font-bold text-primary mb-2">{stat.value}</p>
-                  <p className="text-muted-foreground">{stat.label}</p>
+              <Card key={index} className="border-none shadow-sm text-center">
+                <CardContent className="p-6">
+                  <p className="text-3xl md:text-4xl font-bold text-blue-700 mb-2">{stat.value}</p>
+                  <p className="text-gray-600">{stat.label}</p>
                 </CardContent>
               </Card>
             ))}
@@ -126,78 +114,68 @@ export default function CreditRepairPage() {
         </div>
       </section>
 
-      {/* Process Section */}
-      <section className="section bg-secondary">
-        <div className="container">
-          <div className="section-title">
-            <h2 className="mb-4">Our Credit Education Process</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              A structured approach to help you understand and improve your credit
-            </p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12">
-            {[
-              {
-                title: "Credit Assessment",
-                description: "We help you understand how to review your current credit situation.",
-              },
-              {
-                title: "Educational Resources",
-                description: "We provide materials to help you understand credit factors.",
-              },
-              {
-                title: "Monitoring Tools",
-                description: "We offer tools to help you monitor changes to your credit profile.",
-              },
-              {
-                title: "Ongoing Support",
-                description: "We provide continued educational support as you work on your credit knowledge.",
-              },
-            ].map((step, index) => (
-              <Card key={index} className="border-none shadow-card h-full">
-                <CardHeader>
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold text-xl mb-4">
-                    {index + 1}
+      {/* Education Process Section */}
+      <section className="py-12 md:py-16 bg-white">
+        <div className="container px-4 mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">Our Credit Education Process</h2>
+          <div className="max-w-4xl mx-auto">
+            <div className="space-y-8">
+              {[
+                {
+                  step: 1,
+                  title: "Credit Assessment",
+                  description: "We help you understand how to review your current credit situation.",
+                },
+                {
+                  step: 2,
+                  title: "Educational Resources",
+                  description: "We provide materials to help you understand credit factors.",
+                },
+                {
+                  step: 3,
+                  title: "Monitoring Tools",
+                  description: "We offer tools to help you monitor changes to your credit profile.",
+                },
+                {
+                  step: 4,
+                  title: "Ongoing Support",
+                  description: "We provide continued educational support as you work on your credit knowledge.",
+                },
+              ].map((item) => (
+                <div key={item.step} className="flex items-start">
+                  <div className="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center flex-shrink-0 mt-1">
+                    <span className="font-bold">{item.step}</span>
                   </div>
-                  <CardTitle>{step.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">{step.description}</p>
-                </CardContent>
-              </Card>
-            ))}
+                  <div className="ml-4">
+                    <h3 className="text-xl font-semibold mb-1">{item.title}</h3>
+                    <p className="text-gray-600">{item.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* Education Topics Section */}
-      <section className="section bg-white">
-        <div className="container">
-          <div className="section-title">
-            <h2 className="mb-4">Educational Resources</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Comprehensive materials to help you understand credit factors
-            </p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8 mt-12">
+      <section className="py-12 md:py-16 bg-gray-50">
+        <div className="container px-4 mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">Educational Resources</h2>
+          <div className="grid md:grid-cols-3 gap-6">
             {educationTopics.map((topic, index) => (
-              <Card key={index} className="border-none shadow-card h-full">
-                <CardHeader>
-                  <CardTitle className="text-xl">{topic.name}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-muted-foreground">{topic.description}</p>
-                  <div>
-                    <h4 className="font-semibold mb-2">What You'll Learn:</h4>
-                    <ul className="space-y-1">
-                      {topic.benefits.map((item, i) => (
-                        <li key={i} className="flex items-start">
-                          <CheckCircle className="h-4 w-4 text-primary mr-2 mt-1 flex-shrink-0" />
-                          <span className="text-sm text-muted-foreground">{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+              <Card key={index} className="border-none shadow-sm h-full">
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-semibold mb-3">{topic.name}</h3>
+                  <p className="text-gray-600 mb-4">{topic.description}</p>
+                  <h4 className="font-medium mb-2">What You'll Learn:</h4>
+                  <ul className="space-y-1">
+                    {topic.benefits.map((item, i) => (
+                      <li key={i} className="flex items-start">
+                        <CheckCircle className="h-4 w-4 text-green-500 mr-2 mt-1 flex-shrink-0" />
+                        <span className="text-sm text-gray-600">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </CardContent>
               </Card>
             ))}
@@ -206,19 +184,14 @@ export default function CreditRepairPage() {
       </section>
 
       {/* Benefits Section */}
-      <section className="section bg-primary text-white">
-        <div className="container">
-          <div className="section-title">
-            <h2 className="mb-4">Benefits of Credit Education</h2>
-            <p className="text-xl text-primary-foreground/90 max-w-3xl mx-auto">
-              Understanding your credit can lead to better financial decisions
-            </p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
+      <section className="py-12 md:py-16 bg-white">
+        <div className="container px-4 mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">Benefits of Credit Education</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {benefits.map((benefit, index) => (
-              <div key={index} className="flex items-start bg-white/10 p-6 rounded-lg">
-                <CheckCircle className="h-5 w-5 text-white mr-3 mt-0.5 flex-shrink-0" />
-                <p>{benefit}</p>
+              <div key={index} className="bg-gray-50 p-4 rounded-lg shadow-sm flex items-center">
+                <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                <p className="font-medium">{benefit}</p>
               </div>
             ))}
           </div>
@@ -226,24 +199,19 @@ export default function CreditRepairPage() {
       </section>
 
       {/* Testimonials Section */}
-      <section className="section bg-secondary">
-        <div className="container">
-          <div className="section-title">
-            <h2 className="mb-4">What Our Clients Say</h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Hear from businesses we've helped with credit education
-            </p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8 mt-12">
+      <section className="py-12 md:py-16 bg-gray-50">
+        <div className="container px-4 mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">What Our Clients Say</h2>
+          <div className="grid md:grid-cols-3 gap-6">
             {testimonials.map((testimonial, index) => (
-              <Card key={index} className="border-none shadow-card">
-                <CardContent className="pt-6">
-                  <div className="flex items-center mb-4">
+              <Card key={index} className="border-none shadow-sm">
+                <CardContent className="p-6">
+                  <div className="flex mb-4">
                     {[...Array(5)].map((_, i) => (
                       <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
                     ))}
                   </div>
-                  <p className="text-muted-foreground mb-4 italic">"{testimonial.quote}"</p>
+                  <p className="text-gray-600 mb-4 italic">"{testimonial.quote}"</p>
                   <p className="font-semibold">{testimonial.author}</p>
                 </CardContent>
               </Card>
@@ -253,34 +221,33 @@ export default function CreditRepairPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="section bg-primary text-white">
-        <div className="container text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Learn More?</h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto text-primary-foreground/90">
+      <section className="py-12 md:py-16 bg-blue-700 text-white">
+        <div className="container px-4 mx-auto text-center">
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to Learn More?</h2>
+          <p className="text-xl mb-8 max-w-2xl mx-auto">
             Schedule a consultation to discuss our educational resources and how they can help you understand credit
             factors.
           </p>
-          <Button size="lg" variant="secondary" className="text-lg px-8 py-6 bg-white text-primary hover:bg-gray-100">
+          <Button size="lg" className="bg-white text-blue-700 hover:bg-blue-50" onClick={() => setIsCalendlyOpen(true)}>
             Schedule Your Free Consultation <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
         </div>
       </section>
 
-      <CalendlyModal isOpen={isCalendlyOpen} onClose={() => setIsCalendlyOpen(false)} />
+      {/* Disclaimer */}
+      <section className="py-8 bg-gray-50">
+        <div className="container px-4 mx-auto">
+          <div className="max-w-3xl mx-auto">
+            <p className="text-sm text-gray-500 text-center">
+              <strong>Disclaimer:</strong> Diamond Tier Capital provides consultation services only and does not
+              directly provide credit repair services or other financial products. All information is for educational
+              purposes only.
+            </p>
+          </div>
+        </div>
+      </section>
 
-      {/* Scroll to Top Button */}
-      <motion.button
-        className={`fixed bottom-8 right-8 bg-primary/90 text-white p-3 rounded-full shadow-lg transition-opacity duration-300 ${
-          showScrollTop ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-        onClick={scrollToTop}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: showScrollTop ? 1 : 0 }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-      >
-        <ArrowUp className="h-5 w-5" />
-      </motion.button>
-    </>
+      <CalendlyModal isOpen={isCalendlyOpen} onClose={() => setIsCalendlyOpen(false)} />
+    </div>
   )
 }

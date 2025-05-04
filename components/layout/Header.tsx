@@ -130,11 +130,7 @@ export function Header() {
   }, [])
 
   return (
-    <header
-      className={`fixed w-full z-50 transition-all duration-300 ${
-        isScrolled ? "bg-white shadow-lg" : "bg-white shadow-sm"
-      }`}
-    >
+    <header className="fixed w-full z-50 transition-all duration-300 bg-white shadow-md">
       <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
