@@ -8,20 +8,24 @@ import { useAdminAuth } from "@/lib/admin-auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { AlertCircle, CheckCircle2, Clock, FileText } from "lucide-react"
+import { AlertCircle } from "lucide-react"
 import { createClient } from "@supabase/supabase-js"
-import Link from "next/link"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { DashboardStats } from "@/components/admin/DashboardStats"
+import { KanbanBoard } from "@/components/admin/KanbanBoard"
+import { ClientList } from "@/components/admin/ClientList"
 
 export default function AdminPage() {
   const { isAuthenticated, login } = useAdminAuth()
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [applications, setApplications] = useState([])
   const [stats, setStats] = useState({
     totalApplications: 0,
     pendingApplications: 0,
     approvedApplications: 0,
-    recentApplications: [],
+    rejectedApplications: 0,
   })
   const router = useRouter()
 
@@ -43,7 +47,7 @@ export default function AdminPage() {
   // Fetch dashboard stats if authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      const fetchStats = async () => {
+      const fetchData = async () => {
         try {
           const supabase = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -65,33 +69,100 @@ export default function AdminPage() {
             .select("*", { count: "exact", head: true })
             .eq("status", "approved")
 
-          // Get recent applications
-          const { data: recentApps } = await supabase
+          // Get rejected applications count
+          const { count: rejectedCount } = await supabase
+            .from("applications")
+            .select("*", { count: "exact", head: true })
+            .eq("status", "rejected")
+
+          // Get all applications
+          const { data: allApplications } = await supabase
             .from("applications")
             .select(`
               id, 
-              status, 
               reference_id, 
+              status, 
               created_at,
-              applicant_details!inner(full_name, email)
+              applicant_details (
+                full_name, 
+                email
+              ),
+              business_details (
+                business_name,
+                business_type
+              ),
+              funding_requests (
+                amount_requested
+              )
             `)
             .order("created_at", { ascending: false })
-            .limit(5)
 
           setStats({
             totalApplications: totalCount || 0,
             pendingApplications: pendingCount || 0,
             approvedApplications: approvedCount || 0,
-            recentApplications: recentApps || [],
+            rejectedApplications: rejectedCount || 0,
           })
+
+          setApplications(allApplications || [])
         } catch (error) {
-          console.error("Error fetching stats:", error)
+          console.error("Error fetching data:", error)
         }
       }
 
-      fetchStats()
+      fetchData()
     }
   }, [isAuthenticated])
+
+  // Handle status change from Kanban board
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    try {
+      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+
+      const { error } = await supabase.from("applications").update({ status: newStatus }).eq("id", id)
+
+      if (error) throw error
+
+      // Update local state to reflect the change
+      setApplications((prev) => prev.map((app) => (app.id === id ? { ...app, status: newStatus } : app)))
+
+      // Update stats
+      const newStats = { ...stats }
+
+      // Decrement old status count
+      const oldApp = applications.find((app) => app.id === id)
+      if (oldApp) {
+        switch (oldApp.status) {
+          case "pending":
+            newStats.pendingApplications--
+            break
+          case "approved":
+            newStats.approvedApplications--
+            break
+          case "rejected":
+            newStats.rejectedApplications--
+            break
+        }
+      }
+
+      // Increment new status count
+      switch (newStatus) {
+        case "pending":
+          newStats.pendingApplications++
+          break
+        case "approved":
+          newStats.approvedApplications++
+          break
+        case "rejected":
+          newStats.rejectedApplications++
+          break
+      }
+
+      setStats(newStats)
+    } catch (error) {
+      console.error("Error updating application status:", error)
+    }
+  }
 
   // If not authenticated, show login form
   if (!isAuthenticated) {
@@ -140,93 +211,28 @@ export default function AdminPage() {
   return (
     <div className="space-y-6">
       {/* Stats overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="bg-blue-100 p-3 rounded-full">
-              <FileText className="h-6 w-6 text-blue-600" />
-            </div>
-            <div className="ml-4">
-              <h3 className="text-sm font-medium text-slate-500">Total Applications</h3>
-              <p className="text-2xl font-bold text-slate-900">{stats.totalApplications}</p>
-            </div>
-          </div>
-        </div>
+      <DashboardStats
+        totalApplications={stats.totalApplications}
+        pendingApplications={stats.pendingApplications}
+        approvedApplications={stats.approvedApplications}
+        rejectedApplications={stats.rejectedApplications}
+      />
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="bg-amber-100 p-3 rounded-full">
-              <Clock className="h-6 w-6 text-amber-600" />
-            </div>
-            <div className="ml-4">
-              <h3 className="text-sm font-medium text-slate-500">Pending Applications</h3>
-              <p className="text-2xl font-bold text-slate-900">{stats.pendingApplications}</p>
-            </div>
-          </div>
-        </div>
+      {/* Tabs for different views */}
+      <Tabs defaultValue="kanban" className="space-y-4">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="kanban">Kanban Board</TabsTrigger>
+          <TabsTrigger value="list">Client List</TabsTrigger>
+        </TabsList>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="bg-green-100 p-3 rounded-full">
-              <CheckCircle2 className="h-6 w-6 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <h3 className="text-sm font-medium text-slate-500">Approved Applications</h3>
-              <p className="text-2xl font-bold text-slate-900">{stats.approvedApplications}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+        <TabsContent value="kanban" className="space-y-4">
+          <KanbanBoard applications={applications} onStatusChange={handleStatusChange} />
+        </TabsContent>
 
-      {/* Recent applications */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-slate-200">
-          <h2 className="text-lg font-medium text-slate-900">Recent Applications</h2>
-        </div>
-        <div className="divide-y divide-slate-200">
-          {stats.recentApplications.length > 0 ? (
-            stats.recentApplications.map((app: any) => (
-              <div key={app.id} className="p-6 flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-slate-900">{app.applicant_details?.[0]?.full_name || "Unknown"}</p>
-                  <p className="text-sm text-slate-500">
-                    {app.applicant_details?.[0]?.email || "No email"} • Ref: {app.reference_id}
-                  </p>
-                  <p className="text-xs text-slate-400 mt-1">{new Date(app.created_at).toLocaleDateString()}</p>
-                </div>
-                <div className="flex items-center">
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      app.status === "approved"
-                        ? "bg-green-100 text-green-800"
-                        : app.status === "rejected"
-                          ? "bg-red-100 text-red-800"
-                          : app.status === "in_review"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-amber-100 text-amber-800"
-                    }`}
-                  >
-                    {app.status.charAt(0).toUpperCase() + app.status.slice(1).replace("_", " ")}
-                  </span>
-                  <Link
-                    href={`/admin/applications/${app.id}`}
-                    className="ml-4 text-blue-600 hover:text-blue-800 text-sm font-medium"
-                  >
-                    View
-                  </Link>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="p-6 text-center text-slate-500">No recent applications found.</div>
-          )}
-        </div>
-        <div className="p-4 bg-slate-50 border-t border-slate-200 text-right">
-          <Link href="/admin/applications" className="text-sm font-medium text-blue-600 hover:text-blue-800">
-            View all applications →
-          </Link>
-        </div>
-      </div>
+        <TabsContent value="list">
+          <ClientList applications={applications} />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
