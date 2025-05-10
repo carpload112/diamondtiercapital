@@ -1,12 +1,12 @@
 import { Suspense } from "react"
-import ClientTabsWrapper from "./ClientTabsWrapper"
+import ApplicationListClient from "@/components/admin/ApplicationListClient"
 
-export default function ApplicationsPage() {
+export default function ApplicationListPage() {
   return (
     <div className="space-y-4">
       <div>
         <h1 className="text-lg font-semibold mb-1">Client Applications</h1>
-        <p className="text-xs text-gray-500">Manage and review all submitted applications</p>
+        <p className="text-xs text-gray-500">List view of all submitted applications</p>
       </div>
 
       <Suspense
@@ -16,17 +16,8 @@ export default function ApplicationsPage() {
           </div>
         }
       >
-        {/* @ts-expect-error Async Server Component */}
-        <ApplicationTabs />
+        <ApplicationListClient />
       </Suspense>
-    </div>
-  )
-}
-
-async function ApplicationTabs() {
-  return (
-    <div className="mt-4">
-      <ClientTabsWrapper />
     </div>
   )
 }

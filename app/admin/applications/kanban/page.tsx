@@ -1,12 +1,12 @@
 import { Suspense } from "react"
-import ClientTabsWrapper from "./ClientTabsWrapper"
+import ApplicationKanbanClient from "@/components/admin/ApplicationKanbanClient"
 
-export default function ApplicationsPage() {
+export default function ApplicationKanbanPage() {
   return (
     <div className="space-y-4">
       <div>
         <h1 className="text-lg font-semibold mb-1">Client Applications</h1>
-        <p className="text-xs text-gray-500">Manage and review all submitted applications</p>
+        <p className="text-xs text-gray-500">Kanban board for managing application status</p>
       </div>
 
       <Suspense
@@ -16,17 +16,8 @@ export default function ApplicationsPage() {
           </div>
         }
       >
-        {/* @ts-expect-error Async Server Component */}
-        <ApplicationTabs />
+        <ApplicationKanbanClient />
       </Suspense>
-    </div>
-  )
-}
-
-async function ApplicationTabs() {
-  return (
-    <div className="mt-4">
-      <ClientTabsWrapper />
     </div>
   )
 }
