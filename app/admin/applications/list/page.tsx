@@ -5,8 +5,11 @@ export default function ApplicationListPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-lg font-semibold mb-1">Client Applications</h1>
-        <p className="text-xs text-gray-500">List view of all submitted applications</p>
+        <h1 className="text-lg font-semibold mb-1">Applications List</h1>
+        <p className="text-xs text-gray-500">View and manage all submitted applications</p>
+        <a href="/admin/applications" className="text-blue-500 hover:underline text-sm mt-2 inline-block">
+          ← Back to Applications
+        </a>
       </div>
 
       <Suspense
