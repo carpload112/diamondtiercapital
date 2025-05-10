@@ -203,3 +203,125 @@ export async function submitApplication(formData: ApplicationFormData) {
     return { success: false, error: "Failed to submit application" }
   }
 }
+
+// New function to upload bank statements
+export async function uploadBankStatement({
+  applicationId,
+  file,
+  monthYear,
+  notes,
+}: {
+  applicationId: string
+  file: File
+  monthYear: string
+  notes?: string
+}) {
+  const supabase = createServerClient()
+
+  try {
+    // Generate a unique file name
+    const fileExt = file.name.split(".").pop()
+    const fileName = `${applicationId}_${monthYear.replace("/", "-")}_${Date.now()}.${fileExt}`
+    const filePath = `bank-statements/${fileName}`
+
+    // Upload file to Supabase Storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from("application-documents")
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+      })
+
+    if (uploadError) throw uploadError
+
+    // Get the public URL for the uploaded file
+    const { data: urlData } = supabase.storage.from("application-documents").getPublicUrl(filePath)
+
+    if (!urlData || !urlData.publicUrl) {
+      throw new Error("Failed to get public URL for uploaded file")
+    }
+
+    // Insert record into bank_statements table
+    const { error: insertError } = await supabase.from("bank_statements").insert({
+      application_id: applicationId,
+      file_name: file.name,
+      file_url: urlData.publicUrl,
+      file_type: file.type,
+      file_size: file.size,
+      month_year: monthYear,
+      notes: notes || null,
+    })
+
+    if (insertError) throw insertError
+
+    return { success: true, filePath }
+  } catch (error) {
+    console.error("Error uploading bank statement:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to upload bank statement",
+    }
+  }
+}
+
+// Function to get bank statements for an application
+export async function getBankStatements(applicationId: string) {
+  const supabase = createServerClient()
+
+  try {
+    const { data, error } = await supabase
+      .from("bank_statements")
+      .select("*")
+      .eq("application_id", applicationId)
+      .order("month_year", { ascending: false })
+
+    if (error) throw error
+
+    return { success: true, data }
+  } catch (error) {
+    console.error("Error fetching bank statements:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch bank statements",
+      data: [],
+    }
+  }
+}
+
+// Function to delete a bank statement
+export async function deleteBankStatement(statementId: string) {
+  const supabase = createServerClient()
+
+  try {
+    // Get the statement to find the file path
+    const { data: statement, error: fetchError } = await supabase
+      .from("bank_statements")
+      .select("file_url")
+      .eq("id", statementId)
+      .single()
+
+    if (fetchError) throw fetchError
+
+    // Delete from database
+    const { error: deleteError } = await supabase.from("bank_statements").delete().eq("id", statementId)
+
+    if (deleteError) throw deleteError
+
+    // Extract file path from URL to delete from storage
+    // This is a simplified approach - you might need to adjust based on your URL structure
+    if (statement && statement.file_url) {
+      const filePath = statement.file_url.split("/").pop()
+      if (filePath) {
+        await supabase.storage.from("application-documents").remove([`bank-statements/${filePath}`])
+      }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error deleting bank statement:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to delete bank statement",
+    }
+  }
+}

@@ -26,6 +26,7 @@ import {
   ChevronDown,
   Archive,
   CalendarClock,
+  FileText,
 } from "lucide-react"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -34,6 +35,7 @@ import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import ApplicationTagsEditor from "@/components/admin/ApplicationTagsEditor"
 import ApplicationFolderSelector from "@/components/admin/ApplicationFolderSelector"
+import { BankStatementViewer } from "@/components/BankStatementViewer"
 
 export default function ApplicationDetailPage({ params }: { params: { id: string } }) {
   const { id } = params
@@ -819,6 +821,19 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
               </CardContent>
             </Card>
           )}
+
+          {/* Bank Statements */}
+          <Card className="md:col-span-2 xl:col-span-3">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <FileText className="h-4 w-4 text-blue-500" />
+                Bank Statements
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <BankStatementViewer applicationId={params.id} isAdmin={true} />
+            </CardContent>
+          </Card>
         </div>
 
         {/* Status & Notes Drawer - Using React state instead of DOM manipulation */}

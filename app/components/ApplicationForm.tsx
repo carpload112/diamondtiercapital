@@ -197,6 +197,21 @@ const formSteps = [
     ],
   },
   {
+    title: "Bank Statements",
+    description: "Upload your last 3 months of business bank statements for verification.",
+    icon: "FileText",
+    fields: [
+      {
+        name: "bankStatementsInfo",
+        label: "Bank Statements",
+        type: "custom",
+        component: "BankStatementUpload",
+        required: true,
+        tooltip: "We need your last 3 months of business bank statements to verify your business income and expenses.",
+      },
+    ],
+  },
+  {
     title: "Additional Information",
     description: "Help us provide you with the best possible service.",
     icon: "FileText",
