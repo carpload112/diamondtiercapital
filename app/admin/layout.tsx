@@ -6,7 +6,7 @@ import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 import { useAdminAuth } from "@/lib/admin-auth"
-import { LayoutDashboard, FileText, Settings, LogOut, Menu, X, ChevronRight, User, Users } from "lucide-react"
+import { LayoutDashboard, FileText, Settings, LogOut, Menu, X, ChevronRight, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
@@ -32,7 +32,6 @@ export default function AdminLayout({
   const navItems = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { name: "Applications", href: "/admin/applications", icon: FileText },
-    { name: "Affiliates", href: "/admin/affiliates", icon: Users },
     { name: "Settings", href: "/admin/settings", icon: Settings },
   ]
 

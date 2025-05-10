@@ -13,7 +13,6 @@ import MobileStepper from "../components/MobileStepper"
 import ApplicationSuccess from "../components/ApplicationSuccess"
 import { useToast } from "@/components/ui/use-toast"
 import { submitApplication } from "@/lib/supabase/actions"
-import { useSearchParams } from "next/navigation"
 
 // Define the form steps with improved descriptions and tooltips
 const formSteps = [
@@ -233,13 +232,8 @@ const formSteps = [
 ]
 
 export default function ApplyNowPage() {
-  const searchParams = useSearchParams()
-  const referralCode = searchParams.get("ref")
-
   const [currentStep, setCurrentStep] = useState(0)
-  const [formData, setFormData] = useState<Record<string, any>>({
-    ...(referralCode ? { referralCode } : {}),
-  })
+  const [formData, setFormData] = useState<Record<string, any>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
@@ -330,10 +324,6 @@ export default function ApplyNowPage() {
     setIsSubmitting(true)
 
     try {
-      // Make sure the referral code is included in the submission
-      if (referralCode && !formData.referralCode) {
-        formData.referralCode = referralCode
-      }
       // Submit to database using the server action
       const result = await submitApplication(formData)
 

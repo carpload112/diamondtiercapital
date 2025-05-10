@@ -9,7 +9,7 @@ export function Footer() {
     <footer className="bg-gray-900 text-white pt-10 pb-6">
       <div className="container mx-auto px-4">
         {/* Main footer content */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-6 md:gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
           {/* Logo and company info */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="inline-block mb-4">
@@ -69,26 +69,6 @@ export function Footer() {
                 { name: "Contact", href: "/contact" },
                 { name: "Apply Now", href: "/applynow" },
                 { name: "Admin", href: "/admin" },
-              ].map((link, index) => (
-                <li key={index}>
-                  <Link href={link.href} className="text-sm text-gray-400 hover:text-white transition-colors">
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Affiliate Program */}
-          <div>
-            <h3 className="font-semibold text-sm mb-3">Affiliate Program</h3>
-            <ul className="space-y-2">
-              {[
-                { name: "Become an Affiliate", href: "/affiliate-program" },
-                { name: "Affiliate Login", href: "/affiliate/login" },
-                { name: "Affiliate Dashboard", href: "/affiliate/dashboard" },
-                { name: "Commission Structure", href: "/affiliate-program#commission" },
-                { name: "Affiliate Terms", href: "/affiliate-terms" },
               ].map((link, index) => (
                 <li key={index}>
                   <Link href={link.href} className="text-sm text-gray-400 hover:text-white transition-colors">
