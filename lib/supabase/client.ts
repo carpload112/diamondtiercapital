@@ -1,9 +1,11 @@
+"\"use client"
+
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 
-// Create a simple, reliable client function
+// Simple client function that will work reliably
 export function createClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error("Missing Supabase environment variables")
@@ -12,11 +14,17 @@ export function createClient() {
   return createSupabaseClient(supabaseUrl, supabaseAnonKey)
 }
 
-// Export for backward compatibility
-export const getSupabaseClient = createClient
-
-// Default export
+// Export as default for modules that use default import
 export default createClient
 
-// Named export for server components
-export const createClientClient = createClient
+// Export a separate client for server components
+export function createClientClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error("Missing Supabase environment variables")
+  }
+
+  return createSupabaseClient(supabaseUrl, supabaseAnonKey)
+}
