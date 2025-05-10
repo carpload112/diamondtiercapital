@@ -1,6 +1,6 @@
 "use client"
 
-import { createClient } from "@/lib/supabase/client"
+import { createClient } from "./supabase/client"
 import { createContext, useContext, useEffect, useState } from "react"
 import type { ReactNode } from "react"
 
@@ -17,6 +17,7 @@ type AuthContextType = {
   isAdmin: boolean
   signIn: (email: string, password: string) => Promise<{ error: any | null }>
   signOut: () => Promise<void>
+  resetPassword?: (email: string) => Promise<{ error: any | null }>
 }
 
 // Create context with default values
@@ -113,8 +114,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsAdmin(false)
   }
 
+  // Reset password function
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/admin/reset-password`,
+      })
+      return { error }
+    } catch (error) {
+      return { error }
+    }
+  }
+
   // Return provider
-  return <AuthContext.Provider value={{ user, isLoading, isAdmin, signIn, signOut }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, isLoading, isAdmin, signIn, signOut, resetPassword }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 // Hook to use auth context

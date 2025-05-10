@@ -1,5 +1,4 @@
 import { createClient } from "@supabase/supabase-js"
-import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 
 export async function POST(request: Request) {
@@ -45,27 +44,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "You do not have admin access" }, { status: 403 })
     }
 
-    // Set cookies for the session
-    const cookieStore = cookies()
-
-    // Set the session cookie
-    if (data.session) {
-      cookieStore.set("sb-access-token", data.session.access_token, {
-        path: "/",
-        maxAge: 60 * 60 * 24 * 7, // 1 week
-        sameSite: "lax",
-        secure: process.env.NODE_ENV === "production",
-      })
-
-      cookieStore.set("sb-refresh-token", data.session.refresh_token, {
-        path: "/",
-        maxAge: 60 * 60 * 24 * 7, // 1 week
-        sameSite: "lax",
-        secure: process.env.NODE_ENV === "production",
-      })
-    }
-
-    // Return success
+    // Return success with session
     return NextResponse.json({
       success: true,
       user: {
@@ -73,6 +52,7 @@ export async function POST(request: Request) {
         email: data.user.email,
         role: adminData.role,
       },
+      session: data.session,
     })
   } catch (error: any) {
     console.error("Unexpected error in direct-login:", error)
