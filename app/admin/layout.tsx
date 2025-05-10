@@ -1,7 +1,6 @@
 "use client"
 
 import { AdminAuthProvider } from "@/components/admin/AdminAuthProvider"
-import type React from "react"
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
@@ -11,13 +10,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/lib/auth"
 import { Skeleton } from "@/components/ui/skeleton"
+import type { ReactNode } from "react"
 
 // AdminDashboard component
-function AdminDashboard({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+function AdminDashboard({ children }: { children: ReactNode }) {
   const { user, isLoading, isAdmin, signOut } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
@@ -152,7 +148,7 @@ function AdminDashboard({
                 <span className="text-xs text-slate-600 mr-2 hidden md:block">{user.email}</span>
                 <Avatar className="h-7 w-7">
                   <AvatarFallback className="bg-blue-100 text-blue-700 text-xs">
-                    {user.email && user.email.substring(0, 2).toUpperCase()}
+                    {user.email ? user.email.substring(0, 2).toUpperCase() : "AD"}
                   </AvatarFallback>
                 </Avatar>
               </div>
@@ -168,11 +164,7 @@ function AdminDashboard({
 }
 
 // Main layout component
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <AdminAuthProvider>
       <AdminDashboard>{children}</AdminDashboard>

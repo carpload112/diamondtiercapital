@@ -1,5 +1,4 @@
 import { createClient } from "@supabase/supabase-js"
-import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 
 export async function POST(request: Request) {
@@ -15,26 +14,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing Supabase environment variables" }, { status: 500 })
     }
 
-    // Create a Supabase client with cookie storage
-    const cookieStore = cookies()
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        storageKey: "sb-auth-token",
-        storage: {
-          getItem: (key) => {
-            const cookie = cookieStore.get(key)
-            return cookie?.value
-          },
-          setItem: (key, value) => {
-            cookieStore.set(key, value, { path: "/", maxAge: 60 * 60 * 24 * 7 }) // 1 week
-          },
-          removeItem: (key) => {
-            cookieStore.set(key, "", { path: "/", maxAge: 0 })
-          },
-        },
-      },
-    })
+    const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
     // Sign in
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -61,18 +41,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "You do not have admin access" }, { status: 403 })
     }
 
-    // Set cookies for the session
-    const response = NextResponse.json({
+    // Return success with session
+    return NextResponse.json({
       success: true,
       user: {
         id: data.user.id,
         email: data.user.email,
         role: adminData.role,
       },
+      session: data.session,
     })
-
-    // Return success
-    return response
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }

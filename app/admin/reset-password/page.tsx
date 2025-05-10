@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -12,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { createClient } from "@/lib/supabase/client"
 import { LoadingSpinner } from "@/app/components/LoadingSpinner"
 import Image from "next/image"
+import type { FormEvent } from "react"
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("")
@@ -38,7 +37,7 @@ export default function ResetPasswordPage() {
     checkSession()
   }, [supabase])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)

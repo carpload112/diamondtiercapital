@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { createClient } from "@/lib/supabase/client"
 import { LoadingSpinner } from "@/app/components/LoadingSpinner"
+import type { FormEvent } from "react"
 
 export function PasswordResetForm() {
   const [email, setEmail] = useState("")
@@ -18,7 +17,7 @@ export function PasswordResetForm() {
   const [success, setSuccess] = useState<string | null>(null)
   const supabase = createClient()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)

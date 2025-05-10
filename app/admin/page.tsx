@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
 import { useAuth } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
@@ -13,6 +11,7 @@ import { LoadingSpinner } from "@/app/components/LoadingSpinner"
 import Image from "next/image"
 import Link from "next/link"
 import { Eye, EyeOff, AlertCircle } from "lucide-react"
+import type { FormEvent } from "react"
 
 export default function AdminPage() {
   const { user, isAdmin, signIn } = useAuth()
@@ -22,7 +21,7 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
