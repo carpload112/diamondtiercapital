@@ -5,8 +5,10 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Calendar, DollarSign, ArrowRight } from "lucide-react"
+import { Calendar, DollarSign, ArrowRight, Archive, MoreHorizontal } from "lucide-react"
 import Link from "next/link"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
 
 type Application = {
   id: string
@@ -28,6 +30,7 @@ type KanbanColumn = {
 type KanbanBoardProps = {
   applications: Application[]
   onStatusChange?: (id: string, newStatus: string) => Promise<void>
+  onArchive?: (id: string) => Promise<void>
 }
 
 const initialColumns: KanbanColumn[] = [
@@ -53,40 +56,34 @@ const initialColumns: KanbanColumn[] = [
   },
 ]
 
-export function KanbanBoard({ applications, onStatusChange }: KanbanBoardProps) {
-  // Add this after the KanbanBoard function declaration
-  console.log("Applications received:", applications.length)
-  console.log("Applications by status:", {
-    pending: applications.filter((app) => app.status === "pending").length,
-    in_review: applications.filter((app) => app.status === "in_review").length,
-    approved: applications.filter((app) => app.status === "approved").length,
-    rejected: applications.filter((app) => app.status === "rejected").length,
-  })
-
+export function KanbanBoard({ applications, onStatusChange, onArchive }: KanbanBoardProps) {
   const [columns, setColumns] = useState<KanbanColumn[]>(initialColumns)
 
   // Update columns when applications prop changes
   useEffect(() => {
+    // Filter out archived applications
+    const activeApplications = applications.filter((app) => app.status !== "archived")
+
     setColumns([
       {
         id: "pending",
         title: "Pending",
-        applications: applications.filter((app) => app.status === "pending"),
+        applications: activeApplications.filter((app) => app.status === "pending"),
       },
       {
         id: "in_review",
         title: "In Review",
-        applications: applications.filter((app) => app.status === "in_review"),
+        applications: activeApplications.filter((app) => app.status === "in_review"),
       },
       {
         id: "approved",
         title: "Approved",
-        applications: applications.filter((app) => app.status === "approved"),
+        applications: activeApplications.filter((app) => app.status === "approved"),
       },
       {
         id: "rejected",
         title: "Rejected",
-        applications: applications.filter((app) => app.status === "rejected"),
+        applications: activeApplications.filter((app) => app.status === "rejected"),
       },
     ])
   }, [applications])
@@ -128,6 +125,12 @@ export function KanbanBoard({ applications, onStatusChange }: KanbanBoardProps) 
     // Call the onStatusChange callback if provided
     if (onStatusChange) {
       await onStatusChange(draggableId, destination.droppableId)
+    }
+  }
+
+  const handleArchive = async (id: string) => {
+    if (onArchive) {
+      await onArchive(id)
     }
   }
 
@@ -220,12 +223,27 @@ export function KanbanBoard({ applications, onStatusChange }: KanbanBoardProps) 
                                       <p className="text-xs text-gray-500 line-clamp-1">{app.business_name || "N/A"}</p>
                                     </div>
                                   </div>
-                                  <Link
-                                    href={`/admin/applications/${app.id}`}
-                                    className="text-blue-500 hover:text-blue-700"
-                                  >
-                                    <ArrowRight className="h-4 w-4" />
-                                  </Link>
+                                  <div className="flex items-center space-x-1">
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                          <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        <DropdownMenuItem asChild>
+                                          <Link href={`/admin/applications/${app.id}`}>
+                                            <ArrowRight className="h-4 w-4 mr-2" />
+                                            View Details
+                                          </Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleArchive(app.id)}>
+                                          <Archive className="h-4 w-4 mr-2" />
+                                          Move to Archive
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </div>
                                 </div>
 
                                 <div className="mt-2 flex items-center justify-between text-xs text-gray-500">

@@ -24,12 +24,16 @@ import {
   CheckCircle,
   XCircle,
   ChevronDown,
+  Archive,
+  CalendarClock,
 } from "lucide-react"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import ApplicationTagsEditor from "@/components/admin/ApplicationTagsEditor"
+import ApplicationFolderSelector from "@/components/admin/ApplicationFolderSelector"
 
 export default function ApplicationDetailPage({ params }: { params: { id: string } }) {
   const { id } = params
@@ -284,6 +288,109 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
   // Get additional comments from additional_information
   const additionalComments = getValue(application, "additional_information.additional_info")
 
+  const handleArchive = async () => {
+    try {
+      const supabase = createClient()
+
+      const { error } = await supabase.from("applications").update({ archived: true }).eq("id", params.id)
+
+      if (error) throw error
+
+      toast({
+        title: "Application archived",
+        description: "The application has been archived successfully",
+      })
+
+      // Redirect to applications list after archiving
+      router.push("/admin/applications")
+    } catch (error) {
+      console.error("Error archiving application:", error)
+      toast({
+        title: "Error",
+        description: "Failed to archive application",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case "approved":
+        return "success"
+      case "rejected":
+        return "destructive"
+      case "in_review":
+        return "secondary"
+      default:
+        return "default"
+    }
+  }
+
+  const UpdateStatusForm = ({ applicationId, currentStatus }: { applicationId: string; currentStatus: string }) => {
+    const [status, setStatus] = useState(currentStatus)
+    const [isUpdating, setIsUpdating] = useState(false)
+    const { toast } = useToast()
+
+    const updateStatus = async () => {
+      try {
+        setIsUpdating(true)
+        const supabase = createClient()
+
+        const { error } = await supabase.from("applications").update({ status }).eq("id", applicationId)
+
+        if (error) throw error
+
+        toast({
+          title: "Status updated",
+          description: `Application status changed to ${status.replace("_", " ")}`,
+        })
+      } catch (error) {
+        console.error("Error updating status:", error)
+        toast({
+          title: "Error",
+          description: "Failed to update application status",
+          variant: "destructive",
+        })
+      } finally {
+        setIsUpdating(false)
+      }
+    }
+
+    return (
+      <div className="space-y-2">
+        <Select value={status} onValueChange={setStatus}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="in_review">In Review</SelectItem>
+            <SelectItem value="approved">Approved</SelectItem>
+            <SelectItem value="rejected">Rejected</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button
+          variant="outline"
+          className="w-full justify-start"
+          onClick={updateStatus}
+          disabled={isUpdating || status === currentStatus}
+        >
+          {isUpdating ? (
+            <>
+              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+              Updating...
+            </>
+          ) : (
+            <>
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Update Status
+            </>
+          )}
+        </Button>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4 pb-6">
       {/* Header with Back Button */}
@@ -360,6 +467,131 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
 
       {/* Main Content - Full Width */}
       <div className="space-y-6">
+        <div className="flex flex-col md:flex-row gap-4 md:gap-8">
+          <div className="flex-1">
+            <h2 className="text-2xl font-bold mb-4">Application Details</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Name</h3>
+                <p className="text-lg">{application?.applicant_details?.full_name}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Email</h3>
+                <p className="text-lg">{application?.applicant_details?.email}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Phone</h3>
+                <p className="text-lg">{application?.applicant_details?.phone}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Status</h3>
+                <Badge variant={getStatusVariant(application.status)} className="capitalize mt-1">
+                  {application.status?.replace(/_/g, " ")}
+                </Badge>
+              </div>
+              <div>
+                <ApplicationTagsEditor applicationId={params.id} />
+              </div>
+              <div>
+                <ApplicationFolderSelector applicationId={params.id} />
+              </div>
+            </div>
+          </div>
+
+          <div className="w-full md:w-80">
+            <h2 className="text-2xl font-bold mb-4">Actions</h2>
+            <div className="space-y-2">
+              <UpdateStatusForm applicationId={params.id} currentStatus={application.status} />
+
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => {
+                  if (email !== "N/A") {
+                    window.location.href = `mailto:${email}`
+                  } else {
+                    toast({
+                      title: "No email available",
+                      description: "This applicant doesn't have an email address",
+                      variant: "destructive",
+                    })
+                  }
+                }}
+              >
+                <Mail className="mr-2 h-4 w-4" />
+                Send Email
+              </Button>
+
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => {
+                  if (phone !== "N/A") {
+                    window.location.href = `tel:${phone}`
+                  } else {
+                    toast({
+                      title: "No phone available",
+                      description: "This applicant doesn't have a phone number",
+                      variant: "destructive",
+                    })
+                  }
+                }}
+              >
+                <Phone className="mr-2 h-4 w-4" />
+                Call Client
+              </Button>
+
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => {
+                  // Open a dialog to schedule a meeting
+                  // This is a placeholder - you might want to integrate with a calendar service
+                  toast({
+                    title: "Schedule Meeting",
+                    description: "Calendar integration coming soon",
+                  })
+                }}
+              >
+                <CalendarClock className="mr-2 h-4 w-4" />
+                Schedule Meeting
+              </Button>
+
+              <Button
+                variant="destructive"
+                className="w-full justify-start"
+                onClick={async () => {
+                  try {
+                    const supabase = createClient()
+
+                    const { error } = await supabase.from("applications").update({ archived: true }).eq("id", params.id)
+
+                    if (error) throw error
+
+                    toast({
+                      title: "Application archived",
+                      description: "The application has been archived successfully",
+                    })
+
+                    // Redirect to applications list after archiving
+                    router.push("/admin/applications")
+                  } catch (error) {
+                    console.error("Error archiving application:", error)
+                    toast({
+                      title: "Error",
+                      description: "Failed to archive application",
+                      variant: "destructive",
+                    })
+                  }
+                }}
+              >
+                <Archive className="mr-2 h-4 w-4" />
+                Archive Application
+              </Button>
+            </div>
+          </div>
+        </div>
+
         {/* Section headers */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center space-x-2">
