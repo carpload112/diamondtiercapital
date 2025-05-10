@@ -1,18 +1,24 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  swcMinify: true,
+  reactStrictMode: false,
+  swcMinify: false,
   eslint: {
-    // Disable ESLint during builds to prevent deployment failures
     ignoreDuringBuilds: true,
   },
   typescript: {
-    // Disable TypeScript errors during builds to prevent deployment failures
     ignoreBuildErrors: true,
   },
   images: {
     domains: ["images.unsplash.com"],
     unoptimized: true,
+  },
+  // Disable all webpack optimizations
+  webpack: (config, { isServer }) => {
+    // Disable all optimizations
+    config.optimization.minimize = false
+
+    // Return the modified config
+    return config
   },
 }
 

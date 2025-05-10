@@ -21,9 +21,18 @@ type AuthContextType = {
 }
 
 // Create context with default values
-const AuthContext = createContext<AuthContextType>({
+// const AuthContext = createContext<AuthContextType>({
+//   user: null,
+//   isLoading: true,
+//   isAdmin: false,
+//   signIn: async () => ({ error: null }),
+//   signOut: async () => {},
+// })
+
+// Create a simple context
+const AuthContext = createContext({
   user: null,
-  isLoading: true,
+  isLoading: false,
   isAdmin: false,
   signIn: async () => ({ error: null }),
   signOut: async () => {},
@@ -55,40 +64,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .eq("id", data.session.user.id)
             .single()
 
+          setIsAdmin(!!adminData)\
+        } catch (error) 
+          console.error("Auth initialization error:", error)finally 
+          setIsLoading(false)
+      }
+
+      initAuth()
+
+      // Set up auth state change listener
+      const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (session?.user) {
+          setUser({
+            id: session.user.id,
+            email: session.user.email,
+          })
+
+          // Check if user is admin
+          const { data: adminData } = await supabase.from("admin_users").select("*").eq("id", session.user.id).single()
+
           setIsAdmin(!!adminData)
+        } else {
+          setUser(null)
+          setIsAdmin(false)
         }
-      } catch (error) {
-        console.error("Auth initialization error:", error)
-      } finally {
+
         setIsLoading(false)
+      })
+
+      return () => {
+        data.subscription.unsubscribe()
       }
     }
-
     initAuth()
-
-    // Set up auth state change listener
-    const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        setUser({
-          id: session.user.id,
-          email: session.user.email,
-        })
-
-        // Check if user is admin
-        const { data: adminData } = await supabase.from("admin_users").select("*").eq("id", session.user.id).single()
-
-        setIsAdmin(!!adminData)
-      } else {
-        setUser(null)
-        setIsAdmin(false)
-      }
-
-      setIsLoading(false)
-    })
-
-    return () => {
-      data.subscription.unsubscribe()
-    }
   }, [])
 
   // Sign in function
@@ -102,7 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) return { error }
 
       return { error: null }
-    } catch (error) {
+    } catch (error: any) {
       return { error }
     }
   }
@@ -121,7 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         redirectTo: `${window.location.origin}/admin/reset-password`,
       })
       return { error }
-    } catch (error) {
+    } catch (error: any) {
       return { error }
     }
   }

@@ -1,9 +1,7 @@
 "use client"
 
 import { AuthProvider } from "@/lib/auth"
-import type { ReactNode } from "react"
 
-// Simple wrapper around AuthProvider
-export function AdminAuthProvider({ children }: { children: ReactNode }) {
+export function AdminAuthProvider({ children }) {
   return <AuthProvider>{children}</AuthProvider>
 }

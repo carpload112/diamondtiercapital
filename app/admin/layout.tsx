@@ -167,7 +167,7 @@ function AdminDashboard({ children }: { children: ReactNode }) {
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <AdminAuthProvider>
-      <AdminDashboard>{children}</AdminDashboard>
+      <div className="min-h-screen bg-gray-50 p-4">{children}</div>
     </AdminAuthProvider>
   )
 }
