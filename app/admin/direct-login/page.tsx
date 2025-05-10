@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import LoadingSpinner from "@/app/components/LoadingSpinner"
+import { LoadingSpinner } from "@/app/components/LoadingSpinner"
 import Image from "next/image"
 import { AlertCircle, CheckCircle } from "lucide-react"
 

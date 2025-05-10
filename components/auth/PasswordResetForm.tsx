@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { createClient } from "@/lib/supabase/client"
-import LoadingSpinner from "@/app/components/LoadingSpinner"
+import { LoadingSpinner } from "@/app/components/LoadingSpinner"
 
 export function PasswordResetForm() {
   const [email, setEmail] = useState("")

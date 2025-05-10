@@ -2,20 +2,6 @@
 
 import { AdminAuthProvider } from "@/components/admin/AdminAuthProvider"
 import type React from "react"
-
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <AdminAuthProvider>
-      <AdminDashboard>{children}</AdminDashboard>
-    </AdminAuthProvider>
-  )
-}
-
-// Move the existing AdminLayout code to a new component
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
@@ -26,6 +12,7 @@ import { cn } from "@/lib/utils"
 import { useAuth } from "@/lib/auth"
 import { Skeleton } from "@/components/ui/skeleton"
 
+// AdminDashboard component
 function AdminDashboard({
   children,
 }: {
@@ -165,7 +152,7 @@ function AdminDashboard({
                 <span className="text-xs text-slate-600 mr-2 hidden md:block">{user.email}</span>
                 <Avatar className="h-7 w-7">
                   <AvatarFallback className="bg-blue-100 text-blue-700 text-xs">
-                    {user.email.substring(0, 2).toUpperCase()}
+                    {user.email && user.email.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </div>
@@ -177,5 +164,18 @@ function AdminDashboard({
         {children}
       </main>
     </div>
+  )
+}
+
+// Main layout component
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <AdminAuthProvider>
+      <AdminDashboard>{children}</AdminDashboard>
+    </AdminAuthProvider>
   )
 }
