@@ -17,6 +17,7 @@ type AuthContextType = {
   isAdmin: boolean
   signIn: (email: string, password: string) => Promise<{ error: any | null }>
   signOut: () => Promise<void>
+  resetPassword?: (email: string) => Promise<{ error: any | null }>
 }
 
 // Create context with default values
@@ -35,9 +36,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false)
   const supabase = createClient()
 
+  // Initialize auth state
   useEffect(() => {
-    // Check session
-    const checkSession = async () => {
+    async function initAuth() {
       try {
         const { data } = await supabase.auth.getSession()
 
@@ -47,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             email: data.session.user.email,
           })
 
-          // Check if admin
+          // Check if user is admin
           const { data: adminData } = await supabase
             .from("admin_users")
             .select("*")
@@ -57,15 +58,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setIsAdmin(!!adminData)
         }
       } catch (error) {
-        console.error("Auth error:", error)
+        console.error("Auth initialization error:", error)
       } finally {
         setIsLoading(false)
       }
     }
 
-    checkSession()
+    initAuth()
 
-    // Auth state listener
+    // Set up auth state change listener
     const { data } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         setUser({
@@ -73,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: session.user.email,
         })
 
-        // Check if admin
+        // Check if user is admin
         const { data: adminData } = await supabase.from("admin_users").select("*").eq("id", session.user.id).single()
 
         setIsAdmin(!!adminData)
@@ -113,7 +114,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsAdmin(false)
   }
 
-  return <AuthContext.Provider value={{ user, isLoading, isAdmin, signIn, signOut }}>{children}</AuthContext.Provider>
+  // Reset password function
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/admin/reset-password`,
+      })
+      return { error }
+    } catch (error) {
+      return { error }
+    }
+  }
+
+  // Return provider with proper parentheses around JSX
+  return (
+    <AuthContext.Provider value={{ user, isLoading, isAdmin, signIn, signOut, resetPassword }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 // Hook to use auth context
