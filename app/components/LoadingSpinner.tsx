@@ -8,6 +8,7 @@ interface LoadingSpinnerProps {
   size?: "sm" | "md" | "lg"
 }
 
+// Simple loading spinner component
 export function LoadingSpinner({ className, size = "md" }: LoadingSpinnerProps) {
   const sizeClasses = {
     sm: "h-4 w-4",
@@ -22,5 +23,5 @@ export function LoadingSpinner({ className, size = "md" }: LoadingSpinnerProps) 
   )
 }
 
-// Default export for backward compatibility
+// Default export
 export default LoadingSpinner

@@ -1,39 +1,21 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
-import type { Database } from "@/types/supabase"
 
-// Create a single supabase client for browser-side usage
-let supabaseClient: ReturnType<typeof createSupabaseClient<Database>> | null = null
-
-// This is the function that was missing - export createClient for backward compatibility
+// Create a simple client function that doesn't rely on complex patterns
 export function createClient() {
-  return getSupabaseClient()
-}
-
-export function getSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error("Missing Supabase environment variables")
   }
 
-  // Create a singleton to avoid multiple instances
-  if (!supabaseClient) {
-    supabaseClient = createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-      },
-    })
-  }
-
-  return supabaseClient
+  return createSupabaseClient(supabaseUrl, supabaseAnonKey)
 }
 
+// Export additional functions that use the base function
 export function createClientClient() {
-  return createClient() // Use the createClient function for consistency
+  return createClient()
 }
 
-// Also export as default for modules that use default import
+// Default export for modules that use default import
 export default createClient
