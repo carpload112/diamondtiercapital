@@ -8,7 +8,8 @@ interface LoadingSpinnerProps {
   size?: "sm" | "md" | "lg"
 }
 
-export default function LoadingSpinner({ className, size = "md" }: LoadingSpinnerProps) {
+// Export as both named and default export
+export function LoadingSpinner({ className, size = "md" }: LoadingSpinnerProps) {
   const sizeClasses = {
     sm: "h-4 w-4",
     md: "h-6 w-6",
@@ -21,3 +22,6 @@ export default function LoadingSpinner({ className, size = "md" }: LoadingSpinne
     </div>
   )
 }
+
+// Also export as default for backward compatibility
+export default LoadingSpinner

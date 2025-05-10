@@ -1,32 +1,47 @@
 "use client"
 
+import { AdminAuthProvider } from "@/components/admin/AdminAuthProvider"
 import type React from "react"
-
-import { useEffect, useState } from "react"
-import { useRouter, usePathname } from "next/navigation"
-import Link from "next/link"
-import { useAdminAuth } from "@/lib/admin-auth"
-import { LayoutDashboard, FileText, Settings, LogOut, Menu, X, ChevronRight, User, Users } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { cn } from "@/lib/utils"
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const { isAuthenticated, logout } = useAdminAuth()
+  return (
+    <AdminAuthProvider>
+      <AdminDashboard>{children}</AdminDashboard>
+    </AdminAuthProvider>
+  )
+}
+
+// Move the existing AdminLayout code to a new component
+import { useEffect, useState } from "react"
+import { useRouter, usePathname } from "next/navigation"
+import Link from "next/link"
+import { LayoutDashboard, FileText, Settings, LogOut, Menu, X, ChevronRight, Users } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { cn } from "@/lib/utils"
+import { useAuth } from "@/lib/auth"
+import { Skeleton } from "@/components/ui/skeleton"
+
+function AdminDashboard({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const { user, isLoading, isAdmin, signOut } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (!isAuthenticated && pathname !== "/admin") {
+    if (!isLoading && !isAdmin && pathname !== "/admin") {
       router.push("/admin")
     }
-  }, [isAuthenticated, router, pathname])
+  }, [isAdmin, isLoading, router, pathname])
 
   // Navigation items
   const navItems = [
@@ -36,8 +51,20 @@ export default function AdminLayout({
     { name: "Settings", href: "/admin/settings", icon: Settings },
   ]
 
+  // If loading, show a skeleton
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 p-4">
+        <div className="w-full max-w-md mx-auto">
+          <Skeleton className="h-12 w-full mb-4" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      </div>
+    )
+  }
+
   // If on the login page and not authenticated, just show the login form
-  if (!isAuthenticated && pathname === "/admin") {
+  if (!isAdmin && pathname === "/admin") {
     return <div className="min-h-screen bg-slate-50">{children}</div>
   }
 
@@ -86,7 +113,7 @@ export default function AdminLayout({
               size="sm"
               className="w-full justify-start text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-50 h-8"
               onClick={() => {
-                logout()
+                signOut()
                 router.push("/admin")
                 setMobileMenuOpen(false)
               }}
@@ -133,11 +160,16 @@ export default function AdminLayout({
             </div>
           </div>
           <div className="flex items-center">
-            <Avatar className="h-7 w-7">
-              <AvatarFallback className="bg-blue-100 text-blue-700 text-xs">
-                <User className="h-3.5 w-3.5" />
-              </AvatarFallback>
-            </Avatar>
+            {user && (
+              <div className="flex items-center">
+                <span className="text-xs text-slate-600 mr-2 hidden md:block">{user.email}</span>
+                <Avatar className="h-7 w-7">
+                  <AvatarFallback className="bg-blue-100 text-blue-700 text-xs">
+                    {user.email.substring(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+            )}
           </div>
         </header>
 

@@ -117,25 +117,32 @@ export function AffiliateStats({ stats }: AffiliateStatsProps) {
               <CardTitle className="text-sm">Application Status</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-80">
+              <div className="h-[350px] pt-4">
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
+                  <PieChart margin={{ top: 10, right: 30, left: 30, bottom: 50 }}>
                     <Pie
                       data={applicationStatusData}
                       cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={80}
+                      cy="40%"
+                      labelLine={true}
+                      outerRadius={90}
+                      innerRadius={30}
                       fill="#8884d8"
                       dataKey="value"
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                      paddingAngle={2}
                     >
                       {applicationStatusData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
                     <Tooltip formatter={(value) => [`${value} Applications`, "Count"]} />
-                    <Legend />
+                    <Legend
+                      layout="horizontal"
+                      verticalAlign="bottom"
+                      align="center"
+                      wrapperStyle={{ paddingTop: 20 }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -149,25 +156,32 @@ export function AffiliateStats({ stats }: AffiliateStatsProps) {
               <CardTitle className="text-sm">Commission Status</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-80">
+              <div className="h-[350px] pt-4">
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
+                  <PieChart margin={{ top: 10, right: 30, left: 30, bottom: 50 }}>
                     <Pie
                       data={commissionStatusData}
                       cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={80}
+                      cy="40%"
+                      labelLine={true}
+                      outerRadius={90}
+                      innerRadius={30}
                       fill="#8884d8"
                       dataKey="value"
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                      paddingAngle={2}
                     >
                       {commissionStatusData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
                     <Tooltip formatter={(value) => [formatCurrency(Number(value)), "Amount"]} />
-                    <Legend />
+                    <Legend
+                      layout="horizontal"
+                      verticalAlign="bottom"
+                      align="center"
+                      wrapperStyle={{ paddingTop: 20 }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -181,18 +195,18 @@ export function AffiliateStats({ stats }: AffiliateStatsProps) {
               <CardTitle className="text-sm">Conversion Funnel</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-80">
+              <div className="h-[350px] pt-4">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={conversionData}
                     layout="vertical"
-                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                    margin={{ top: 20, right: 30, left: 60, bottom: 20 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis dataKey="name" type="category" />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="#3b82f6" />
+                    <XAxis type="number" tickFormatter={(value) => value.toLocaleString()} />
+                    <YAxis dataKey="name" type="category" width={100} />
+                    <Tooltip formatter={(value) => [value.toLocaleString(), "Count"]} />
+                    <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={30} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
