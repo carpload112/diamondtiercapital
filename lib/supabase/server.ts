@@ -1,7 +1,8 @@
+import { createClient } from "@supabase/supabase-js"
 import { createServerClient as createSupabaseServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 
-// This is the function that was missing in the export
+// This is the function that was missing in the export - without cookies
 export function createServerClient() {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!
   const supabaseKey =
@@ -11,7 +12,7 @@ export function createServerClient() {
     throw new Error("Missing Supabase environment variables")
   }
 
-  return createSupabaseServerClient(supabaseUrl, supabaseKey, {
+  return createClient(supabaseUrl, supabaseKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
@@ -24,7 +25,7 @@ export function createServerClient() {
   })
 }
 
-// For server components and server actions with cookies
+// For server components and server actions with cookies - only call this within a request context
 export function createServerSupabaseClient() {
   const cookieStore = cookies()
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -45,5 +46,5 @@ export function createServerSupabaseClient() {
   })
 }
 
-// For server components and server actions
-export const supabase = createServerSupabaseClient()
+// DO NOT initialize at the module level with cookies
+// export const supabase = createServerSupabaseClient() // This was causing the error

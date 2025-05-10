@@ -1,234 +1,239 @@
-"use server"
-
 import { createServerClient } from "./server"
-import { v4 as uuidv4 } from "uuid"
 
 export async function seedDemoData() {
-  const supabase = createServerClient()
-
   try {
-    // Check if we already have data
-    const { count } = await supabase.from("applications").select("*", { count: "exact", head: true })
+    const supabase = createServerClient()
 
-    // If we already have applications, don't seed
-    if (count && count > 0) {
-      return { success: true, message: "Data already exists" }
-    }
-
-    // Create demo affiliates
-    const affiliates = [
-      {
-        id: uuidv4(),
-        name: "John Smith",
-        email: "john@example.com",
-        referral_code: "JOSM1234",
-        tier: "standard",
-        status: "active",
-      },
-      {
-        id: uuidv4(),
-        name: "Sarah Johnson",
-        email: "sarah@example.com",
-        referral_code: "SAJO5678",
-        tier: "premium",
-        status: "active",
-      },
-    ]
-
-    // Insert affiliates
-    const { error: affiliateError } = await supabase.from("affiliates").insert(affiliates)
-
-    if (affiliateError) throw affiliateError
-
-    // Create demo applications
+    // Sample applications
     const applications = [
       {
-        id: uuidv4(),
-        reference_id: "APP12345",
+        id: "550e8400-e29b-41d4-a716-446655440000",
+        reference_id: "APP-001",
         status: "pending",
         credit_check_completed: false,
-        submitted_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-        notes: "Looking for working capital",
-        affiliate_id: affiliates[0].id,
-        affiliate_code: affiliates[0].referral_code,
+        submitted_at: new Date().toISOString(),
+        notes: "Initial application",
       },
       {
-        id: uuidv4(),
-        reference_id: "APP67890",
+        id: "550e8400-e29b-41d4-a716-446655440001",
+        reference_id: "APP-002",
         status: "approved",
         credit_check_completed: true,
-        submitted_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        notes: "Approved for $100,000 SBA loan",
-        affiliate_id: affiliates[1].id,
-        affiliate_code: affiliates[1].referral_code,
+        submitted_at: new Date().toISOString(),
+        notes: "Approved with conditions",
       },
       {
-        id: uuidv4(),
-        reference_id: "APP24680",
-        status: "in_review",
+        id: "550e8400-e29b-41d4-a716-446655440002",
+        reference_id: "APP-003",
+        status: "rejected",
         credit_check_completed: true,
-        submitted_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        notes: "Waiting for additional documentation",
+        submitted_at: new Date().toISOString(),
+        notes: "Credit score too low",
       },
     ]
 
     // Insert applications
-    const { error: appError } = await supabase.from("applications").insert(applications)
+    const { error: applicationsError } = await supabase.from("applications").upsert(applications, { onConflict: "id" })
 
-    if (appError) throw appError
+    if (applicationsError) {
+      console.error("Error seeding applications:", applicationsError)
+      return { success: false, error: applicationsError.message }
+    }
 
-    // Add applicant details for each application
+    // Sample applicant details
     const applicantDetails = [
       {
-        application_id: applications[0].id,
-        full_name: "Michael Brown",
-        email: "michael@example.com",
-        phone: "(555) 123-4567",
+        application_id: "550e8400-e29b-41d4-a716-446655440000",
+        full_name: "John Doe",
+        email: "john.doe@example.com",
+        phone: "555-123-4567",
         preferred_contact: "Email",
       },
       {
-        application_id: applications[1].id,
-        full_name: "Jessica Williams",
-        email: "jessica@example.com",
-        phone: "(555) 987-6543",
+        application_id: "550e8400-e29b-41d4-a716-446655440001",
+        full_name: "Jane Smith",
+        email: "jane.smith@example.com",
+        phone: "555-987-6543",
         preferred_contact: "Phone",
       },
       {
-        application_id: applications[2].id,
-        full_name: "David Miller",
-        email: "david@example.com",
-        phone: "(555) 456-7890",
+        application_id: "550e8400-e29b-41d4-a716-446655440002",
+        full_name: "Bob Johnson",
+        email: "bob.johnson@example.com",
+        phone: "555-456-7890",
         preferred_contact: "Email",
       },
     ]
 
-    const { error: applicantError } = await supabase.from("applicant_details").insert(applicantDetails)
+    // Insert applicant details
+    const { error: applicantDetailsError } = await supabase
+      .from("applicant_details")
+      .upsert(applicantDetails, { onConflict: "application_id" })
 
-    if (applicantError) throw applicantError
+    if (applicantDetailsError) {
+      console.error("Error seeding applicant details:", applicantDetailsError)
+      return { success: false, error: applicantDetailsError.message }
+    }
 
-    // Add business details for each application
+    // Sample business details
     const businessDetails = [
       {
-        application_id: applications[0].id,
-        business_name: "Brown's Consulting",
+        application_id: "550e8400-e29b-41d4-a716-446655440000",
+        business_name: "Acme Corp",
         business_type: "LLC",
-        industry: "Professional Services",
-        years_in_business: "1-2 years",
-        ein: "12-3456789",
-        annual_revenue: "$100,000 - $250,000",
-        credit_score: "Good (700-749)",
-        bankruptcy_history: false,
-      },
-      {
-        application_id: applications[1].id,
-        business_name: "Jessica's Bakery",
-        business_type: "Sole Proprietorship",
-        industry: "Food & Beverage",
-        years_in_business: "3-5 years",
-        annual_revenue: "$250,000 - $500,000",
-        credit_score: "Excellent (750+)",
-        bankruptcy_history: false,
-      },
-      {
-        application_id: applications[2].id,
-        business_name: "Miller Tech Solutions",
-        business_type: "Corporation",
         industry: "Technology",
-        years_in_business: "Less than 1 year",
-        annual_revenue: "Under $100,000",
-        credit_score: "Fair (650-699)",
+        years_in_business: "1-3",
+        ein: "12-3456789",
+        annual_revenue: "$100,000-$500,000",
+        monthly_profit: "$10,000-$50,000",
+        credit_score: "Good (670-739)",
         bankruptcy_history: false,
+      },
+      {
+        application_id: "550e8400-e29b-41d4-a716-446655440001",
+        business_name: "Smith Consulting",
+        business_type: "Sole Proprietorship",
+        industry: "Consulting",
+        years_in_business: "3-5",
+        ein: "98-7654321",
+        annual_revenue: "$500,000-$1,000,000",
+        monthly_profit: "$50,000-$100,000",
+        credit_score: "Excellent (740+)",
+        bankruptcy_history: false,
+      },
+      {
+        application_id: "550e8400-e29b-41d4-a716-446655440002",
+        business_name: "Johnson Retail",
+        business_type: "Corporation",
+        industry: "Retail",
+        years_in_business: "Less than 1",
+        ein: "45-6789123",
+        annual_revenue: "Less than $100,000",
+        monthly_profit: "Less than $10,000",
+        credit_score: "Fair (580-669)",
+        bankruptcy_history: true,
       },
     ]
 
-    const { error: businessError } = await supabase.from("business_details").insert(businessDetails)
+    // Insert business details
+    const { error: businessDetailsError } = await supabase
+      .from("business_details")
+      .upsert(businessDetails, { onConflict: "application_id" })
 
-    if (businessError) throw businessError
+    if (businessDetailsError) {
+      console.error("Error seeding business details:", businessDetailsError)
+      return { success: false, error: businessDetailsError.message }
+    }
 
-    // Add funding requests for each application
+    // Sample funding requests
     const fundingRequests = [
       {
-        application_id: applications[0].id,
-        funding_amount: "$50,000 - $100,000",
-        funding_purpose: "Working Capital",
-        timeframe: "Immediate (0-30 days)",
-        collateral: "No",
-      },
-      {
-        application_id: applications[1].id,
-        funding_amount: "$100,000 - $250,000",
-        funding_purpose: "Business Expansion",
-        timeframe: "Medium-term (3-6 months)",
-        collateral: "Yes",
-      },
-      {
-        application_id: applications[2].id,
-        funding_amount: "Under $50,000",
+        application_id: "550e8400-e29b-41d4-a716-446655440000",
+        funding_amount: "$50,000-$100,000",
         funding_purpose: "Equipment Purchase",
-        timeframe: "Short-term (1-3 months)",
-        collateral: "Not Sure",
+        timeframe: "1-3 months",
+        collateral: "Equipment",
+      },
+      {
+        application_id: "550e8400-e29b-41d4-a716-446655440001",
+        funding_amount: "$100,000-$250,000",
+        funding_purpose: "Working Capital",
+        timeframe: "Immediately",
+        collateral: "None",
+      },
+      {
+        application_id: "550e8400-e29b-41d4-a716-446655440002",
+        funding_amount: "Less than $50,000",
+        funding_purpose: "Inventory",
+        timeframe: "3-6 months",
+        collateral: "Inventory",
       },
     ]
 
-    const { error: fundingError } = await supabase.from("funding_requests").insert(fundingRequests)
+    // Insert funding requests
+    const { error: fundingRequestsError } = await supabase
+      .from("funding_requests")
+      .upsert(fundingRequests, { onConflict: "application_id" })
 
-    if (fundingError) throw fundingError
+    if (fundingRequestsError) {
+      console.error("Error seeding funding requests:", fundingRequestsError)
+      return { success: false, error: fundingRequestsError.message }
+    }
 
-    // Add additional information for each application
-    const additionalInfo = [
+    // Sample additional information
+    const additionalInformation = [
       {
-        application_id: applications[0].id,
-        hear_about_us: "Search Engine",
-        additional_info: "Looking to expand operations to a new location",
+        application_id: "550e8400-e29b-41d4-a716-446655440000",
+        hear_about_us: "Google Search",
+        additional_info: "Looking for quick funding",
         terms_agreed: true,
         marketing_consent: true,
       },
       {
-        application_id: applications[1].id,
+        application_id: "550e8400-e29b-41d4-a716-446655440001",
         hear_about_us: "Referral",
-        additional_info: "Need funding to purchase new equipment and hire staff",
+        additional_info: "Need funding for expansion",
         terms_agreed: true,
         marketing_consent: false,
       },
       {
-        application_id: applications[2].id,
+        application_id: "550e8400-e29b-41d4-a716-446655440002",
         hear_about_us: "Social Media",
-        additional_info: "Startup looking for initial funding",
+        additional_info: "Urgent funding needed",
         terms_agreed: true,
         marketing_consent: true,
       },
     ]
 
-    const { error: infoError } = await supabase.from("additional_information").insert(additionalInfo)
+    // Insert additional information
+    const { error: additionalInfoError } = await supabase
+      .from("additional_information")
+      .upsert(additionalInformation, { onConflict: "application_id" })
 
-    if (infoError) throw infoError
+    if (additionalInfoError) {
+      console.error("Error seeding additional information:", additionalInfoError)
+      return { success: false, error: additionalInfoError.message }
+    }
 
-    // Create commissions for the affiliate applications
-    const commissions = [
+    // Sample affiliates
+    const affiliates = [
       {
-        affiliate_id: affiliates[0].id,
-        application_id: applications[0].id,
-        amount: 500,
-        rate: 10,
-        status: "pending",
+        id: "550e8400-e29b-41d4-a716-446655440010",
+        name: "John Partner",
+        email: "john.partner@example.com",
+        referral_code: "JOHN10",
+        tier: "standard",
+        status: "active",
       },
       {
-        affiliate_id: affiliates[1].id,
-        application_id: applications[1].id,
-        amount: 1500,
-        rate: 15,
-        status: "paid",
-        payout_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        id: "550e8400-e29b-41d4-a716-446655440011",
+        name: "Sarah Partner",
+        email: "sarah.partner@example.com",
+        referral_code: "SARAH15",
+        tier: "premium",
+        status: "active",
+      },
+      {
+        id: "550e8400-e29b-41d4-a716-446655440012",
+        name: "Mike Partner",
+        email: "mike.partner@example.com",
+        referral_code: "MIKE20",
+        tier: "elite",
+        status: "inactive",
       },
     ]
 
-    const { error: commissionError } = await supabase.from("affiliate_commissions").insert(commissions)
+    // Insert affiliates
+    const { error: affiliatesError } = await supabase.from("affiliates").upsert(affiliates, { onConflict: "id" })
 
-    if (commissionError) throw commissionError
+    if (affiliatesError) {
+      console.error("Error seeding affiliates:", affiliatesError)
+      return { success: false, error: affiliatesError.message }
+    }
 
     return { success: true, message: "Demo data seeded successfully" }
   } catch (error) {
-    console.error("Error seeding demo data:", error)
-    return { success: false, error: "Failed to seed demo data" }
+    console.error("Error in seedDemoData:", error)
+    return { success: false, error: "Internal server error" }
   }
 }
