@@ -1,14 +1,13 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, Eye, EyeOff } from "lucide-react"
-import LoadingSpinner from "@/app/components/LoadingSpinner"
+import { LoadingSpinner } from "@/app/components/LoadingSpinner"
+import type { FormEvent } from "react"
 
 export function DirectLoginForm() {
   const [email, setEmail] = useState("hysen@diamondtier.solutions")
@@ -18,7 +17,7 @@ export function DirectLoginForm() {
   const [success, setSuccess] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)

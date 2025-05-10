@@ -22,4 +22,5 @@ export function LoadingSpinner({ className, size = "md" }: LoadingSpinnerProps) 
   )
 }
 
+// Default export for backward compatibility
 export default LoadingSpinner

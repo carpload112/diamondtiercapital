@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
+import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 
 export async function POST(request: Request) {
@@ -7,13 +8,14 @@ export async function POST(request: Request) {
     const { email = "hysen@diamondtier.solutions", password = "HYbr2016$$" } = body
 
     // Create a Supabase client
-    const supabaseUrl = process.env.SUPABASE_URL!
-    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
     if (!supabaseUrl || !supabaseAnonKey) {
       return NextResponse.json({ error: "Missing Supabase environment variables" }, { status: 500 })
     }
 
+    // Create a Supabase client
     const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
     // Sign in
@@ -23,6 +25,7 @@ export async function POST(request: Request) {
     })
 
     if (error) {
+      console.error("Login error:", error.message)
       return NextResponse.json({ error: error.message }, { status: 401 })
     }
 
@@ -38,10 +41,31 @@ export async function POST(request: Request) {
       .single()
 
     if (adminError || !adminData) {
+      console.error("Admin check error:", adminError?.message || "No admin data found")
       return NextResponse.json({ error: "You do not have admin access" }, { status: 403 })
     }
 
-    // Return success with session
+    // Set cookies for the session
+    const cookieStore = cookies()
+
+    // Set the session cookie
+    if (data.session) {
+      cookieStore.set("sb-access-token", data.session.access_token, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7, // 1 week
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      })
+
+      cookieStore.set("sb-refresh-token", data.session.refresh_token, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7, // 1 week
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      })
+    }
+
+    // Return success
     return NextResponse.json({
       success: true,
       user: {
@@ -49,9 +73,9 @@ export async function POST(request: Request) {
         email: data.user.email,
         role: adminData.role,
       },
-      session: data.session,
     })
   } catch (error: any) {
+    console.error("Unexpected error in direct-login:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
