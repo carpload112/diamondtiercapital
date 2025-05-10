@@ -1,21 +1,23 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 
-// Simple client function that will work reliably
+// Create a simple client function
 export function createClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("Missing Supabase environment variables")
+    console.error("Missing Supabase environment variables")
+    // Return a dummy client that won't crash the app
+    return createSupabaseClient("https://placeholder-url.supabase.co", "placeholder-key")
   }
 
   return createSupabaseClient(supabaseUrl, supabaseAnonKey)
 }
 
-// Export as default for modules that use default import
+// Export for backward compatibility
 export default createClient
 
-// Export a separate client for server components
+// Export for server components
 export function createClientClient() {
   return createClient()
 }
