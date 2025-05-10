@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import ApplicationsClient from "@/components/admin/ApplicationsClient"
+import ApplicationsContent from "@/components/admin/ApplicationsContent"
 
 export default function ApplicationsPage() {
   return (
@@ -10,7 +10,7 @@ export default function ApplicationsPage() {
         </div>
       }
     >
-      <ApplicationsClient />
+      <ApplicationsContent />
     </Suspense>
   )
 }
