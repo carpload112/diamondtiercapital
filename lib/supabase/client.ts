@@ -1,11 +1,11 @@
-import { createClient as supabaseCreateClient } from "@supabase/supabase-js"
+import { createBrowserClient } from "@supabase/ssr"
 
-// Create a singleton instance for the client
-let clientInstance: ReturnType<typeof supabaseCreateClient> | null = null
+// Create a singleton instance of the Supabase client
+let supabaseClient: ReturnType<typeof createBrowserClient> | null = null
 
-// Main function to create/get the Supabase client
+// This is the function that was missing in the export
 export function createClientClient() {
-  if (clientInstance) return clientInstance
+  if (supabaseClient) return supabaseClient
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -14,9 +14,17 @@ export function createClientClient() {
     throw new Error("Missing Supabase environment variables")
   }
 
-  clientInstance = supabaseCreateClient(supabaseUrl, supabaseAnonKey)
-  return clientInstance
+  supabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey)
+  return supabaseClient
 }
 
-// Export an alias to support both naming conventions used in the app
-export const createClient = createClientClient
+// Create a client for browser usage
+export const createClient = () => {
+  if (!supabaseClient) {
+    supabaseClient = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    )
+  }
+  return supabaseClient
+}

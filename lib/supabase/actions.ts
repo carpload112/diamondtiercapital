@@ -50,8 +50,8 @@ export async function submitApplication(formData: ApplicationFormData) {
     // Insert into applications table
     const { error: applicationError } = await supabase.from("applications").insert({
       id: applicationId,
-      status: "pending",
       reference_id: referenceId,
+      status: "pending",
       credit_check_completed: false,
       submitted_at: new Date().toISOString(),
       notes: formData.additionalInfo || "",
@@ -125,69 +125,74 @@ export async function submitApplication(formData: ApplicationFormData) {
 
     // Add affiliate tracking if referral code is provided
     if (formData.referralCode) {
-      // Get the affiliate from the referral code
-      const { data: affiliate } = await getAffiliateByReferralCode(formData.referralCode)
+      try {
+        // Get the affiliate from the referral code
+        const { data: affiliate } = await getAffiliateByReferralCode(formData.referralCode)
 
-      if (affiliate) {
-        // Update the application with the affiliate ID
-        await supabase
-          .from("applications")
-          .update({
-            affiliate_id: affiliate.id,
-            affiliate_code: formData.referralCode,
+        if (affiliate) {
+          // Update the application with the affiliate ID
+          await supabase
+            .from("applications")
+            .update({
+              affiliate_id: affiliate.id,
+              affiliate_code: formData.referralCode,
+            })
+            .eq("id", applicationId)
+
+          // For now, we'll create a pending commission based on a default amount
+          // In a real system, this would be calculated based on the actual funding amount
+          const defaultCommissionAmount = 1000 // $1000 placeholder
+          const { data: tierData } = await supabase
+            .from("affiliate_tiers")
+            .select("commission_rate")
+            .eq("name", affiliate.tier)
+            .single()
+
+          const commissionRate = tierData?.commission_rate || 10 // Default 10% if tier not found
+          const commissionAmount = calculateCommission(defaultCommissionAmount, commissionRate)
+
+          // Create the commission record
+          await createCommission({
+            affiliateId: affiliate.id,
+            applicationId: applicationId,
+            amount: commissionAmount,
+            rate: commissionRate,
           })
-          .eq("id", applicationId)
 
-        // For now, we'll create a pending commission based on a default amount
-        // In a real system, this would be calculated based on the actual funding amount
-        const defaultCommissionAmount = 1000 // $1000 placeholder
-        const { data: tierData } = await supabase
-          .from("affiliate_tiers")
-          .select("commission_rate")
-          .eq("name", affiliate.tier)
-          .single()
+          // Process MLM commissions if applicable
+          const { data: mlmSettings } = await supabase
+            .from("affiliate_mlm_settings")
+            .select("*")
+            .order("level", { ascending: true })
 
-        const commissionRate = tierData?.commission_rate || 10 // Default 10% if tier not found
-        const commissionAmount = calculateCommission(defaultCommissionAmount, commissionRate)
+          if (mlmSettings && mlmSettings.length > 0) {
+            // Get parent affiliates up to the maximum level in the MLM structure
+            const { data: relationships } = await supabase
+              .from("affiliate_relationships")
+              .select("parent_affiliate_id")
+              .eq("child_affiliate_id", affiliate.id)
 
-        // Create the commission record
-        await createCommission({
-          affiliateId: affiliate.id,
-          applicationId: applicationId,
-          amount: commissionAmount,
-          rate: commissionRate,
-        })
+            if (relationships && relationships.length > 0) {
+              for (let i = 0; i < Math.min(relationships.length, mlmSettings.length); i++) {
+                const parentId = relationships[i].parent_affiliate_id
+                const mlmRate = mlmSettings[i].commission_percentage
+                const mlmAmount = calculateCommission(defaultCommissionAmount, mlmRate)
 
-        // Process MLM commissions if applicable
-        const { data: mlmSettings } = await supabase
-          .from("affiliate_mlm_settings")
-          .select("*")
-          .order("level", { ascending: true })
-
-        if (mlmSettings && mlmSettings.length > 0) {
-          // Get parent affiliates up to the maximum level in the MLM structure
-          const { data: relationships } = await supabase
-            .from("affiliate_relationships")
-            .select("parent_affiliate_id")
-            .eq("child_affiliate_id", affiliate.id)
-
-          if (relationships && relationships.length > 0) {
-            for (let i = 0; i < Math.min(relationships.length, mlmSettings.length); i++) {
-              const parentId = relationships[i].parent_affiliate_id
-              const mlmRate = mlmSettings[i].commission_percentage
-              const mlmAmount = calculateCommission(defaultCommissionAmount, mlmRate)
-
-              // Create commission for the parent affiliate
-              await createCommission({
-                affiliateId: parentId,
-                applicationId: applicationId,
-                amount: mlmAmount,
-                rate: mlmRate,
-                status: "pending",
-              })
+                // Create commission for the parent affiliate
+                await createCommission({
+                  affiliateId: parentId,
+                  applicationId: applicationId,
+                  amount: mlmAmount,
+                  rate: mlmRate,
+                  status: "pending",
+                })
+              }
             }
           }
         }
+      } catch (affiliateError) {
+        // Log the error but don't fail the application submission
+        console.error("Error processing affiliate:", affiliateError)
       }
     }
 

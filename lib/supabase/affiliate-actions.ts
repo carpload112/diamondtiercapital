@@ -26,14 +26,11 @@ export async function createAffiliate(data: {
     const { data: affiliate, error } = await supabase
       .from("affiliates")
       .insert({
-        first_name: data.firstName,
-        last_name: data.lastName,
+        name: `${data.firstName} ${data.lastName}`,
         email: data.email,
-        phone: data.phone || null,
-        company_name: data.companyName || null,
         referral_code: referralCode,
-        payment_method: data.paymentMethod || null,
-        payment_details: data.paymentDetails || null,
+        tier: "standard", // Default tier
+        status: "active",
       })
       .select()
       .single()
@@ -53,7 +50,6 @@ export async function createAffiliate(data: {
         await supabase.from("affiliate_relationships").insert({
           parent_affiliate_id: parentAffiliate.id,
           child_affiliate_id: affiliate.id,
-          level: 1, // Direct referral
         })
       }
     }
@@ -126,13 +122,7 @@ export async function updateAffiliate(id: string, data: any) {
   const supabase = createServerClient()
 
   try {
-    const { error } = await supabase
-      .from("affiliates")
-      .update({
-        ...data,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", id)
+    const { error } = await supabase.from("affiliates").update(data).eq("id", id)
 
     if (error) throw error
 
@@ -157,6 +147,7 @@ export async function recordAffiliateClick(referralCode: string, ipAddress: stri
     // Record the click
     const { error } = await supabase.from("affiliate_clicks").insert({
       affiliate_id: affiliate.id,
+      referral_code: referralCode,
       ip_address: ipAddress,
       user_agent: userAgent,
     })
@@ -208,53 +199,45 @@ export async function getAffiliateStats(affiliateId: string) {
 
   try {
     // Get total clicks
-    const { data: clicks, error: clicksError } = await supabase
+    const { count: totalClicks } = await supabase
       .from("affiliate_clicks")
-      .select("id", { count: "exact" })
+      .select("id", { count: "exact", head: true })
       .eq("affiliate_id", affiliateId)
-
-    if (clicksError) throw clicksError
 
     // Get total applications
-    const { data: applications, error: applicationsError } = await supabase
+    const { data: applications } = await supabase
       .from("applications")
-      .select("id, status", { count: "exact" })
+      .select("id, status")
       .eq("affiliate_id", affiliateId)
 
-    if (applicationsError) throw applicationsError
-
     // Get total commissions
-    const { data: commissions, error: commissionsError } = await supabase
+    const { data: commissions } = await supabase
       .from("affiliate_commissions")
       .select("amount, status")
       .eq("affiliate_id", affiliateId)
 
-    if (commissionsError) throw commissionsError
-
     // Calculate stats
-    const totalClicks = clicks?.length || 0
     const totalApplications = applications?.length || 0
     const approvedApplications = applications?.filter((app) => app.status === "approved").length || 0
     const pendingApplications = applications?.filter((app) => app.status === "pending").length || 0
     const rejectedApplications = applications?.filter((app) => app.status === "rejected").length || 0
 
-    const totalCommissions =
-      commissions?.reduce((sum, commission) => sum + Number.parseFloat(commission.amount), 0) || 0
+    const totalCommissions = commissions?.reduce((sum, commission) => sum + Number(commission.amount), 0) || 0
     const paidCommissions =
       commissions
         ?.filter((commission) => commission.status === "paid")
-        .reduce((sum, commission) => sum + Number.parseFloat(commission.amount), 0) || 0
+        .reduce((sum, commission) => sum + Number(commission.amount), 0) || 0
     const pendingCommissions =
       commissions
         ?.filter((commission) => commission.status === "pending")
-        .reduce((sum, commission) => sum + Number.parseFloat(commission.amount), 0) || 0
+        .reduce((sum, commission) => sum + Number(commission.amount), 0) || 0
 
     // Calculate conversion rate
     const conversionRate = totalClicks > 0 ? (totalApplications / totalClicks) * 100 : 0
 
     return {
       data: {
-        totalClicks,
+        totalClicks: totalClicks || 0,
         totalApplications,
         approvedApplications,
         pendingApplications,
@@ -301,47 +284,6 @@ export async function getAffiliateTiers() {
   } catch (error) {
     console.error("Error getting affiliate tiers:", error)
     return { data: [] }
-  }
-}
-
-/**
- * Create or update affiliate payout
- */
-export async function createAffiliatePayout(data: {
-  affiliateId: string
-  amount: number
-  paymentMethod: string
-  paymentDetails?: any
-}) {
-  const supabase = createServerClient()
-
-  try {
-    // Create payout record
-    const { error } = await supabase.from("affiliate_payouts").insert({
-      affiliate_id: data.affiliateId,
-      amount: data.amount,
-      payment_method: data.paymentMethod,
-      payment_details: data.paymentDetails || null,
-    })
-
-    if (error) throw error
-
-    // Update commissions to paid status
-    const { error: updateError } = await supabase
-      .from("affiliate_commissions")
-      .update({
-        status: "paid",
-        payout_date: new Date().toISOString(),
-      })
-      .eq("affiliate_id", data.affiliateId)
-      .eq("status", "pending")
-
-    if (updateError) throw updateError
-
-    return { success: true }
-  } catch (error) {
-    console.error("Error creating affiliate payout:", error)
-    return { success: false, error: "Failed to create payout" }
   }
 }
 
