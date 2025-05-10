@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
-import { Edit, Save, X } from "lucide-react"
+import { Edit, Save, X, Plus } from "lucide-react"
 
 type MLMSetting = {
   level: number
@@ -201,107 +201,39 @@ export function MLMSettings({ mlmSettings, tiers }: MLMSettingsProps) {
           <CardDescription>Configure commission rates and requirements for different affiliate tiers.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tier</TableHead>
-                <TableHead>Commission Rate</TableHead>
-                <TableHead>Min. Referrals</TableHead>
-                <TableHead>Min. Approved Apps</TableHead>
-                <TableHead>Min. Revenue</TableHead>
-                <TableHead className="w-[100px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tierData.map((tier) => (
-                <TableRow key={tier.name}>
-                  <TableCell className="font-medium">
-                    {tier.name.charAt(0).toUpperCase() + tier.name.slice(1)}
-                  </TableCell>
-                  <TableCell>
-                    {editingTier === tier.name ? (
-                      <Input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.1"
-                        value={tier.commission_rate}
-                        onChange={(e) => handleTierChange(tier.name, "commission_rate", e.target.value)}
-                        className="w-20 h-8"
-                      />
-                    ) : (
-                      `${tier.commission_rate}%`
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingTier === tier.name ? (
-                      <Input
-                        type="number"
-                        min="0"
-                        value={tier.min_referrals}
-                        onChange={(e) => handleTierChange(tier.name, "min_referrals", e.target.value)}
-                        className="w-20 h-8"
-                      />
-                    ) : (
-                      tier.min_referrals
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingTier === tier.name ? (
-                      <Input
-                        type="number"
-                        min="0"
-                        value={tier.min_approved_applications}
-                        onChange={(e) => handleTierChange(tier.name, "min_approved_applications", e.target.value)}
-                        className="w-20 h-8"
-                      />
-                    ) : (
-                      tier.min_approved_applications
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingTier === tier.name ? (
-                      <Input
-                        type="number"
-                        min="0"
-                        value={tier.min_revenue}
-                        onChange={(e) => handleTierChange(tier.name, "min_revenue", e.target.value)}
-                        className="w-20 h-8"
-                      />
-                    ) : (
-                      `$${tier.min_revenue.toLocaleString()}`
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {editingTier === tier.name ? (
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 p-0"
-                          onClick={() => saveTierChanges(tier.name)}
-                        >
-                          <Save className="h-3.5 w-3.5 text-green-500" />
-                        </Button>
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={cancelTierEdit}>
-                          <X className="h-3.5 w-3.5 text-red-500" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0"
-                        onClick={() => handleTierEdit(tier.name)}
-                      >
-                        <Edit className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
-                  </TableCell>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium">Commission Rates</h3>
+              <Button size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Tier
+              </Button>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Tier Name</TableHead>
+                  <TableHead>Commission Rate</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {tiers.map((tier) => (
+                  <TableRow key={tier.name}>
+                    <TableCell className="font-medium capitalize">{tier.name}</TableCell>
+                    <TableCell>{tier.commission_rate}%</TableCell>
+                    <TableCell>{tier.description}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="sm">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

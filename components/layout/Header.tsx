@@ -16,6 +16,7 @@ import {
   Users,
   Phone,
   GraduationCap,
+  LayoutDashboard,
 } from "lucide-react"
 import CalendlyModal from "./CalendlyModal"
 
@@ -69,6 +70,23 @@ const menuItems = [
         description: "Get in touch with our team",
         href: "/contact",
         icon: Phone,
+      },
+    ],
+  },
+  {
+    title: "Admin",
+    items: [
+      {
+        name: "Dashboard",
+        description: "Access the admin dashboard",
+        href: "/admin",
+        icon: LayoutDashboard,
+      },
+      {
+        name: "Affiliate Management",
+        description: "Manage affiliate partners",
+        href: "/admin/affiliates",
+        icon: Users,
       },
     ],
   },

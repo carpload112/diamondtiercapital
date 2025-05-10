@@ -2,12 +2,12 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Search, ChevronDown, ChevronUp, Eye, Plus, Edit, Copy, Check } from "lucide-react"
+import { Search, ChevronDown, ChevronUp, Eye, Plus, Edit, Copy, Check, ExternalLink } from "lucide-react"
 import Link from "next/link"
 import {
   Dialog,
@@ -22,16 +22,13 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { createAffiliate, updateAffiliate } from "@/lib/supabase/affiliate-actions"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 type Affiliate = {
   id: string
-  first_name: string
-  last_name: string
+  name: string
   email: string
-  phone: string
-  company_name: string
   referral_code: string
-  tier: string
   status: string
   created_at: string
   total_applications?: number
@@ -41,9 +38,6 @@ type Affiliate = {
 type AffiliateTier = {
   name: string
   description: string
-  min_referrals: number
-  min_approved_applications: number
-  min_revenue: number
   commission_rate: number
 }
 
@@ -66,10 +60,18 @@ export function AffiliateManagement({ affiliates, tiers }: AffiliateManagementPr
     email: "",
     phone: "",
     companyName: "",
-    tier: "bronze",
-    status: "pending",
+    status: "active",
   })
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
+  const [baseUrl, setBaseUrl] = useState("https://www.diamondtiercapital.com")
+
+  // Get the base URL for referral links
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href)
+      setBaseUrl(`${url.protocol}//${url.host}`)
+    }
+  }, [])
 
   // Handle sort
   const handleSort = (field: string) => {
@@ -83,12 +85,11 @@ export function AffiliateManagement({ affiliates, tiers }: AffiliateManagementPr
 
   // Filter affiliates based on search term
   const filteredAffiliates = affiliates.filter((affiliate) => {
-    const fullName = `${affiliate.first_name} ${affiliate.last_name}`
+    const fullName = affiliate.name || ""
     const email = affiliate.email || ""
-    const company = affiliate.company_name || ""
     const code = affiliate.referral_code || ""
 
-    const searchString = `${fullName} ${email} ${company} ${code}`.toLowerCase()
+    const searchString = `${fullName} ${email} ${code}`.toLowerCase()
     return searchString.includes(searchTerm.toLowerCase())
   })
 
@@ -98,16 +99,12 @@ export function AffiliateManagement({ affiliates, tiers }: AffiliateManagementPr
 
     switch (sortField) {
       case "name":
-        aValue = `${a.first_name} ${a.last_name}`
-        bValue = `${b.first_name} ${b.last_name}`
+        aValue = a.name || ""
+        bValue = b.name || ""
         break
       case "email":
         aValue = a.email || ""
         bValue = b.email || ""
-        break
-      case "tier":
-        aValue = a.tier || ""
-        bValue = b.tier || ""
         break
       case "status":
         aValue = a.status || ""
@@ -148,13 +145,21 @@ export function AffiliateManagement({ affiliates, tiers }: AffiliateManagementPr
       email: "",
       phone: "",
       companyName: "",
-      tier: "bronze",
-      status: "pending",
+      status: "active",
     })
   }
 
   const handleAddAffiliate = async () => {
     try {
+      if (!formData.firstName || !formData.lastName || !formData.email) {
+        toast({
+          title: "Error",
+          description: "Please fill in all required fields",
+          variant: "destructive",
+        })
+        return
+      }
+
       const result = await createAffiliate({
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -166,20 +171,20 @@ export function AffiliateManagement({ affiliates, tiers }: AffiliateManagementPr
       if (result.success) {
         toast({
           title: "Success",
-          description: "Affiliate has been created",
+          description: "Affiliate has been created successfully",
         })
         setIsAddDialogOpen(false)
         resetForm()
         // Refresh the page to show the new affiliate
         window.location.reload()
       } else {
-        throw new Error(result.error)
+        throw new Error(result.error || "Failed to create affiliate")
       }
     } catch (error) {
       console.error("Error adding affiliate:", error)
       toast({
         title: "Error",
-        description: "Failed to create affiliate",
+        description: error instanceof Error ? error.message : "Failed to create affiliate",
         variant: "destructive",
       })
     }
@@ -189,13 +194,14 @@ export function AffiliateManagement({ affiliates, tiers }: AffiliateManagementPr
     if (!selectedAffiliate) return
 
     try {
+      // Split the name into first and last name for display purposes only
+      const nameParts = formData.firstName.split(" ")
+      const firstName = nameParts[0]
+      const lastName = nameParts.slice(1).join(" ")
+
       const result = await updateAffiliate(selectedAffiliate.id, {
-        first_name: formData.firstName,
-        last_name: formData.lastName,
+        name: `${formData.firstName} ${formData.lastName}`,
         email: formData.email,
-        phone: formData.phone,
-        company_name: formData.companyName,
-        tier: formData.tier,
         status: formData.status,
       })
 
@@ -222,22 +228,43 @@ export function AffiliateManagement({ affiliates, tiers }: AffiliateManagementPr
 
   const handleEditClick = (affiliate: Affiliate) => {
     setSelectedAffiliate(affiliate)
+
+    // Split the name into first and last name for the form
+    const nameParts = affiliate.name.split(" ")
+    const firstName = nameParts[0]
+    const lastName = nameParts.slice(1).join(" ")
+
     setFormData({
-      firstName: affiliate.first_name,
-      lastName: affiliate.last_name,
+      firstName: firstName,
+      lastName: lastName,
       email: affiliate.email,
-      phone: affiliate.phone || "",
-      companyName: affiliate.company_name || "",
-      tier: affiliate.tier,
+      phone: "",
+      companyName: "",
       status: affiliate.status,
     })
     setIsEditDialogOpen(true)
   }
 
+  const getReferralLink = (code: string) => {
+    return `${baseUrl}/applynow?ref=${code}`
+  }
+
   const copyToClipboard = (code: string) => {
-    navigator.clipboard.writeText(`https://www.diamondtiercapital.com/applynow?ref=${code}`)
+    const referralLink = getReferralLink(code)
+    navigator.clipboard.writeText(referralLink)
     setCopiedCode(code)
+
+    toast({
+      title: "Copied!",
+      description: "Referral link copied to clipboard",
+    })
+
     setTimeout(() => setCopiedCode(null), 2000)
+  }
+
+  const openReferralLink = (code: string) => {
+    const referralLink = getReferralLink(code)
+    window.open(referralLink, "_blank")
   }
 
   const formatDate = (dateString: string) => {
@@ -246,19 +273,6 @@ export function AffiliateManagement({ affiliates, tiers }: AffiliateManagementPr
       month: "short",
       day: "numeric",
     })
-  }
-
-  const getTierBadge = (tier: string) => {
-    switch (tier) {
-      case "platinum":
-        return <Badge className="bg-purple-100 text-purple-800">Platinum</Badge>
-      case "gold":
-        return <Badge className="bg-yellow-100 text-yellow-800">Gold</Badge>
-      case "silver":
-        return <Badge className="bg-gray-100 text-gray-800">Silver</Badge>
-      default:
-        return <Badge className="bg-amber-100 text-amber-800">Bronze</Badge>
-    }
   }
 
   const getStatusBadge = (status: string) => {
@@ -299,28 +313,30 @@ export function AffiliateManagement({ affiliates, tiers }: AffiliateManagementPr
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
+                  <Label htmlFor="firstName">First Name *</Label>
                   <Input
                     id="firstName"
                     name="firstName"
                     value={formData.firstName}
                     onChange={handleInputChange}
                     placeholder="John"
+                    required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
+                  <Label htmlFor="lastName">Last Name *</Label>
                   <Input
                     id="lastName"
                     name="lastName"
                     value={formData.lastName}
                     onChange={handleInputChange}
                     placeholder="Doe"
+                    required
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email *</Label>
                 <Input
                   id="email"
                   name="email"
@@ -328,6 +344,7 @@ export function AffiliateManagement({ affiliates, tiers }: AffiliateManagementPr
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="john@example.com"
+                  required
                 />
               </div>
               <div className="space-y-2">
@@ -396,20 +413,6 @@ export function AffiliateManagement({ affiliates, tiers }: AffiliateManagementPr
               <TableHead>
                 <button
                   className="flex items-center text-xs font-medium text-gray-500"
-                  onClick={() => handleSort("tier")}
-                >
-                  Tier
-                  {sortField === "tier" &&
-                    (sortDirection === "asc" ? (
-                      <ChevronUp className="ml-1 h-3 w-3" />
-                    ) : (
-                      <ChevronDown className="ml-1 h-3 w-3" />
-                    ))}
-                </button>
-              </TableHead>
-              <TableHead>
-                <button
-                  className="flex items-center text-xs font-medium text-gray-500"
                   onClick={() => handleSort("status")}
                 >
                   Status
@@ -442,7 +445,7 @@ export function AffiliateManagement({ affiliates, tiers }: AffiliateManagementPr
           <TableBody>
             {sortedAffiliates.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
+                <TableCell colSpan={6} className="h-24 text-center">
                   No affiliates found.
                 </TableCell>
               </TableRow>
@@ -450,30 +453,52 @@ export function AffiliateManagement({ affiliates, tiers }: AffiliateManagementPr
               sortedAffiliates.map((affiliate) => (
                 <TableRow key={affiliate.id}>
                   <TableCell>
-                    <div className="font-medium text-sm">
-                      {affiliate.first_name} {affiliate.last_name}
-                    </div>
-                    {affiliate.company_name && <div className="text-xs text-gray-500">{affiliate.company_name}</div>}
+                    <div className="font-medium text-sm">{affiliate.name}</div>
                   </TableCell>
                   <TableCell className="text-sm">{affiliate.email}</TableCell>
-                  <TableCell>{getTierBadge(affiliate.tier)}</TableCell>
                   <TableCell>{getStatusBadge(affiliate.status)}</TableCell>
                   <TableCell className="text-xs text-gray-500">{formatDate(affiliate.created_at)}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <code className="text-xs bg-gray-100 px-2 py-1 rounded">{affiliate.referral_code}</code>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0"
-                        onClick={() => copyToClipboard(affiliate.referral_code)}
-                      >
-                        {copiedCode === affiliate.referral_code ? (
-                          <Check className="h-3.5 w-3.5 text-green-500" />
-                        ) : (
-                          <Copy className="h-3.5 w-3.5" />
-                        )}
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                readOnly
+                                value={getReferralLink(affiliate.referral_code)}
+                                className="h-8 text-xs font-mono bg-gray-50"
+                                onClick={() => copyToClipboard(affiliate.referral_code)}
+                              />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Click to copy referral link</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => copyToClipboard(affiliate.referral_code)}
+                        >
+                          {copiedCode === affiliate.referral_code ? (
+                            <Check className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => openReferralLink(affiliate.referral_code)}
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -521,29 +546,6 @@ export function AffiliateManagement({ affiliates, tiers }: AffiliateManagementPr
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input id="phone" name="phone" value={formData.phone} onChange={handleInputChange} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="companyName">Company Name</Label>
-              <Input id="companyName" name="companyName" value={formData.companyName} onChange={handleInputChange} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="tier">Tier</Label>
-              <Select value={formData.tier} onValueChange={(value) => handleSelectChange("tier", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select tier" />
-                </SelectTrigger>
-                <SelectContent>
-                  {tiers.map((tier) => (
-                    <SelectItem key={tier.name} value={tier.name}>
-                      {tier.name.charAt(0).toUpperCase() + tier.name.slice(1)} ({tier.commission_rate}%)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>

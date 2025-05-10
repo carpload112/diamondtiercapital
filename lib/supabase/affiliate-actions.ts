@@ -22,15 +22,15 @@ export async function createAffiliate(data: {
     // Generate a unique referral code
     const referralCode = generateReferralCode(data.firstName, data.lastName)
 
-    // Create the affiliate record
+    // Create the affiliate record - using the correct schema fields
     const { data: affiliate, error } = await supabase
       .from("affiliates")
       .insert({
         name: `${data.firstName} ${data.lastName}`,
         email: data.email,
         referral_code: referralCode,
-        tier: "standard", // Default tier
-        status: "active",
+        // Remove tier field as it doesn't exist in the schema
+        status: "active", // Default status
       })
       .select()
       .single()
@@ -57,7 +57,7 @@ export async function createAffiliate(data: {
     return { success: true, data: affiliate }
   } catch (error) {
     console.error("Error creating affiliate:", error)
-    return { success: false, error: "Failed to create affiliate" }
+    return { success: false, error: error instanceof Error ? error.message : "Failed to create affiliate" }
   }
 }
 
@@ -122,14 +122,17 @@ export async function updateAffiliate(id: string, data: any) {
   const supabase = createServerClient()
 
   try {
-    const { error } = await supabase.from("affiliates").update(data).eq("id", id)
+    // Remove tier field if it exists in the data
+    const { tier, ...updateData } = data
+
+    const { error } = await supabase.from("affiliates").update(updateData).eq("id", id)
 
     if (error) throw error
 
     return { success: true }
   } catch (error) {
     console.error("Error updating affiliate:", error)
-    return { success: false, error: "Failed to update affiliate" }
+    return { success: false, error: error instanceof Error ? error.message : "Failed to update affiliate" }
   }
 }
 
