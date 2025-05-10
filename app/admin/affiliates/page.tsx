@@ -2,6 +2,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AffiliateManagement } from "@/components/admin/AffiliateManagement"
 import { MLMSettings } from "@/components/admin/MLMSettings"
+import { AffiliatePayouts } from "@/components/admin/AffiliatePayouts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function AffiliatesPage() {
@@ -15,12 +16,17 @@ export default function AffiliatesPage() {
       <Tabs defaultValue="affiliates" className="space-y-4">
         <TabsList>
           <TabsTrigger value="affiliates">Affiliates</TabsTrigger>
+          <TabsTrigger value="payouts">Payouts</TabsTrigger>
           <TabsTrigger value="settings">Commission Settings</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
 
         <TabsContent value="affiliates">
           <AffiliateManagement />
+        </TabsContent>
+
+        <TabsContent value="payouts">
+          <AffiliatePayouts />
         </TabsContent>
 
         <TabsContent value="settings">

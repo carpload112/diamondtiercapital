@@ -8,6 +8,7 @@ import { Footer } from "@/components/layout/Footer"
 import { Toaster } from "@/components/ui/toaster"
 import { ScrollToTop } from "@/components/ui/scroll-to-top"
 import { PageWrapper } from "@/components/layout/PageWrapper"
+import { AffiliateTracker } from "@/components/affiliate/AffiliateTracker"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -39,6 +40,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+          <AffiliateTracker />
           <Header />
           <main className="min-h-screen">
             <PageWrapper>{children}</PageWrapper>
