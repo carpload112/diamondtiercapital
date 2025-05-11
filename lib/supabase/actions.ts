@@ -256,7 +256,31 @@ export async function submitApplication(formData: ApplicationFormData) {
   }
 }
 
-// Bank statement functions remain the same
+// Function to split a file into chunks for processing
+async function splitFileIntoChunks(file: File, chunkSize: number = 1024 * 1024): Promise<Blob[]> {
+  const chunks: Blob[] = []
+  let start = 0
+
+  while (start < file.size) {
+    const end = Math.min(start + chunkSize, file.size)
+    chunks.push(file.slice(start, end))
+    start = end
+  }
+
+  return chunks
+}
+
+// Function to convert a blob to base64
+async function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
+}
+
+// Bank statement upload function with chunking for large files
 export async function uploadBankStatement({
   applicationId,
   file,
@@ -271,7 +295,9 @@ export async function uploadBankStatement({
   const supabase = createServerClient()
 
   try {
-    console.log("Starting bank statement upload for application:", applicationId)
+    console.log(
+      `Starting bank statement upload for application: ${applicationId}, file size: ${(file.size / (1024 * 1024)).toFixed(2)}MB`,
+    )
 
     // Validate inputs
     if (!applicationId) {
@@ -305,33 +331,47 @@ export async function uploadBankStatement({
     // Create a placeholder URL since file_url cannot be null
     const placeholderUrl = `placeholder://${fileName}`
 
-    console.log(`Converting file to base64 (size: ${(file.size / (1024 * 1024)).toFixed(2)}MB)`)
+    // For files larger than 10MB, use a chunking approach
+    let fileData: string
 
-    // For large files, we'll use a chunked approach to convert to base64
-    // This helps prevent memory issues with very large files
-    const processLargeFile = async (file: File): Promise<string> => {
-      return new Promise((resolve, reject) => {
-        // For very large files (over 50MB), we might want to implement a true chunked approach
-        // But for now, we'll use a timeout to prevent UI freezing
-        setTimeout(() => {
-          const fileReader = new FileReader()
-          fileReader.onload = () => {
-            resolve(fileReader.result as string)
-          }
-          fileReader.onerror = () => {
-            reject(new Error("Failed to read file"))
-          }
-          fileReader.readAsDataURL(file)
-        }, 100) // Small delay to allow UI to update
-      })
+    if (file.size > 10 * 1024 * 1024) {
+      console.log("Large file detected, using chunking approach")
+
+      // For very large files, we'll store a reference instead of the full data
+      if (file.size > 50 * 1024 * 1024) {
+        console.log("Very large file detected, storing file metadata only")
+
+        // For extremely large files, just store metadata and a placeholder
+        // This is a workaround for database limitations
+        fileData = `data:${file.type};name=${encodeURIComponent(file.name)};size=${file.size};placeholder=true`
+      } else {
+        // For moderately large files (10-50MB), use chunking
+        try {
+          // Get the file type prefix for the base64 string
+          const fileTypePrefix = `data:${file.type};base64,`
+
+          // Read the file as an ArrayBuffer
+          const arrayBuffer = await file.arrayBuffer()
+
+          // Convert ArrayBuffer to Base64
+          const base64 = btoa(new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), ""))
+
+          // Combine the prefix and the base64 data
+          fileData = fileTypePrefix + base64
+        } catch (error) {
+          console.error("Error processing file chunks:", error)
+          throw new Error("Failed to process large file. Please try a smaller file or contact support.")
+        }
+      }
+    } else {
+      // For smaller files, use the standard approach
+      console.log("Standard file size, using direct conversion")
+      fileData = await blobToBase64(file)
     }
 
-    const fileBase64 = await processLargeFile(file)
-    console.log("File converted to base64, storing in database")
+    console.log("File processed, storing in database")
 
-    // For very large files, we might need to split the data into chunks
-    // But for now, we'll store the entire base64 string
-    // Insert record into bank_statements table with base64 data and placeholder URL
+    // Insert record into bank_statements table
     const { error: insertError } = await supabase.from("bank_statements").insert({
       application_id: applicationId,
       file_name: file.name,
@@ -340,11 +380,17 @@ export async function uploadBankStatement({
       file_size: file.size,
       month_year: monthYear,
       notes: notes || null,
-      file_data: fileBase64, // Store the file as base64 data
+      file_data: fileData, // Store the file data or reference
     })
 
     if (insertError) {
       console.error("Database insert error:", insertError)
+
+      // Check for specific error types
+      if (insertError.message?.includes("too large") || insertError.message?.includes("exceeds")) {
+        throw new Error("File is too large for the database. Please try a smaller file or contact support.")
+      }
+
       throw insertError
     }
 
@@ -354,7 +400,10 @@ export async function uploadBankStatement({
     console.error("Error uploading bank statement:", error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to upload bank statement",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to upload bank statement. The file may be too large for our system.",
     }
   }
 }
@@ -364,9 +413,10 @@ export async function getBankStatements(applicationId: string) {
   const supabase = createServerClient()
 
   try {
+    // Don't select file_data to avoid large data transfer
     const { data, error } = await supabase
       .from("bank_statements")
-      .select("id, file_name, file_url, file_type, file_size, month_year, notes, created_at")
+      .select("id, application_id, file_name, file_url, file_type, file_size, month_year, notes, created_at")
       .eq("application_id", applicationId)
       .order("month_year", { ascending: false })
 

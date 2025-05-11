@@ -3,15 +3,16 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { getBankStatements, deleteBankStatement } from "@/lib/supabase/actions"
+import { getBankStatements, getBankStatementWithData, deleteBankStatement } from "@/lib/supabase/actions"
 import { useToast } from "@/hooks/use-toast"
-import { FileIcon, Trash2, Download, FileText, Eye } from "lucide-react"
+import { FileIcon, Trash2, Download, FileText, Eye, AlertTriangle } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
 interface BankStatementViewerProps {
   applicationId: string
   onDelete?: () => void
   readOnly?: boolean
+  isAdmin?: boolean
 }
 
 interface BankStatement {
@@ -27,11 +28,17 @@ interface BankStatement {
   file_data?: string // Base64 data
 }
 
-export function BankStatementViewer({ applicationId, onDelete, readOnly = false }: BankStatementViewerProps) {
+export function BankStatementViewer({
+  applicationId,
+  onDelete,
+  readOnly = false,
+  isAdmin = false,
+}: BankStatementViewerProps) {
   const [statements, setStatements] = useState<BankStatement[]>([])
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [selectedStatement, setSelectedStatement] = useState<BankStatement | null>(null)
+  const [loadingStatement, setLoadingStatement] = useState<string | null>(null)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -104,12 +111,63 @@ export function BankStatementViewer({ applicationId, onDelete, readOnly = false 
     })
   }
 
-  const viewStatement = (statement: BankStatement) => {
-    setSelectedStatement(statement)
+  const viewStatement = async (statement: BankStatement) => {
+    // If we already have the file data, just show it
+    if (statement.file_data) {
+      setSelectedStatement(statement)
+      return
+    }
+
+    // Otherwise, we need to fetch the file data
+    setLoadingStatement(statement.id)
+    try {
+      const { success, data, error } = await getBankStatementWithData(statement.id)
+
+      if (success && data) {
+        // Check if this is a placeholder for a very large file
+        if (data.file_data && data.file_data.includes("placeholder=true")) {
+          toast({
+            title: "Very large file",
+            description: "This file is too large to preview. Please download it instead.",
+            variant: "warning",
+          })
+          setLoadingStatement(null)
+          return
+        }
+
+        setSelectedStatement(data)
+      } else {
+        toast({
+          title: "Error loading file",
+          description: error || "Failed to load file data",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Error loading statement data:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load file data",
+        variant: "destructive",
+      })
+    } finally {
+      setLoadingStatement(null)
+    }
   }
 
-  const downloadStatement = (statement: BankStatement) => {
+  const downloadStatement = async (statement: BankStatement) => {
+    // If we already have the file data, use it
     if (statement.file_data) {
+      // Check if this is a placeholder
+      if (statement.file_data.includes("placeholder=true")) {
+        toast({
+          title: "Cannot download file directly",
+          description: "This file is too large for direct download. Please contact support.",
+          variant: "warning",
+        })
+        return
+      }
+
       // Create a download link for the base64 data
       const link = document.createElement("a")
       link.href = statement.file_data
@@ -117,16 +175,54 @@ export function BankStatementViewer({ applicationId, onDelete, readOnly = false 
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-    } else if (!statement.file_url.startsWith("placeholder://")) {
-      // If we have a real URL and no base64 data, open in a new tab
-      window.open(statement.file_url, "_blank")
-    } else {
+      return
+    }
+
+    // Otherwise, we need to fetch the file data first
+    setLoadingStatement(statement.id)
+    try {
+      const { success, data, error } = await getBankStatementWithData(statement.id)
+
+      if (success && data && data.file_data) {
+        // Check if this is a placeholder
+        if (data.file_data.includes("placeholder=true")) {
+          toast({
+            title: "Cannot download file directly",
+            description: "This file is too large for direct download. Please contact support.",
+            variant: "warning",
+          })
+          setLoadingStatement(null)
+          return
+        }
+
+        // Create a download link
+        const link = document.createElement("a")
+        link.href = data.file_data
+        link.download = data.file_name
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      } else {
+        toast({
+          title: "Error downloading file",
+          description: error || "Failed to download file",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Error downloading statement:", error)
       toast({
-        title: "Cannot download file",
-        description: "This file cannot be downloaded directly. Please contact support.",
+        title: "Error",
+        description: "Failed to download file",
         variant: "destructive",
       })
+    } finally {
+      setLoadingStatement(null)
     }
+  }
+
+  const isVeryLargeFile = (statement: BankStatement) => {
+    return statement.file_size > 50 * 1024 * 1024
   }
 
   return (
@@ -160,13 +256,18 @@ export function BankStatementViewer({ applicationId, onDelete, readOnly = false 
                     <p className="font-medium">{statement.file_name}</p>
                     <div className="flex space-x-4 text-sm text-gray-500">
                       <span>{statement.month_year}</span>
-                      <span>{formatFileSize(statement.file_size)}</span>
+                      <span className="flex items-center">
+                        {formatFileSize(statement.file_size)}
+                        {isVeryLargeFile(statement) && (
+                          <AlertTriangle className="h-3 w-3 text-amber-500 ml-1" title="Very large file" />
+                        )}
+                      </span>
                       <span>{formatDate(statement.created_at)}</span>
                     </div>
                   </div>
                 </div>
                 <div className="flex space-x-2">
-                  {statement.file_data && (
+                  {!isVeryLargeFile(statement) && (
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button
@@ -174,32 +275,45 @@ export function BankStatementViewer({ applicationId, onDelete, readOnly = false 
                           size="sm"
                           className="flex items-center"
                           onClick={() => viewStatement(statement)}
+                          disabled={loadingStatement === statement.id}
                         >
-                          <Eye className="h-4 w-4 mr-1" />
+                          {loadingStatement === statement.id ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-1"></div>
+                          ) : (
+                            <Eye className="h-4 w-4 mr-1" />
+                          )}
                           View
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="max-w-4xl">
                         <DialogHeader>
-                          <DialogTitle>{statement.file_name}</DialogTitle>
+                          <DialogTitle>{selectedStatement?.file_name}</DialogTitle>
                         </DialogHeader>
                         <div className="mt-4 max-h-[70vh] overflow-auto">
-                          {statement.file_type.startsWith("image/") ? (
+                          {selectedStatement?.file_type.startsWith("image/") ? (
                             <img
-                              src={statement.file_data || "/placeholder.svg"}
-                              alt={statement.file_name}
+                              src={selectedStatement.file_data || "/placeholder.svg"}
+                              alt={selectedStatement.file_name}
                               className="max-w-full h-auto"
                             />
-                          ) : statement.file_type === "application/pdf" ? (
-                            <iframe src={statement.file_data} title={statement.file_name} className="w-full h-[70vh]" />
+                          ) : selectedStatement?.file_type === "application/pdf" ? (
+                            <iframe
+                              src={selectedStatement.file_data}
+                              title={selectedStatement.file_name}
+                              className="w-full h-[70vh]"
+                            />
                           ) : (
                             <div className="p-4 bg-gray-100 rounded-md text-center">
                               <FileText className="h-16 w-16 mx-auto mb-2 text-gray-400" />
                               <p>
-                                This file type ({statement.file_type}) cannot be previewed. Please download the file to
-                                view it.
+                                This file type ({selectedStatement?.file_type}) cannot be previewed. Please download the
+                                file to view it.
                               </p>
-                              <Button variant="outline" className="mt-4" onClick={() => downloadStatement(statement)}>
+                              <Button
+                                variant="outline"
+                                className="mt-4"
+                                onClick={() => downloadStatement(selectedStatement!)}
+                              >
                                 <Download className="h-4 w-4 mr-2" />
                                 Download File
                               </Button>
@@ -214,8 +328,13 @@ export function BankStatementViewer({ applicationId, onDelete, readOnly = false 
                     size="sm"
                     className="flex items-center"
                     onClick={() => downloadStatement(statement)}
+                    disabled={loadingStatement === statement.id}
                   >
-                    <Download className="h-4 w-4 mr-1" />
+                    {loadingStatement === statement.id ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-1"></div>
+                    ) : (
+                      <Download className="h-4 w-4 mr-1" />
+                    )}
                     Download
                   </Button>
                   {!readOnly && (

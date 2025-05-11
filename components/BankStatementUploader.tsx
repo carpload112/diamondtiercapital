@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { UploadIcon as FileUpload, Upload, X, FileCheck, AlertCircle, Info } from "lucide-react"
+import { UploadIcon as FileUpload, Upload, X, FileCheck, AlertCircle, Info, AlertTriangle } from "lucide-react"
 import { uploadBankStatement } from "@/lib/supabase/actions"
 
 interface BankStatementUploaderProps {
@@ -46,6 +46,10 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
 
   // Increased file size limit to 100MB
   const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB in bytes
+  // Threshold for large file warning
+  const LARGE_FILE_THRESHOLD = 20 * 1024 * 1024 // 20MB
+  // Threshold for very large file warning
+  const VERY_LARGE_FILE_THRESHOLD = 50 * 1024 * 1024 // 50MB
 
   // Validate application ID on component mount
   useEffect(() => {
@@ -90,19 +94,20 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
         return
       }
 
-      // Show warning for large files (over 50MB)
-      if (file.size > 50 * 1024 * 1024) {
+      // Show appropriate warnings based on file size
+      if (file.size > VERY_LARGE_FILE_THRESHOLD) {
         toast({
           title: "Very large file detected",
           description: "Files over 50MB may take several minutes to upload and process. Please be patient.",
           variant: "warning",
-          duration: 6000, // Show for 6 seconds
+          duration: 8000, // Show for 8 seconds
         })
-      } else if (file.size > 20 * 1024 * 1024) {
+      } else if (file.size > LARGE_FILE_THRESHOLD) {
         toast({
           title: "Large file detected",
           description: "Files over 20MB may take longer to upload and process",
           variant: "warning",
+          duration: 5000, // Show for 5 seconds
         })
       }
 
@@ -156,11 +161,13 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
 
     // Check for very large files and warn the user
     const totalSize = Object.values(files).reduce((sum, file) => sum + (file?.size || 0), 0)
-    if (totalSize > 100 * 1024 * 1024) {
+    const hasVeryLargeFile = Object.values(files).some((file) => file && file.size > VERY_LARGE_FILE_THRESHOLD)
+
+    if (hasVeryLargeFile || totalSize > 100 * 1024 * 1024) {
       toast({
         title: "Very large upload",
-        description: "You're uploading over 100MB of files. This may take several minutes to complete.",
-        duration: 6000,
+        description: "You're uploading large files. This may take several minutes to complete. Please be patient.",
+        duration: 8000,
       })
     }
 
@@ -170,23 +177,30 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
     try {
       // Upload each file
       let successCount = 0
+      let errorCount = 0
+
       for (const [month, file] of Object.entries(files)) {
         if (file) {
           // Calculate progress update interval based on file size
           // Larger files will have slower progress updates
           const progressInterval = Math.max(100, Math.min(1000, Math.floor(file.size / 200000)))
 
-          // Simulate progress
+          // Reset progress for this file
+          setUploadProgress((prev) => ({ ...prev, [month]: 1 }))
+
+          // Start progress simulation
           const interval = setInterval(() => {
             setUploadProgress((prev) => {
-              const newProgress = Math.min((prev[month] || 0) + 2, 90)
+              // For very large files, progress more slowly
+              const increment = file.size > VERY_LARGE_FILE_THRESHOLD ? 1 : file.size > LARGE_FILE_THRESHOLD ? 2 : 5
+              const newProgress = Math.min((prev[month] || 0) + increment, 90)
               return { ...prev, [month]: newProgress }
             })
           }, progressInterval)
 
           try {
             // Show a toast for very large files
-            if (file.size > 50 * 1024 * 1024) {
+            if (file.size > VERY_LARGE_FILE_THRESHOLD) {
               toast({
                 title: "Processing large file",
                 description: `Uploading ${formatFileSize(file.size)}. This may take several minutes.`,
@@ -209,16 +223,33 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
               successCount++
             } else {
               setUploadProgress((prev) => ({ ...prev, [month]: 0 }))
+              errorCount++
               throw new Error(result.error || "Upload failed")
             }
           } catch (error) {
             clearInterval(interval)
             console.error(`Error uploading ${month} statement:`, error)
-            toast({
-              title: `Failed to upload ${month} statement`,
-              description: error instanceof Error ? error.message : "An unknown error occurred",
-              variant: "destructive",
-            })
+
+            // Show a more specific error message for large files
+            if (
+              file.size > VERY_LARGE_FILE_THRESHOLD &&
+              error instanceof Error &&
+              (error.message.includes("too large") || error.message.includes("exceeds"))
+            ) {
+              toast({
+                title: `Failed to upload large file`,
+                description:
+                  "This file is too large for our system. Please try a smaller file or split it into multiple parts.",
+                variant: "destructive",
+                duration: 8000,
+              })
+            } else {
+              toast({
+                title: `Failed to upload ${month} statement`,
+                description: error instanceof Error ? error.message : "An unknown error occurred",
+                variant: "destructive",
+              })
+            }
             // Continue with other uploads even if one fails
           }
         }
@@ -228,36 +259,53 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
       if (successCount > 0) {
         setUploadStatus({
           success: true,
-          message: `Successfully uploaded ${successCount} bank statement(s)`,
+          message: `Successfully uploaded ${successCount} bank statement(s)${errorCount > 0 ? `, ${errorCount} failed` : ""}`,
         })
 
         toast({
           title: "Upload successful",
-          description: `Successfully uploaded ${successCount} bank statement(s)`,
+          description: `Successfully uploaded ${successCount} bank statement(s)${errorCount > 0 ? `, ${errorCount} failed` : ""}`,
         })
 
-        // Reset form
-        setFiles({ month1: null, month2: null, month3: null })
-        setMonths({ month1: "", month2: "", month3: "" })
+        // Reset form for successful uploads
+        const newFiles = { ...files }
+        const newMonths = { ...months }
+        const newProgress = { ...uploadProgress }
+
+        Object.entries(files).forEach(([month, file]) => {
+          if (file && uploadProgress[month] === 100) {
+            newFiles[month] = null
+            newMonths[month] = ""
+            newProgress[month] = 0
+            if (fileInputRefs[month as keyof typeof fileInputRefs]?.current) {
+              fileInputRefs[month as keyof typeof fileInputRefs].current!.value = ""
+            }
+          }
+        })
+
+        setFiles(newFiles)
+        setMonths(newMonths)
         setNotes("")
-        setUploadProgress({ month1: 0, month2: 0, month3: 0 })
+        setUploadProgress(newProgress)
 
         // Notify parent component
         if (onUploadComplete) {
           onUploadComplete()
         }
-      } else {
+      } else if (errorCount > 0) {
         setUploadStatus({
           success: false,
-          message: "No files were uploaded successfully. Please try again.",
+          message: "No files were uploaded successfully. Please try again with smaller files.",
         })
-        throw new Error("No files were uploaded successfully")
       }
     } catch (error) {
       console.error("Error uploading bank statements:", error)
       toast({
         title: "Upload failed",
-        description: error instanceof Error ? error.message : "An error occurred while uploading bank statements",
+        description:
+          error instanceof Error
+            ? error.message
+            : "An error occurred while uploading bank statements. Please try again with smaller files.",
         variant: "destructive",
       })
     } finally {
@@ -308,22 +356,40 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
         )}
 
         <div className="text-sm text-gray-500 mb-4">
-          Please upload your last 3 months of business bank statements. Accepted formats: PDF, JPG, PNG, Excel. Maximum
-          file size: 100MB per file.
+          Please upload your last 3 months of business bank statements. Accepted formats: PDF, JPG, PNG, Excel.
         </div>
 
         <div className="p-3 bg-blue-50 border border-blue-100 rounded-md mb-4">
           <div className="flex items-start">
             <Info className="h-5 w-5 text-blue-500 mt-0.5 mr-2" />
             <div>
-              <p className="text-sm font-medium text-blue-800">Large File Support</p>
+              <p className="text-sm font-medium text-blue-800">File Size Guidelines</p>
               <p className="text-xs text-blue-700 mt-1">
-                Files up to 100MB are supported, but uploads of very large files may take several minutes to complete.
-                Please be patient during the upload process.
+                • Files up to 20MB: Standard upload, recommended for most statements
+                <br />• Files 20-50MB: Large files, may take longer to process
+                <br />• Files 50-100MB: Very large files, may take several minutes to process
+                <br />• Maximum file size: 100MB
               </p>
             </div>
           </div>
         </div>
+
+        {/* Warning for very large files */}
+        {Object.values(files).some((file) => file && file.size > VERY_LARGE_FILE_THRESHOLD) && (
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-md mb-4">
+            <div className="flex items-start">
+              <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5 mr-2" />
+              <div>
+                <p className="text-sm font-medium text-amber-800">Very Large File Warning</p>
+                <p className="text-xs text-amber-700 mt-1">
+                  You've selected one or more very large files (over 50MB). These may take several minutes to upload and
+                  process. If you encounter errors, please try splitting the file into smaller parts or using a
+                  compressed format.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Month 1 */}
         <div className="space-y-2">
@@ -373,7 +439,15 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
                   <FileCheck className="h-4 w-4 text-green-500 mr-2" />
                   <div className="flex flex-col flex-1 min-w-0">
                     <span className="text-sm truncate">{files.month1.name}</span>
-                    <span className="text-xs text-gray-500">{formatFileSize(files.month1.size)}</span>
+                    <span className="text-xs text-gray-500">
+                      {formatFileSize(files.month1.size)}
+                      {files.month1.size > VERY_LARGE_FILE_THRESHOLD && (
+                        <span className="text-amber-600 ml-1">(Very Large)</span>
+                      )}
+                      {files.month1.size > LARGE_FILE_THRESHOLD && files.month1.size <= VERY_LARGE_FILE_THRESHOLD && (
+                        <span className="text-amber-500 ml-1">(Large)</span>
+                      )}
+                    </span>
                   </div>
                   <Button
                     type="button"
@@ -454,7 +528,15 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
                   <FileCheck className="h-4 w-4 text-green-500 mr-2" />
                   <div className="flex flex-col flex-1 min-w-0">
                     <span className="text-sm truncate">{files.month2.name}</span>
-                    <span className="text-xs text-gray-500">{formatFileSize(files.month2.size)}</span>
+                    <span className="text-xs text-gray-500">
+                      {formatFileSize(files.month2.size)}
+                      {files.month2.size > VERY_LARGE_FILE_THRESHOLD && (
+                        <span className="text-amber-600 ml-1">(Very Large)</span>
+                      )}
+                      {files.month2.size > LARGE_FILE_THRESHOLD && files.month2.size <= VERY_LARGE_FILE_THRESHOLD && (
+                        <span className="text-amber-500 ml-1">(Large)</span>
+                      )}
+                    </span>
                   </div>
                   <Button
                     type="button"
@@ -535,7 +617,15 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
                   <FileCheck className="h-4 w-4 text-green-500 mr-2" />
                   <div className="flex flex-col flex-1 min-w-0">
                     <span className="text-sm truncate">{files.month3.name}</span>
-                    <span className="text-xs text-gray-500">{formatFileSize(files.month3.size)}</span>
+                    <span className="text-xs text-gray-500">
+                      {formatFileSize(files.month3.size)}
+                      {files.month3.size > VERY_LARGE_FILE_THRESHOLD && (
+                        <span className="text-amber-600 ml-1">(Very Large)</span>
+                      )}
+                      {files.month3.size > LARGE_FILE_THRESHOLD && files.month3.size <= VERY_LARGE_FILE_THRESHOLD && (
+                        <span className="text-amber-500 ml-1">(Large)</span>
+                      )}
+                    </span>
                   </div>
                   <Button
                     type="button"
