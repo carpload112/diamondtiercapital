@@ -107,7 +107,7 @@ export async function submitApplication(formData: ApplicationFormData) {
           years_in_business: formData.yearsInBusiness,
           ein: formData.ein || null,
           annual_revenue: formData.annualRevenue || null,
-          monthly_profit: formData.estimatedMonthlyDeposits || null,
+          estimated_monthly_deposits: formData.estimatedMonthlyDeposits || null,
           credit_score: formData.creditScore || null,
           bankruptcy_history: formData.bankruptcy === "Yes",
         })
@@ -247,7 +247,7 @@ export async function submitApplication(formData: ApplicationFormData) {
         const updateData: any = {}
 
         if (formData.annualRevenue) updateData.annual_revenue = formData.annualRevenue
-        if (formData.estimatedMonthlyDeposits) updateData.monthly_profit = formData.estimatedMonthlyDeposits
+        if (formData.estimatedMonthlyDeposits) updateData.estimated_monthly_deposits = formData.estimatedMonthlyDeposits
         if (formData.creditScore) updateData.credit_score = formData.creditScore
         if (formData.bankruptcy) updateData.bankruptcy_history = formData.bankruptcy === "Yes"
 
@@ -275,7 +275,6 @@ export async function submitApplication(formData: ApplicationFormData) {
         if (formData.additionalInfo !== undefined) updateData.additional_info = formData.additionalInfo
         if (formData.termsAgreed !== undefined) updateData.terms_agreed = formData.termsAgreed
         if (formData.marketingConsent !== undefined) updateData.marketing_consent = formData.marketingConsent
-        // Removed referral_code field as it doesn't exist in the schema
 
         const { error: updateAdditionalError } = await supabase
           .from("additional_information")
@@ -309,6 +308,22 @@ export async function submitApplication(formData: ApplicationFormData) {
       }
     } else {
       console.log("No referral code provided, skipping affiliate tracking")
+    }
+
+    // If this is a final submission (status = pending), ensure affiliate tracking is processed
+    if (formData.status === "pending" && referralCode) {
+      // Double-check that the application has an affiliate_id
+      const { data: application, error: checkError } = await supabase
+        .from("applications")
+        .select("affiliate_id, affiliate_code")
+        .eq("id", applicationId)
+        .single()
+
+      if (!checkError && application && !application.affiliate_id && application.affiliate_code) {
+        // If we have an affiliate_code but no affiliate_id, try tracking again
+        console.log("Application has affiliate_code but no affiliate_id, retrying tracking...")
+        await trackApplication(applicationId, referenceId, application.affiliate_code, formData.fundingAmount)
+      }
     }
 
     console.log("Application submitted successfully with ID:", applicationId)

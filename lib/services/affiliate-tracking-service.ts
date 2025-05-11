@@ -1,7 +1,7 @@
 "use server"
 
-import { createServerClient } from "@/lib/supabase/server"
 import { cookies } from "next/headers"
+import { createServerClient } from "@/lib/supabase/server"
 import { calculateCommission } from "../utils/affiliate-utils"
 import { v4 as uuidv4 } from "uuid"
 
