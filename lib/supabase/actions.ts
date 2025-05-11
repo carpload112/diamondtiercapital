@@ -2,7 +2,7 @@
 
 import { createServerClient } from "./server"
 import { v4 as uuidv4 } from "uuid"
-import { trackApplication, validateAndNormalizeReferralCode } from "../services/affiliate-tracking-service"
+import { trackApplication } from "../services/affiliate-tracking-service"
 
 export interface ApplicationFormData {
   // Personal Information
@@ -54,8 +54,8 @@ export async function submitApplication(formData: ApplicationFormData) {
     const applicationId = formData.applicationId || uuidv4()
     const referenceId = `APP${Math.random().toString(36).substring(2, 7).toUpperCase()}`
 
-    // Validate and normalize referral code (support both referralCode and ref parameters)
-    const referralCode = await validateAndNormalizeReferralCode(formData.referralCode || formData.ref)
+    // Get referral code (support both referralCode and ref parameters)
+    const referralCode = formData.referralCode || formData.ref || null
 
     // Log the form data for debugging
     console.log("Submit application form data:", {
@@ -72,8 +72,8 @@ export async function submitApplication(formData: ApplicationFormData) {
         credit_check_completed: false,
         submitted_at: new Date().toISOString(),
         notes: formData.additionalInfo || "",
-        // Store referral code directly in the application for redundancy
-        affiliate_code: referralCode || null,
+        // Store referral code directly in the application
+        affiliate_code: referralCode,
       })
 
       if (applicationError) {
@@ -107,7 +107,7 @@ export async function submitApplication(formData: ApplicationFormData) {
           years_in_business: formData.yearsInBusiness,
           ein: formData.ein || null,
           annual_revenue: formData.annualRevenue || null,
-          estimated_monthly_deposits: formData.estimatedMonthlyDeposits || null,
+          monthly_profit: formData.estimatedMonthlyDeposits || null,
           credit_score: formData.creditScore || null,
           bankruptcy_history: formData.bankruptcy === "Yes",
         })
@@ -155,8 +155,7 @@ export async function submitApplication(formData: ApplicationFormData) {
         additional_info: formData.additionalInfo || null,
         terms_agreed: formData.termsAgreed || false,
         marketing_consent: formData.marketingConsent || false,
-        // Store referral code in additional_information as well for redundancy
-        referral_code: referralCode || null,
+        // Removed referral_code field as it doesn't exist in the schema
       })
 
       if (additionalError) {
@@ -248,7 +247,7 @@ export async function submitApplication(formData: ApplicationFormData) {
         const updateData: any = {}
 
         if (formData.annualRevenue) updateData.annual_revenue = formData.annualRevenue
-        if (formData.estimatedMonthlyDeposits) updateData.estimated_monthly_deposits = formData.estimatedMonthlyDeposits
+        if (formData.estimatedMonthlyDeposits) updateData.monthly_profit = formData.estimatedMonthlyDeposits
         if (formData.creditScore) updateData.credit_score = formData.creditScore
         if (formData.bankruptcy) updateData.bankruptcy_history = formData.bankruptcy === "Yes"
 
@@ -268,8 +267,7 @@ export async function submitApplication(formData: ApplicationFormData) {
         formData.hearAboutUs ||
         formData.additionalInfo !== undefined ||
         formData.termsAgreed !== undefined ||
-        formData.marketingConsent !== undefined ||
-        referralCode
+        formData.marketingConsent !== undefined
       ) {
         const updateData: any = {}
 
@@ -277,7 +275,7 @@ export async function submitApplication(formData: ApplicationFormData) {
         if (formData.additionalInfo !== undefined) updateData.additional_info = formData.additionalInfo
         if (formData.termsAgreed !== undefined) updateData.terms_agreed = formData.termsAgreed
         if (formData.marketingConsent !== undefined) updateData.marketing_consent = formData.marketingConsent
-        if (referralCode) updateData.referral_code = referralCode
+        // Removed referral_code field as it doesn't exist in the schema
 
         const { error: updateAdditionalError } = await supabase
           .from("additional_information")
@@ -302,42 +300,12 @@ export async function submitApplication(formData: ApplicationFormData) {
         if (!trackingResult.success) {
           console.warn("Affiliate tracking warning:", trackingResult.error)
           // Continue with application submission even if affiliate tracking fails
-
-          // Create a tracking retry record for manual review
-          await supabase
-            .from("affiliate_tracking_retries")
-            .insert({
-              application_id: applicationId,
-              referral_code: referralCode,
-              error_message: trackingResult.error || "Unknown error",
-              created_at: new Date().toISOString(),
-              status: "pending",
-            })
-            .catch((err) => {
-              console.error("Error creating tracking retry record:", err)
-              // Don't throw, just log
-            })
         } else {
           console.log(`Successfully tracked application ${applicationId} for affiliate ${trackingResult.affiliateId}`)
         }
       } catch (affiliateError) {
         // Log the error but don't fail the application submission
         console.error("Error processing affiliate:", affiliateError)
-
-        // Create a tracking retry record for manual review
-        await supabase
-          .from("affiliate_tracking_retries")
-          .insert({
-            application_id: applicationId,
-            referral_code: referralCode,
-            error_message: affiliateError instanceof Error ? affiliateError.message : "Unknown error",
-            created_at: new Date().toISOString(),
-            status: "pending",
-          })
-          .catch((err) => {
-            console.error("Error creating tracking retry record:", err)
-            // Don't throw, just log
-          })
       }
     } else {
       console.log("No referral code provided, skipping affiliate tracking")
