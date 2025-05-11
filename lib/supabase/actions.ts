@@ -2,6 +2,7 @@
 
 import { createServerClient } from "./server"
 import { v4 as uuidv4 } from "uuid"
+import { trackApplication } from "../services/affiliate-tracking-service"
 
 export interface ApplicationFormData {
   // Personal Information
@@ -54,7 +55,10 @@ export async function submitApplication(formData: ApplicationFormData) {
     const referenceId = `APP${Math.random().toString(36).substring(2, 7).toUpperCase()}`
 
     // Log the form data for debugging
-    console.log("Submit application form data:", formData)
+    console.log("Submit application form data:", {
+      ...formData,
+      referralCode: formData.referralCode || formData.ref || "none",
+    })
 
     if (!isUpdate) {
       // Insert into applications table
@@ -283,56 +287,21 @@ export async function submitApplication(formData: ApplicationFormData) {
       try {
         console.log(`Processing affiliate tracking for referral code: ${referralCode}`)
 
-        // Get the affiliate from the referral code
-        const { data: affiliate, error: affiliateError } = await supabase
-          .from("affiliates")
-          .select("id, name, referral_code")
-          .eq("referral_code", referralCode)
-          .single()
+        // Use the trackApplication function from the affiliate tracking service
+        const trackingResult = await trackApplication(applicationId, referenceId, referralCode, formData.fundingAmount)
 
-        if (affiliateError || !affiliate) {
-          console.error("Error finding affiliate with referral code:", referralCode, affiliateError)
+        if (!trackingResult.success) {
+          console.warn("Affiliate tracking warning:", trackingResult.error)
           // Continue with application submission even if affiliate tracking fails
         } else {
-          console.log(`Found affiliate: ${affiliate.name} (${affiliate.id})`)
-
-          // Update the application with the affiliate ID
-          const { error: updateError } = await supabase
-            .from("applications")
-            .update({
-              affiliate_id: affiliate.id,
-              affiliate_code: referralCode,
-            })
-            .eq("id", applicationId)
-
-          if (updateError) {
-            console.error("Error updating application with affiliate:", updateError)
-          } else {
-            console.log(`Successfully linked application ${applicationId} to affiliate ${affiliate.id}`)
-
-            // Only create notification if this is a final submission (not draft)
-            if (formData.status === "pending") {
-              // Create a notification for the affiliate
-              const { error: notificationError } = await supabase.from("affiliate_notifications").insert({
-                affiliate_id: affiliate.id,
-                application_id: applicationId,
-                message: `New application submitted: ${referenceId}`,
-                read: false,
-                created_at: new Date().toISOString(),
-              })
-
-              if (notificationError) {
-                console.error("Error creating affiliate notification:", notificationError)
-              } else {
-                console.log(`Created notification for affiliate ${affiliate.id}`)
-              }
-            }
-          }
+          console.log(`Successfully tracked application ${applicationId} for affiliate ${trackingResult.affiliateId}`)
         }
       } catch (affiliateError) {
         // Log the error but don't fail the application submission
         console.error("Error processing affiliate:", affiliateError)
       }
+    } else {
+      console.log("No referral code provided, skipping affiliate tracking")
     }
 
     console.log("Application submitted successfully with ID:", applicationId)

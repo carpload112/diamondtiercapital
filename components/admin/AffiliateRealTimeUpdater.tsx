@@ -1,75 +1,46 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
 import { Badge } from "@/components/ui/badge"
-import { Bell, AlertCircle } from "lucide-react"
 
 interface AffiliateRealTimeUpdaterProps {
   affiliateId: string
 }
 
 export function AffiliateRealTimeUpdater({ affiliateId }: AffiliateRealTimeUpdaterProps) {
-  const router = useRouter()
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
-  const [notificationCount, setNotificationCount] = useState(0)
-  const [isConnected, setIsConnected] = useState(false)
-  const supabase = createClientComponentClient()
-
-  // Get initial notification count
-  useEffect(() => {
-    async function fetchNotificationCount() {
-      if (!affiliateId) return
-
-      try {
-        console.log(`Fetching notification count for affiliate ${affiliateId}`)
-        const { count, error } = await supabase
-          .from("affiliate_notifications")
-          .select("id", { count: "exact", head: true })
-          .eq("affiliate_id", affiliateId)
-          .eq("read", false)
-
-        if (error) {
-          console.error("Error fetching notification count:", error)
-          return
-        }
-
-        console.log(`Found ${count} unread notifications for affiliate ${affiliateId}`)
-        setNotificationCount(count || 0)
-      } catch (error) {
-        console.error("Error in fetchNotificationCount:", error)
-      }
-    }
-
-    fetchNotificationCount()
-  }, [affiliateId, supabase])
+  const [lastActivity, setLastActivity] = useState<string | null>(null)
+  const [isActive, setIsActive] = useState(false)
 
   useEffect(() => {
-    if (!affiliateId) return
+    const supabase = createClient()
 
-    console.log(`Setting up real-time listener for affiliate ${affiliateId}`)
-
-    // Set up real-time listener for affiliate notifications
-    const channel = supabase
-      .channel(`affiliate-updates-${affiliateId}`)
+    // Subscribe to affiliate clicks
+    const clicksSubscription = supabase
+      .channel(`affiliate-clicks-${affiliateId}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
-          table: "affiliate_notifications",
+          table: "affiliate_clicks",
           filter: `affiliate_id=eq.${affiliateId}`,
         },
         (payload) => {
-          console.log("New affiliate notification received:", payload)
-          setLastUpdate(new Date())
-          setNotificationCount((prev) => prev + 1)
+          setLastActivity("New click recorded")
+          setIsActive(true)
 
-          // Refresh the page data without a full reload
-          router.refresh()
+          // Reset active state after 5 seconds
+          setTimeout(() => {
+            setIsActive(false)
+          }, 5000)
         },
       )
+      .subscribe()
+
+    // Subscribe to affiliate applications
+    const applicationsSubscription = supabase
+      .channel(`affiliate-applications-${affiliateId}`)
       .on(
         "postgres_changes",
         {
@@ -79,13 +50,20 @@ export function AffiliateRealTimeUpdater({ affiliateId }: AffiliateRealTimeUpdat
           filter: `affiliate_id=eq.${affiliateId}`,
         },
         (payload) => {
-          console.log("New application for affiliate received:", payload)
-          setLastUpdate(new Date())
+          setLastActivity("New application submitted")
+          setIsActive(true)
 
-          // Refresh the page data without a full reload
-          router.refresh()
+          // Reset active state after 5 seconds
+          setTimeout(() => {
+            setIsActive(false)
+          }, 5000)
         },
       )
+      .subscribe()
+
+    // Subscribe to affiliate commissions
+    const commissionsSubscription = supabase
+      .channel(`affiliate-commissions-${affiliateId}`)
       .on(
         "postgres_changes",
         {
@@ -95,43 +73,29 @@ export function AffiliateRealTimeUpdater({ affiliateId }: AffiliateRealTimeUpdat
           filter: `affiliate_id=eq.${affiliateId}`,
         },
         (payload) => {
-          console.log("New commission for affiliate received:", payload)
-          setLastUpdate(new Date())
+          setLastActivity("New commission earned")
+          setIsActive(true)
 
-          // Refresh the page data without a full reload
-          router.refresh()
+          // Reset active state after 5 seconds
+          setTimeout(() => {
+            setIsActive(false)
+          }, 5000)
         },
       )
-      .subscribe((status) => {
-        console.log(`Supabase real-time subscription status: ${status}`)
-        setIsConnected(status === "SUBSCRIBED")
-      })
+      .subscribe()
 
     return () => {
-      console.log(`Removing real-time listener for affiliate ${affiliateId}`)
-      supabase.removeChannel(channel)
+      supabase.removeChannel(clicksSubscription)
+      supabase.removeChannel(applicationsSubscription)
+      supabase.removeChannel(commissionsSubscription)
     }
-  }, [affiliateId, router, supabase])
+  }, [affiliateId])
+
+  if (!lastActivity) return null
 
   return (
-    <div className="flex items-center gap-2 mt-1">
-      {!isConnected && (
-        <div className="flex items-center gap-1 text-amber-500 text-xs">
-          <AlertCircle className="h-3 w-3" />
-          <span>Connecting...</span>
-        </div>
-      )}
-
-      {notificationCount > 0 && (
-        <Badge variant="destructive" className="h-5 px-1 flex items-center gap-1">
-          <Bell className="h-3 w-3" />
-          <span>{notificationCount}</span>
-        </Badge>
-      )}
-
-      {lastUpdate && (
-        <div className="text-xs text-gray-500 animate-pulse">Data updated {lastUpdate.toLocaleTimeString()}</div>
-      )}
+    <div className="mt-2">
+      {isActive && <Badge className="bg-green-100 text-green-800 animate-pulse">{lastActivity}</Badge>}
     </div>
   )
 }

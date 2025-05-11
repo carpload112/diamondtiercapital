@@ -1,29 +1,48 @@
 /**
- * Generate a referral code based on name
- */
-export function generateReferralCode(firstName: string, lastName: string): string {
-  const prefix = firstName.substring(0, 2).toUpperCase() + lastName.substring(0, 2).toUpperCase()
-  const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase()
-  return `${prefix}${randomPart}`
-}
-
-/**
- * Calculate commission amount based on amount and rate
+ * Calculate commission amount
  */
 export function calculateCommission(amount: number, rate: number): number {
   return (amount * rate) / 100
 }
 
 /**
- * Format currency
+ * Generate a unique referral code for an affiliate
  */
-export function formatCurrency(amount: number | string): string {
-  const numAmount = typeof amount === "string" ? Number.parseFloat(amount) : amount
+export function generateReferralCode(firstName: string, lastName: string): string {
+  // Get first 2 letters of first name and last name (or first letter if name is only 1 character)
+  const firstInitials = firstName.substring(0, Math.min(2, firstName.length)).toUpperCase()
+  const lastInitials = lastName.substring(0, Math.min(2, lastName.length)).toUpperCase()
 
+  // Generate a random 6-character alphanumeric string
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+  let randomString = ""
+  for (let i = 0; i < 6; i++) {
+    randomString += characters.charAt(Math.floor(Math.random() * characters.length))
+  }
+
+  // Combine initials and random string
+  return `${firstInitials}${lastInitials}${randomString}`
+}
+
+/**
+ * Format currency amount
+ */
+export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(numAmount)
+  }).format(amount)
+}
+
+/**
+ * Format percentage
+ */
+export function formatPercentage(value: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "percent",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value / 100)
 }

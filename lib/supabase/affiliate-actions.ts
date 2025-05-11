@@ -1,6 +1,6 @@
 "use server"
 
-import { createServerClient } from "./server"
+import { createServerClient } from "@/lib/supabase/server"
 import { generateReferralCode } from "../utils/affiliate-utils"
 
 /**
@@ -12,30 +12,49 @@ export async function createAffiliate(data: {
   email: string
   phone?: string
   companyName?: string
-  paymentMethod?: string
-  paymentDetails?: any
   parentAffiliateCode?: string
 }) {
   const supabase = createServerClient()
 
   try {
+    console.log("Creating new affiliate:", data)
+
     // Generate a unique referral code
     const referralCode = generateReferralCode(data.firstName, data.lastName)
 
-    // Create the affiliate record - using the correct schema fields
+    console.log("Generated referral code:", referralCode)
+
+    // Check if email already exists
+    const { data: existingAffiliate, error: checkError } = await supabase
+      .from("affiliates")
+      .select("id")
+      .eq("email", data.email)
+      .maybeSingle()
+
+    if (existingAffiliate) {
+      return { success: false, error: "An affiliate with this email already exists" }
+    }
+
+    // Create the affiliate record
     const { data: affiliate, error } = await supabase
       .from("affiliates")
       .insert({
         name: `${data.firstName} ${data.lastName}`,
         email: data.email,
+        phone: data.phone || null,
+        company_name: data.companyName || null,
         referral_code: referralCode,
-        // Remove tier field as it doesn't exist in the schema
         status: "active", // Default status
       })
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error("Error creating affiliate:", error)
+      return { success: false, error: error.message }
+    }
+
+    console.log("Successfully created affiliate:", affiliate)
 
     // If there's a parent affiliate, create the relationship
     if (data.parentAffiliateCode) {
@@ -61,39 +80,84 @@ export async function createAffiliate(data: {
   }
 }
 
-/**
- * Get affiliate by referral code
- */
-export async function getAffiliateByReferralCode(referralCode: string) {
-  const supabase = createServerClient()
-
+// Update an affiliate
+export async function updateAffiliate(
+  id: string,
+  {
+    name,
+    email,
+    status,
+    tier,
+  }: {
+    name?: string
+    email?: string
+    status?: string
+    tier?: string
+  },
+) {
   try {
-    const { data, error } = await supabase.from("affiliates").select("*").eq("referral_code", referralCode).single()
+    const supabase = createServerClient()
 
-    if (error) throw error
+    // Update the affiliate
+    const { data, error } = await supabase
+      .from("affiliates")
+      .update({
+        ...(name ? { name } : {}),
+        ...(email ? { email } : {}),
+        ...(status ? { status } : {}),
+        ...(tier ? { tier } : {}),
+      })
+      .eq("id", id)
+      .select()
+      .single()
 
-    return { data }
+    if (error) {
+      console.error("Error updating affiliate:", error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true, data }
   } catch (error) {
-    console.error("Error getting affiliate:", error)
-    return { data: null }
+    console.error("Error in updateAffiliate:", error)
+    return { success: false, error: "Internal server error" }
   }
 }
 
-/**
- * Get affiliate by ID
- */
+// Get an affiliate by ID
 export async function getAffiliateById(id: string) {
-  const supabase = createServerClient()
-
   try {
+    const supabase = createServerClient()
+
     const { data, error } = await supabase.from("affiliates").select("*").eq("id", id).single()
 
-    if (error) throw error
+    if (error) {
+      console.error("Error getting affiliate:", error)
+      return { success: false, error: error.message, data: null }
+    }
 
-    return { data }
+    return { success: true, data }
   } catch (error) {
-    console.error("Error getting affiliate:", error)
-    return { data: null }
+    console.error("Error in getAffiliateById:", error)
+    return { success: false, error: "Internal server error", data: null }
+  }
+}
+
+// Get an affiliate by referral code
+export async function getAffiliateByReferralCode(referralCode: string) {
+  try {
+    const supabase = createServerClient()
+
+    const { data, error } = await supabase.from("affiliates").select("*").eq("referral_code", referralCode).single()
+
+    if (error) {
+      console.error("Error getting affiliate by referral code:", error)
+      return { success: false, error: error.message, data: null }
+    }
+
+    return { success: true, data }
+  } catch (error) {
+    console.error("Error in getAffiliateByReferralCode:", error)
+    return { success: false, error: "Internal server error", data: null }
   }
 }
 
@@ -112,27 +176,6 @@ export async function getAllAffiliates() {
   } catch (error) {
     console.error("Error getting affiliates:", error)
     return { data: [] }
-  }
-}
-
-/**
- * Update affiliate
- */
-export async function updateAffiliate(id: string, data: any) {
-  const supabase = createServerClient()
-
-  try {
-    // Remove tier field if it exists in the data
-    const { tier, ...updateData } = data
-
-    const { error } = await supabase.from("affiliates").update(updateData).eq("id", id)
-
-    if (error) throw error
-
-    return { success: true }
-  } catch (error) {
-    console.error("Error updating affiliate:", error)
-    return { success: false, error: error instanceof Error ? error.message : "Failed to update affiliate" }
   }
 }
 
@@ -343,5 +386,57 @@ export async function updateApplicationWithAffiliate(applicationId: string, affi
   } catch (error) {
     console.error("Error updating application with affiliate:", error)
     return { success: false, error: "Failed to update application" }
+  }
+}
+
+/**
+ * Delete an affiliate
+ */
+export async function deleteAffiliate(id: string) {
+  const supabase = createServerClient()
+
+  try {
+    // First check if the affiliate has any applications
+    const { count, error: countError } = await supabase
+      .from("applications")
+      .select("id", { count: "exact", head: true })
+      .eq("affiliate_id", id)
+
+    if (countError) {
+      console.error("Error checking affiliate applications:", countError)
+      return { success: false, error: countError.message }
+    }
+
+    // If the affiliate has applications, don't allow deletion
+    if (count && count > 0) {
+      return {
+        success: false,
+        error: "Cannot delete affiliate with existing applications. Please set status to inactive instead.",
+      }
+    }
+
+    // Delete affiliate clicks
+    await supabase.from("affiliate_clicks").delete().eq("affiliate_id", id)
+
+    // Delete affiliate commissions
+    await supabase.from("affiliate_commissions").delete().eq("affiliate_id", id)
+
+    // Delete affiliate relationships
+    await supabase.from("affiliate_relationships").delete().eq("parent_affiliate_id", id)
+
+    await supabase.from("affiliate_relationships").delete().eq("child_affiliate_id", id)
+
+    // Finally, delete the affiliate
+    const { error } = await supabase.from("affiliates").delete().eq("id", id)
+
+    if (error) {
+      console.error("Error deleting affiliate:", error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error in deleteAffiliate:", error)
+    return { success: false, error: "Internal server error" }
   }
 }

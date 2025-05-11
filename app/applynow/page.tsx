@@ -33,16 +33,17 @@ import { useToast } from "@/components/ui/use-toast"
 import { submitApplication } from "@/lib/supabase/actions"
 import { useSearchParams } from "next/navigation"
 import { BankStatementUploader } from "@/components/BankStatementUploader"
+import { isValidReferralCode } from "@/lib/services/affiliate-tracking-service"
 
 const ApplyNowPage = () => {
   const searchParams = useSearchParams()
   // Support both referralCode and ref parameters
-  const referralCode = searchParams.get("referralCode") || searchParams.get("ref")
+  const referralCodeParam = searchParams.get("referralCode") || searchParams.get("ref")
 
+  const [referralCode, setReferralCode] = useState<string | null>(referralCodeParam)
+  const [referralCodeValidated, setReferralCodeValidated] = useState(false)
   const [currentStep, setCurrentStep] = useState(0)
-  const [formData, setFormData] = useState<Record<string, any>>({
-    ...(referralCode ? { referralCode } : {}),
-  })
+  const [formData, setFormData] = useState<Record<string, any>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
@@ -56,17 +57,50 @@ const ApplyNowPage = () => {
   const formRef = useRef<HTMLDivElement>(null)
   const headerRef = useRef<HTMLDivElement>(null)
 
-  // Log referral code when detected
+  // Validate referral code when component mounts
   useEffect(() => {
-    if (referralCode) {
-      console.log("Affiliate referral detected in URL:", referralCode)
-      // Ensure referral code is in form data
-      setFormData((prev) => ({
-        ...prev,
-        referralCode: referralCode,
-      }))
+    const validateReferralCode = async () => {
+      if (referralCode) {
+        try {
+          console.log(`Validating referral code: ${referralCode}`)
+          const isValid = await isValidReferralCode(referralCode)
+
+          if (isValid) {
+            console.log(`Referral code ${referralCode} is valid`)
+            setReferralCodeValidated(true)
+            setFormData((prev) => ({
+              ...prev,
+              referralCode: referralCode,
+            }))
+
+            // Show toast notification
+            toast({
+              title: "Referral Code Applied",
+              description: "Your referral code has been successfully applied to your application.",
+              variant: "default",
+            })
+          } else {
+            console.warn(`Referral code ${referralCode} is invalid`)
+            setReferralCode(null)
+            setReferralCodeValidated(false)
+
+            // Show toast notification
+            toast({
+              title: "Invalid Referral Code",
+              description: "The referral code provided is invalid. Your application will continue without a referral.",
+              variant: "destructive",
+            })
+          }
+        } catch (error) {
+          console.error("Error validating referral code:", error)
+          setReferralCode(null)
+          setReferralCodeValidated(false)
+        }
+      }
     }
-  }, [referralCode])
+
+    validateReferralCode()
+  }, [referralCode, toast])
 
   // Define the form steps with improved descriptions and tooltips
   const formSteps = [
@@ -310,6 +344,18 @@ const ApplyNowPage = () => {
           placeholder: "I consent to receive marketing communications",
           required: false,
         },
+        // Add a hidden field for referral code if we have one
+        ...(referralCodeValidated
+          ? [
+              {
+                name: "referralCode",
+                label: "Referral Code",
+                type: "hidden",
+                value: referralCode,
+                required: false,
+              },
+            ]
+          : []),
       ],
     },
   ]
@@ -327,7 +373,7 @@ const ApplyNowPage = () => {
     }
 
     setStepCompletion(calculateStepCompletion())
-  }, [currentStep, formData, formSteps])
+  }, [currentStep, formData])
 
   const scrollToForm = () => {
     setShowForm(true)
@@ -424,7 +470,7 @@ const ApplyNowPage = () => {
       // Ensure referral code is included in the submission
       const dataToSubmit = {
         ...formData,
-        referralCode: formData.referralCode || referralCode, // Use from form data or URL
+        referralCode: formData.referralCode || referralCode, // Use from form data or state
         status: "draft", // Mark as draft until final submission
       }
 
@@ -465,7 +511,7 @@ const ApplyNowPage = () => {
       // Ensure referral code is included in the final submission
       const dataToSubmit = {
         ...formData,
-        referralCode: formData.referralCode || referralCode, // Use from form data or URL
+        referralCode: formData.referralCode || referralCode, // Use from form data or state
         applicationId: applicationId,
         status: "pending", // Change from draft to pending ONLY on final submission
       }
@@ -523,11 +569,15 @@ const ApplyNowPage = () => {
               throw new Error("Please complete the personal and business information steps first")
             }
 
-            // Submit the initial application data to get an application ID
-            const result = await submitApplication({
+            // Ensure referral code is included
+            const dataToSubmit = {
               ...formData,
+              referralCode: formData.referralCode || referralCode, // Use from form data or state
               status: "draft", // Mark as draft until final submission
-            })
+            }
+
+            // Submit the initial application data to get an application ID
+            const result = await submitApplication(dataToSubmit)
 
             if (result.success && result.applicationId) {
               setApplicationId(result.applicationId)
@@ -642,6 +692,15 @@ const ApplyNowPage = () => {
           <p className="text-lg text-gray-600 dark:text-gray-300 max-w-xl mx-auto">
             Complete our simple application process to access the funding your business needs.
           </p>
+
+          {/* Display referral code if validated */}
+          {referralCodeValidated && (
+            <div className="mt-4">
+              <Badge className="px-3 py-1 text-sm bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 rounded-full">
+                Referral Code Applied: {referralCode}
+              </Badge>
+            </div>
+          )}
         </div>
 
         {/* Step-by-Step Process */}

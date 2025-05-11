@@ -1,115 +1,81 @@
-import { Suspense } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { AffiliateStats } from "@/components/admin/AffiliateStats"
+import type { Metadata } from "next"
+import { createServerClient } from "@/lib/supabase/server"
 import { AffiliateManagement } from "@/components/admin/AffiliateManagement"
 import { MLMSettings } from "@/components/admin/MLMSettings"
-import { createServerClient } from "@/lib/supabase/server"
-import { getAllAffiliates, getAffiliateTiers, getMLMSettings } from "@/lib/supabase/affiliate-actions"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { DashboardHeader } from "@/components/admin/DashboardHeader"
+
+export const metadata: Metadata = {
+  title: "Affiliate Management | Diamond Tier Capital",
+  description: "Manage your affiliate partners and commission structure",
+}
 
 export default async function AffiliatesPage() {
   const supabase = createServerClient()
 
-  // Get all affiliates
-  const { data: affiliates } = await getAllAffiliates()
+  // Get all affiliates with their stats
+  const { data: affiliates } = await supabase
+    .from("affiliates")
+    .select(`
+      id, 
+      name, 
+      email, 
+      referral_code, 
+      status, 
+      created_at,
+      tier
+    `)
+    .order("created_at", { ascending: false })
 
   // Get affiliate tiers
-  const { data: tiers } = await getAffiliateTiers()
+  const { data: tiers } = await supabase.from("affiliate_tiers").select("*").order("min_referrals", { ascending: true })
 
   // Get MLM settings
-  const { data: mlmSettings } = await getMLMSettings()
+  const { data: mlmSettings } = await supabase.from("mlm_settings").select("*").order("level", { ascending: true })
 
-  // Calculate overall stats
-  const overallStats = {
-    totalClicks: 0,
-    totalApplications: 0,
-    approvedApplications: 0,
-    pendingApplications: 0,
-    rejectedApplications: 0,
-    totalCommissions: 0,
-    paidCommissions: 0,
-    pendingCommissions: 0,
-    conversionRate: 0,
-  }
+  // Get affiliate stats
+  const { data: affiliateStats } = await supabase.rpc("get_all_affiliate_stats")
 
-  // Get total clicks
-  const { count: totalClicks } = await supabase.from("affiliate_clicks").select("*", { count: "exact", head: true })
-
-  if (totalClicks) {
-    overallStats.totalClicks = totalClicks
-  }
-
-  // Get application stats
-  const { data: applications } = await supabase
-    .from("applications")
-    .select("id, status, affiliate_id")
-    .not("affiliate_id", "is", null)
-
-  if (applications) {
-    overallStats.totalApplications = applications.length
-    overallStats.approvedApplications = applications.filter((app) => app.status === "approved").length
-    overallStats.pendingApplications = applications.filter((app) => app.status === "pending").length
-    overallStats.rejectedApplications = applications.filter((app) => app.status === "rejected").length
-  }
-
-  // Get commission stats
-  const { data: commissions } = await supabase.from("affiliate_commissions").select("amount, status")
-
-  if (commissions) {
-    overallStats.totalCommissions = commissions.reduce(
-      (sum, commission) => sum + Number.parseFloat(commission.amount),
-      0,
-    )
-    overallStats.paidCommissions = commissions
-      .filter((commission) => commission.status === "paid")
-      .reduce((sum, commission) => sum + Number.parseFloat(commission.amount), 0)
-    overallStats.pendingCommissions = commissions
-      .filter((commission) => commission.status === "pending")
-      .reduce((sum, commission) => sum + Number.parseFloat(commission.amount), 0)
-  }
-
-  // Calculate conversion rate
-  if (overallStats.totalClicks > 0) {
-    overallStats.conversionRate = (overallStats.totalApplications / overallStats.totalClicks) * 100
-  }
+  // Merge affiliate stats with affiliates
+  const affiliatesWithStats = affiliates?.map((affiliate) => {
+    const stats = affiliateStats?.find((stat) => stat.affiliate_id === affiliate.id)
+    return {
+      ...affiliate,
+      total_applications: stats?.total_applications || 0,
+      total_commissions: stats?.total_commissions || 0,
+    }
+  })
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold mb-2">Affiliate Program</h1>
-        <p className="text-sm text-gray-500">
-          Manage your affiliate partners, track performance, and configure commission settings.
-        </p>
-      </div>
+      <DashboardHeader
+        title="Affiliate Management"
+        description="Manage your affiliate partners and commission structure"
+      />
 
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 h-9">
-          <TabsTrigger value="overview" className="text-xs">
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="affiliates" className="text-xs">
-            Affiliates
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="text-xs">
-            Settings
-          </TabsTrigger>
+      <Tabs defaultValue="affiliates" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="affiliates">Affiliates</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="mt-4">
-          <Suspense fallback={<div>Loading stats...</div>}>
-            <AffiliateStats stats={overallStats} />
-          </Suspense>
+        <TabsContent value="affiliates" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Affiliate Partners</CardTitle>
+              <CardDescription>
+                View and manage your affiliate partners. Track their performance and commissions.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AffiliateManagement affiliates={affiliatesWithStats || []} tiers={tiers || []} />
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        <TabsContent value="affiliates" className="mt-4">
-          <Suspense fallback={<div>Loading affiliates...</div>}>
-            <AffiliateManagement affiliates={affiliates} tiers={tiers} />
-          </Suspense>
-        </TabsContent>
-
-        <TabsContent value="settings" className="mt-4">
-          <Suspense fallback={<div>Loading settings...</div>}>
-            <MLMSettings mlmSettings={mlmSettings} tiers={tiers} />
-          </Suspense>
+        <TabsContent value="settings" className="space-y-4">
+          <MLMSettings mlmSettings={mlmSettings || []} tiers={tiers || []} />
         </TabsContent>
       </Tabs>
     </div>

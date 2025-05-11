@@ -1,32 +1,45 @@
+"use client"
+
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Copy, User, DollarSign, BarChart, LinkIcon } from "lucide-react"
+import { Copy, User, DollarSign, BarChart, LinkIcon } from "lucide-react"
 import { createServerClient } from "@/lib/supabase/server"
-import { getAffiliateById } from "@/lib/supabase/affiliate-actions"
-import { getAffiliateStats } from "@/lib/services/affiliate-tracking-service"
 import { formatCurrency } from "@/lib/utils/affiliate-utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { AffiliateRealTimeUpdater } from "@/components/admin/AffiliateRealTimeUpdater"
+import { DashboardHeader } from "@/components/admin/DashboardHeader"
 
 export default async function AffiliateDetailPage({ params }: { params: { id: string } }) {
   const { id } = params
+  const supabase = createServerClient()
 
   // Get affiliate details
-  const { data: affiliate } = await getAffiliateById(id)
+  const { data: affiliate, error } = await supabase.from("affiliates").select("*").eq("id", id).single()
 
-  if (!affiliate) {
+  if (error || !affiliate) {
     notFound()
   }
 
-  // Get affiliate stats using the standalone function instead of the service
-  const { data: stats } = await getAffiliateStats(id)
+  // Get affiliate stats
+  const { data: statsData } = await supabase.rpc("get_affiliate_stats", { affiliate_id: id })
+
+  const stats = statsData?.[0] || {
+    total_clicks: 0,
+    total_applications: 0,
+    approved_applications: 0,
+    pending_applications: 0,
+    rejected_applications: 0,
+    total_commissions: 0,
+    paid_commissions: 0,
+    pending_commissions: 0,
+    conversion_rate: 0,
+  }
 
   // Get affiliate's applications
-  const supabase = createServerClient()
   const { data: applications } = await supabase
     .from("applications")
     .select(`
@@ -34,8 +47,8 @@ export default async function AffiliateDetailPage({ params }: { params: { id: st
       reference_id,
       status,
       created_at,
-      applicant_details!inner(full_name, email),
-      business_details!inner(business_name, business_type)
+      applicant_details:applicant_details_id(full_name, email),
+      business_details:business_details_id(business_name, business_type)
     `)
     .eq("affiliate_id", id)
     .order("created_at", { ascending: false })
@@ -50,7 +63,7 @@ export default async function AffiliateDetailPage({ params }: { params: { id: st
       status,
       created_at,
       payout_date,
-      applications!inner(reference_id)
+      application:application_id(reference_id)
     `)
     .eq("affiliate_id", id)
     .order("created_at", { ascending: false })
@@ -94,25 +107,25 @@ export default async function AffiliateDetailPage({ params }: { params: { id: st
     }
   }
 
+  // Get base URL for referral links
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.diamondtiercapital.com"
+
   return (
     <div className="space-y-6">
-      {/* Header with Back Button */}
-      <div className="flex items-center justify-between mb-2">
-        <Link href="/admin/affiliates" className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800">
-          <ArrowLeft className="h-3 w-3 mr-1" />
-          Back to Affiliates
-        </Link>
-      </div>
+      <DashboardHeader
+        title={`${affiliate.name}`}
+        description="Affiliate Partner Details"
+        backLink="/admin/affiliates"
+        backLinkText="Back to Affiliates"
+      />
 
       {/* Affiliate Header */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-semibold">
-                {affiliate.first_name} {affiliate.last_name}
-              </h1>
-              {getTierBadge(affiliate.tier)}
+              <h1 className="text-xl font-semibold">{affiliate.name}</h1>
+              {getTierBadge(affiliate.tier || "bronze")}
             </div>
             <p className="text-sm text-gray-500 mt-1">
               {affiliate.email} {affiliate.company_name && `• ${affiliate.company_name}`}
@@ -123,12 +136,38 @@ export default async function AffiliateDetailPage({ params }: { params: { id: st
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-md">
               <code className="text-xs font-mono">{affiliate.referral_code}</code>
-              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(affiliate.referral_code)
+                    // You could add a toast notification here if you have a toast component
+                  } catch (err) {
+                    console.error("Failed to copy text: ", err)
+                  }
+                }}
+                title="Copy referral code"
+              >
                 <Copy className="h-3 w-3" />
               </Button>
             </div>
 
-            <Button size="sm" className="gap-1">
+            <Button
+              size="sm"
+              className="gap-1"
+              onClick={async () => {
+                const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
+                const referralLink = `${baseUrl}/applynow?ref=${affiliate.referral_code}`
+                try {
+                  await navigator.clipboard.writeText(referralLink)
+                  // You could add a toast notification here if you have a toast component
+                } catch (err) {
+                  console.error("Failed to copy link: ", err)
+                }
+              }}
+            >
               <LinkIcon className="h-3.5 w-3.5" />
               <span>Copy Referral Link</span>
             </Button>
@@ -146,10 +185,10 @@ export default async function AffiliateDetailPage({ params }: { params: { id: st
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalApplications}</div>
+            <div className="text-2xl font-bold">{stats.total_applications}</div>
             <div className="flex items-center gap-2 mt-1">
-              <Badge className="bg-green-100 text-green-800">{stats.approvedApplications} Approved</Badge>
-              <Badge className="bg-amber-100 text-amber-800">{stats.pendingApplications} Pending</Badge>
+              <Badge className="bg-green-100 text-green-800">{stats.approved_applications} Approved</Badge>
+              <Badge className="bg-amber-100 text-amber-800">{stats.pending_applications} Pending</Badge>
             </div>
           </CardContent>
         </Card>
@@ -162,10 +201,10 @@ export default async function AffiliateDetailPage({ params }: { params: { id: st
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(stats.totalCommissions)}</div>
+            <div className="text-2xl font-bold text-green-600">{formatCurrency(stats.total_commissions)}</div>
             <div className="flex items-center gap-2 mt-1">
-              <Badge className="bg-green-100 text-green-800">{formatCurrency(stats.paidCommissions)} Paid</Badge>
-              <Badge className="bg-amber-100 text-amber-800">{formatCurrency(stats.pendingCommissions)} Pending</Badge>
+              <Badge className="bg-green-100 text-green-800">{formatCurrency(stats.paid_commissions)} Paid</Badge>
+              <Badge className="bg-amber-100 text-amber-800">{formatCurrency(stats.pending_commissions)} Pending</Badge>
             </div>
           </CardContent>
         </Card>
@@ -178,9 +217,9 @@ export default async function AffiliateDetailPage({ params }: { params: { id: st
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.conversionRate.toFixed(1)}%</div>
+            <div className="text-2xl font-bold">{stats.conversion_rate.toFixed(1)}%</div>
             <div className="text-sm text-gray-500 mt-1">
-              {stats.totalClicks} clicks → {stats.totalApplications} applications
+              {stats.total_clicks} clicks → {stats.total_applications} applications
             </div>
           </CardContent>
         </Card>
@@ -188,7 +227,7 @@ export default async function AffiliateDetailPage({ params }: { params: { id: st
 
       {/* Tabs for Applications and Commissions */}
       <Tabs defaultValue="applications" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 h-9">
+        <TabsList className="grid w-full max-w-md grid-cols-2 h-9">
           <TabsTrigger value="applications" className="text-xs">
             Applications
           </TabsTrigger>
@@ -223,8 +262,8 @@ export default async function AffiliateDetailPage({ params }: { params: { id: st
                             {app.reference_id}
                           </Link>
                         </TableCell>
-                        <TableCell>{app.applicant_details.full_name}</TableCell>
-                        <TableCell>{app.business_details.business_name}</TableCell>
+                        <TableCell>{app.applicant_details?.full_name || "N/A"}</TableCell>
+                        <TableCell>{app.business_details?.business_name || "N/A"}</TableCell>
                         <TableCell>{getStatusBadge(app.status)}</TableCell>
                         <TableCell className="text-xs text-gray-500">{formatDate(app.created_at)}</TableCell>
                       </TableRow>
@@ -263,7 +302,9 @@ export default async function AffiliateDetailPage({ params }: { params: { id: st
                   {commissions && commissions.length > 0 ? (
                     commissions.map((commission) => (
                       <TableRow key={commission.id}>
-                        <TableCell className="font-mono text-xs">{commission.applications.reference_id}</TableCell>
+                        <TableCell className="font-mono text-xs">
+                          {commission.application?.reference_id || "N/A"}
+                        </TableCell>
                         <TableCell className="font-medium">{formatCurrency(commission.amount)}</TableCell>
                         <TableCell>{commission.rate}%</TableCell>
                         <TableCell>{getStatusBadge(commission.status)}</TableCell>

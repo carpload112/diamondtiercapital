@@ -50,19 +50,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
-        style={{
-          boxShadow: variant === "ghost" || variant === "link" ? "none" : "0 4px 6px rgba(0, 0, 0, 0.1)",
-          position: "relative",
-          zIndex: 2,
-          cursor: "pointer",
-        }}
-        onClick={(e) => {
-          // Ensure the event is properly handled
-          e.stopPropagation()
-          if (props.onClick) {
-            props.onClick(e)
-          }
-        }}
+        type={asChild ? undefined : "button"}
         {...props}
       />
     )
