@@ -59,7 +59,7 @@ export async function submitApplication(formData: ApplicationFormData) {
       const { error: applicationError } = await supabase.from("applications").insert({
         id: applicationId,
         reference_id: referenceId,
-        status: formData.status || "pending",
+        status: formData.status || "draft", // Default to draft instead of pending
         credit_check_completed: false,
         submitted_at: new Date().toISOString(),
         notes: formData.additionalInfo || "",
@@ -301,58 +301,46 @@ export async function uploadBankStatement({
     // Generate a unique file name
     const fileExt = file.name.split(".").pop()
     const fileName = `${applicationId}_${monthYear.replace("/", "-")}_${Date.now()}.${fileExt}`
-    const filePath = `bank-statements/${fileName}`
 
-    console.log("Uploading file to storage:", filePath)
+    // Create a placeholder URL since file_url cannot be null
+    const placeholderUrl = `placeholder://${fileName}`
 
-    // First, check available buckets
-    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets()
+    console.log(`Converting file to base64 (size: ${(file.size / (1024 * 1024)).toFixed(2)}MB)`)
 
-    if (bucketsError) {
-      console.error("Error listing buckets:", bucketsError)
-      throw new Error("Could not access storage buckets")
+    // For large files, we'll use a chunked approach to convert to base64
+    // This helps prevent memory issues with very large files
+    const processLargeFile = async (file: File): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        // For very large files (over 50MB), we might want to implement a true chunked approach
+        // But for now, we'll use a timeout to prevent UI freezing
+        setTimeout(() => {
+          const fileReader = new FileReader()
+          fileReader.onload = () => {
+            resolve(fileReader.result as string)
+          }
+          fileReader.onerror = () => {
+            reject(new Error("Failed to read file"))
+          }
+          fileReader.readAsDataURL(file)
+        }, 100) // Small delay to allow UI to update
+      })
     }
 
-    // Use the first available bucket or default to 'public'
-    let bucketName = "public"
-    if (buckets && buckets.length > 0) {
-      bucketName = buckets[0].name
-      console.log("Using existing bucket:", bucketName)
-    } else {
-      console.log("No buckets found, using default 'public' bucket")
-    }
+    const fileBase64 = await processLargeFile(file)
+    console.log("File converted to base64, storing in database")
 
-    // Upload file to Supabase Storage using the available bucket
-    const { data: uploadData, error: uploadError } = await supabase.storage.from(bucketName).upload(filePath, file, {
-      cacheControl: "3600",
-      upsert: false,
-    })
-
-    if (uploadError) {
-      console.error("Storage upload error:", uploadError)
-      throw uploadError
-    }
-
-    console.log("File uploaded successfully, getting public URL")
-
-    // Get the public URL for the uploaded file
-    const { data: urlData } = supabase.storage.from(bucketName).getPublicUrl(filePath)
-
-    if (!urlData || !urlData.publicUrl) {
-      throw new Error("Failed to get public URL for uploaded file")
-    }
-
-    console.log("Got public URL:", urlData.publicUrl)
-
-    // Insert record into bank_statements table
+    // For very large files, we might need to split the data into chunks
+    // But for now, we'll store the entire base64 string
+    // Insert record into bank_statements table with base64 data and placeholder URL
     const { error: insertError } = await supabase.from("bank_statements").insert({
       application_id: applicationId,
       file_name: file.name,
-      file_url: urlData.publicUrl,
+      file_url: placeholderUrl, // Use placeholder URL to satisfy NOT NULL constraint
       file_type: file.type,
       file_size: file.size,
       month_year: monthYear,
       notes: notes || null,
+      file_data: fileBase64, // Store the file as base64 data
     })
 
     if (insertError) {
@@ -361,7 +349,7 @@ export async function uploadBankStatement({
     }
 
     console.log("Bank statement record created successfully")
-    return { success: true, filePath, publicUrl: urlData.publicUrl }
+    return { success: true, filePath: placeholderUrl }
   } catch (error) {
     console.error("Error uploading bank statement:", error)
     return {
@@ -378,7 +366,7 @@ export async function getBankStatements(applicationId: string) {
   try {
     const { data, error } = await supabase
       .from("bank_statements")
-      .select("*")
+      .select("id, file_name, file_url, file_type, file_size, month_year, notes, created_at")
       .eq("application_id", applicationId)
       .order("month_year", { ascending: false })
 
@@ -395,37 +383,35 @@ export async function getBankStatements(applicationId: string) {
   }
 }
 
+// Function to get a specific bank statement with file data
+export async function getBankStatementWithData(statementId: string) {
+  const supabase = createServerClient()
+
+  try {
+    const { data, error } = await supabase.from("bank_statements").select("*").eq("id", statementId).single()
+
+    if (error) throw error
+
+    return { success: true, data }
+  } catch (error) {
+    console.error("Error fetching bank statement:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch bank statement",
+      data: null,
+    }
+  }
+}
+
 // Function to delete a bank statement
 export async function deleteBankStatement(statementId: string) {
   const supabase = createServerClient()
 
   try {
-    // Get the statement to find the file path
-    const { data: statement, error: fetchError } = await supabase
-      .from("bank_statements")
-      .select("file_url")
-      .eq("id", statementId)
-      .single()
-
-    if (fetchError) throw fetchError
-
     // Delete from database
     const { error: deleteError } = await supabase.from("bank_statements").delete().eq("id", statementId)
 
     if (deleteError) throw deleteError
-
-    // Extract file path from URL to delete from storage
-    // This is a simplified approach - you might need to adjust based on your URL structure
-    if (statement && statement.file_url) {
-      const filePath = statement.file_url.split("/").pop()
-      if (filePath) {
-        // Get available buckets
-        const { data: buckets } = await supabase.storage.listBuckets()
-        const bucketName = buckets && buckets.length > 0 ? buckets[0].name : "public"
-
-        await supabase.storage.from(bucketName).remove([`bank-statements/${filePath}`])
-      }
-    }
 
     return { success: true }
   } catch (error) {

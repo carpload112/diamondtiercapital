@@ -445,7 +445,7 @@ const ApplyNowPage = () => {
       const result = await submitApplication({
         ...formData,
         applicationId: applicationId,
-        status: "pending", // Change from draft to pending
+        status: "pending", // Change from draft to pending ONLY on final submission
       })
 
       if (result.success) {

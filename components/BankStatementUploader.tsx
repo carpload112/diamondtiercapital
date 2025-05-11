@@ -44,6 +44,9 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
   }
   const { toast } = useToast()
 
+  // Increased file size limit to 100MB
+  const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB in bytes
+
   // Validate application ID on component mount
   useEffect(() => {
     if (!applicationId) {
@@ -77,14 +80,30 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
         return
       }
 
-      // Check file size (10MB max)
-      if (file.size > 10 * 1024 * 1024) {
+      // Check file size (increased to 100MB max)
+      if (file.size > MAX_FILE_SIZE) {
         toast({
           title: "File too large",
-          description: "Maximum file size is 10MB",
+          description: "Maximum file size is 100MB",
           variant: "destructive",
         })
         return
+      }
+
+      // Show warning for large files (over 50MB)
+      if (file.size > 50 * 1024 * 1024) {
+        toast({
+          title: "Very large file detected",
+          description: "Files over 50MB may take several minutes to upload and process. Please be patient.",
+          variant: "warning",
+          duration: 6000, // Show for 6 seconds
+        })
+      } else if (file.size > 20 * 1024 * 1024) {
+        toast({
+          title: "Large file detected",
+          description: "Files over 20MB may take longer to upload and process",
+          variant: "warning",
+        })
       }
 
       setFiles((prev) => ({ ...prev, [month]: file }))
@@ -100,6 +119,12 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
 
   const handleMonthChange = (month: string, value: string) => {
     setMonths((prev) => ({ ...prev, [month]: value }))
+  }
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return bytes + " bytes"
+    else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB"
+    else return (bytes / 1048576).toFixed(1) + " MB"
   }
 
   const handleUpload = async () => {
@@ -129,6 +154,16 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
 
     if (!isValid) return
 
+    // Check for very large files and warn the user
+    const totalSize = Object.values(files).reduce((sum, file) => sum + (file?.size || 0), 0)
+    if (totalSize > 100 * 1024 * 1024) {
+      toast({
+        title: "Very large upload",
+        description: "You're uploading over 100MB of files. This may take several minutes to complete.",
+        duration: 6000,
+      })
+    }
+
     setUploading(true)
     setUploadStatus(null)
 
@@ -137,15 +172,28 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
       let successCount = 0
       for (const [month, file] of Object.entries(files)) {
         if (file) {
+          // Calculate progress update interval based on file size
+          // Larger files will have slower progress updates
+          const progressInterval = Math.max(100, Math.min(1000, Math.floor(file.size / 200000)))
+
           // Simulate progress
           const interval = setInterval(() => {
             setUploadProgress((prev) => {
-              const newProgress = Math.min((prev[month] || 0) + 10, 90)
+              const newProgress = Math.min((prev[month] || 0) + 2, 90)
               return { ...prev, [month]: newProgress }
             })
-          }, 200)
+          }, progressInterval)
 
           try {
+            // Show a toast for very large files
+            if (file.size > 50 * 1024 * 1024) {
+              toast({
+                title: "Processing large file",
+                description: `Uploading ${formatFileSize(file.size)}. This may take several minutes.`,
+                duration: 10000, // 10 seconds
+              })
+            }
+
             // Upload the file
             const result = await uploadBankStatement({
               applicationId,
@@ -260,7 +308,21 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
         )}
 
         <div className="text-sm text-gray-500 mb-4">
-          Please upload your last 3 months of business bank statements. Accepted formats: PDF, JPG, PNG, Excel.
+          Please upload your last 3 months of business bank statements. Accepted formats: PDF, JPG, PNG, Excel. Maximum
+          file size: 100MB per file.
+        </div>
+
+        <div className="p-3 bg-blue-50 border border-blue-100 rounded-md mb-4">
+          <div className="flex items-start">
+            <Info className="h-5 w-5 text-blue-500 mt-0.5 mr-2" />
+            <div>
+              <p className="text-sm font-medium text-blue-800">Large File Support</p>
+              <p className="text-xs text-blue-700 mt-1">
+                Files up to 100MB are supported, but uploads of very large files may take several minutes to complete.
+                Please be patient during the upload process.
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Month 1 */}
@@ -309,7 +371,10 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
               ) : (
                 <div className="flex items-center p-2 border rounded-md bg-gray-50">
                   <FileCheck className="h-4 w-4 text-green-500 mr-2" />
-                  <span className="text-sm truncate flex-1">{files.month1.name}</span>
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <span className="text-sm truncate">{files.month1.name}</span>
+                    <span className="text-xs text-gray-500">{formatFileSize(files.month1.size)}</span>
+                  </div>
                   <Button
                     type="button"
                     variant="ghost"
@@ -330,6 +395,11 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
                       style={{ width: `${uploadProgress.month1}%` }}
                     ></div>
                   </div>
+                  {uploadProgress.month1 < 100 && uploadProgress.month1 > 0 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      {uploadProgress.month1}% - {uploadProgress.month1 >= 90 ? "Processing..." : "Uploading..."}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -382,7 +452,10 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
               ) : (
                 <div className="flex items-center p-2 border rounded-md bg-gray-50">
                   <FileCheck className="h-4 w-4 text-green-500 mr-2" />
-                  <span className="text-sm truncate flex-1">{files.month2.name}</span>
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <span className="text-sm truncate">{files.month2.name}</span>
+                    <span className="text-xs text-gray-500">{formatFileSize(files.month2.size)}</span>
+                  </div>
                   <Button
                     type="button"
                     variant="ghost"
@@ -403,6 +476,11 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
                       style={{ width: `${uploadProgress.month2}%` }}
                     ></div>
                   </div>
+                  {uploadProgress.month2 < 100 && uploadProgress.month2 > 0 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      {uploadProgress.month2}% - {uploadProgress.month2 >= 90 ? "Processing..." : "Uploading..."}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -455,7 +533,10 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
               ) : (
                 <div className="flex items-center p-2 border rounded-md bg-gray-50">
                   <FileCheck className="h-4 w-4 text-green-500 mr-2" />
-                  <span className="text-sm truncate flex-1">{files.month3.name}</span>
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <span className="text-sm truncate">{files.month3.name}</span>
+                    <span className="text-xs text-gray-500">{formatFileSize(files.month3.size)}</span>
+                  </div>
                   <Button
                     type="button"
                     variant="ghost"
@@ -476,6 +557,11 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
                       style={{ width: `${uploadProgress.month3}%` }}
                     ></div>
                   </div>
+                  {uploadProgress.month3 < 100 && uploadProgress.month3 > 0 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      {uploadProgress.month3}% - {uploadProgress.month3 >= 90 ? "Processing..." : "Uploading..."}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -528,6 +614,9 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
             <p className="text-xs text-amber-700">Application ID: {applicationId || "Not set"}</p>
             <p className="text-xs text-amber-700">Files selected: {Object.values(files).filter(Boolean).length}</p>
             <p className="text-xs text-amber-700">Months selected: {Object.values(months).filter(Boolean).length}</p>
+            <p className="text-xs text-amber-700">
+              Total size: {formatFileSize(Object.values(files).reduce((sum, file) => sum + (file?.size || 0), 0))}
+            </p>
           </div>
         )}
       </CardContent>
