@@ -6,7 +6,18 @@ import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 import { useAdminAuth } from "@/lib/admin-auth"
-import { LayoutDashboard, FileText, Settings, LogOut, Menu, X, ChevronRight, User, Users } from "lucide-react"
+import {
+  LayoutDashboard,
+  FileText,
+  Settings,
+  LogOut,
+  Menu,
+  X,
+  ChevronRight,
+  User,
+  Users,
+  RefreshCw,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
@@ -132,7 +143,16 @@ export default function AdminLayout({
               </div>
             </div>
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs flex items-center gap-1"
+              onClick={() => window.location.reload()}
+            >
+              <RefreshCw className="h-3 w-3" />
+              Refresh Data
+            </Button>
             <Avatar className="h-7 w-7">
               <AvatarFallback className="bg-blue-100 text-blue-700 text-xs">
                 <User className="h-3.5 w-3.5" />
@@ -141,8 +161,10 @@ export default function AdminLayout({
           </div>
         </header>
 
-        {/* Page content */}
-        {children}
+        {/* Page content - this renders the actual page components that fetch data */}
+        <div className="affiliate-data-container" key={pathname}>
+          {children}
+        </div>
       </main>
     </div>
   )

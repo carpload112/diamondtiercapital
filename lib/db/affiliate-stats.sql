@@ -6,23 +6,23 @@ RETURNS TABLE (
   approved_applications BIGINT,
   pending_applications BIGINT,
   rejected_applications BIGINT,
-  total_commissions NUMERIC,
-  paid_commissions NUMERIC,
-  pending_commissions NUMERIC,
-  conversion_rate NUMERIC
+  total_commissions DECIMAL,
+  paid_commissions DECIMAL,
+  pending_commissions DECIMAL,
+  conversion_rate DECIMAL
 ) AS $$
 BEGIN
   RETURN QUERY
   WITH click_counts AS (
-    SELECT COUNT(*) AS clicks
+    SELECT COUNT(*) AS count
     FROM affiliate_clicks
     WHERE affiliate_id = $1
   ),
   application_counts AS (
-    SELECT
+    SELECT 
       COUNT(*) AS total,
       COUNT(*) FILTER (WHERE status = 'approved') AS approved,
-      COUNT(*) FILTER (WHERE status = 'pending' OR status = 'in_review') AS pending,
+      COUNT(*) FILTER (WHERE status IN ('pending', 'in_review', 'draft')) AS pending,
       COUNT(*) FILTER (WHERE status = 'rejected') AS rejected
     FROM applications
     WHERE affiliate_id = $1
@@ -36,24 +36,33 @@ BEGIN
     WHERE affiliate_id = $1
   )
   SELECT
-    c.clicks AS total_clicks,
-    a.total AS total_applications,
-    a.approved AS approved_applications,
-    a.pending AS pending_applications,
-    a.rejected AS rejected_applications,
-    cm.total AS total_commissions,
-    cm.paid AS paid_commissions,
-    cm.pending AS pending_commissions,
-    CASE
-      WHEN c.clicks > 0 THEN (a.total::NUMERIC / c.clicks) * 100
+    COALESCE(cc.count, 0) AS total_clicks,
+    COALESCE(ac.total, 0) AS total_applications,
+    COALESCE(ac.approved, 0) AS approved_applications,
+    COALESCE(ac.pending, 0) AS pending_applications,
+    COALESCE(ac.rejected, 0) AS rejected_applications,
+    COALESCE(ca.total, 0) AS total_commissions,
+    COALESCE(ca.paid, 0) AS paid_commissions,
+    COALESCE(ca.pending, 0) AS pending_commissions,
+    CASE 
+      WHEN COALESCE(cc.count, 0) > 0 THEN 
+        (COALESCE(ac.total, 0)::DECIMAL / COALESCE(cc.count, 0)) * 100
       ELSE 0
     END AS conversion_rate
-  FROM
-    click_counts c,
-    application_counts a,
-    commission_amounts cm;
+  FROM click_counts cc
+  CROSS JOIN application_counts ac
+  CROSS JOIN commission_amounts ca;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Create an index on affiliate_id in applications table to speed up queries
+CREATE INDEX IF NOT EXISTS idx_applications_affiliate_id ON applications(affiliate_id);
+
+-- Create an index on affiliate_id in affiliate_clicks table to speed up queries
+CREATE INDEX IF NOT EXISTS idx_affiliate_clicks_affiliate_id ON affiliate_clicks(affiliate_id);
+
+-- Create an index on affiliate_id in affiliate_commissions table to speed up queries
+CREATE INDEX IF NOT EXISTS idx_affiliate_commissions_affiliate_id ON affiliate_commissions(affiliate_id);
 
 -- Function to get stats for all affiliates
 CREATE OR REPLACE FUNCTION get_all_affiliate_stats()

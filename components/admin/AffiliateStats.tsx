@@ -16,22 +16,73 @@ import {
   Legend,
 } from "recharts"
 import { formatCurrency } from "@/lib/utils/affiliate-utils"
+import { useEffect, useState } from "react"
+import { getAffiliateStats } from "@/lib/services/affiliate-tracking-service"
 
 interface AffiliateStatsProps {
-  stats: {
-    totalClicks: number
-    totalApplications: number
-    approvedApplications: number
-    pendingApplications: number
-    rejectedApplications: number
-    totalCommissions: number
-    paidCommissions: number
-    pendingCommissions: number
-    conversionRate: number
-  }
+  affiliateId: string
+  initialStats?: any
 }
 
-export function AffiliateStats({ stats }: AffiliateStatsProps) {
+export function AffiliateStats({ affiliateId, initialStats }: AffiliateStatsProps) {
+  const [stats, setStats] = useState(
+    initialStats || {
+      totalClicks: 0,
+      totalApplications: 0,
+      approvedApplications: 0,
+      pendingApplications: 0,
+      rejectedApplications: 0,
+      totalCommissions: 0,
+      paidCommissions: 0,
+      pendingCommissions: 0,
+      conversionRate: 0,
+    },
+  )
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch fresh stats when component mounts and periodically refresh
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true)
+        const response = await getAffiliateStats(affiliateId)
+        if (response.success && response.data) {
+          // Transform the data to match our component's expected format
+          setStats({
+            totalClicks: response.data.total_clicks || 0,
+            totalApplications: response.data.total_applications || 0,
+            approvedApplications: response.data.approved_applications || 0,
+            pendingApplications: response.data.pending_applications || 0,
+            rejectedApplications: response.data.rejected_applications || 0,
+            totalCommissions: response.data.total_commissions || 0,
+            paidCommissions: response.data.paid_commissions || 0,
+            pendingCommissions: response.data.pending_commissions || 0,
+            conversionRate: response.data.conversion_rate || 0,
+          })
+          setError(null)
+        } else {
+          console.error("Failed to fetch affiliate stats:", response.error)
+          setError("Failed to load affiliate statistics")
+        }
+      } catch (err) {
+        console.error("Error fetching affiliate stats:", err)
+        setError("An error occurred while loading statistics")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    // Fetch immediately on mount
+    fetchStats()
+
+    // Then refresh every 30 seconds
+    const intervalId = setInterval(fetchStats, 30000)
+
+    // Clean up interval on unmount
+    return () => clearInterval(intervalId)
+  }, [affiliateId])
+
   // Prepare data for application status chart
   const applicationStatusData = [
     { name: "Approved", value: stats.approvedApplications, color: "#10b981" },

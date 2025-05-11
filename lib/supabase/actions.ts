@@ -310,7 +310,7 @@ export async function submitApplication(formData: ApplicationFormData) {
       console.log("No referral code provided, skipping affiliate tracking")
     }
 
-    // If this is a final submission (status = pending), ensure affiliate tracking is processed
+    // This ensures that the affiliate tracking is properly processed
     if (formData.status === "pending" && referralCode) {
       // Double-check that the application has an affiliate_id
       const { data: application, error: checkError } = await supabase

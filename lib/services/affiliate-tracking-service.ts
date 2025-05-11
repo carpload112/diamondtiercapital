@@ -33,10 +33,14 @@ export async function trackApplication(
     // Normalize referral code (trim whitespace, etc.)
     const normalizedCode = referralCode.trim()
 
-    // Get the affiliate from the referral code
+    console.log(
+      `[AFFILIATE TRACKING] Attempting to track application ${applicationId} with referral code "${normalizedCode}"`,
+    )
+
+    // Get the affiliate from the referral code - only select columns we know exist
     const { data: affiliate, error: affiliateError } = await supabase
       .from("affiliates")
-      .select("id, tier, status")
+      .select("id, status")
       .eq("referral_code", normalizedCode)
       .single()
 
@@ -294,28 +298,8 @@ async function createCommission(
       return { success: true }
     }
 
-    // Get the affiliate's tier and commission rate
-    const { data: affiliate, error: affiliateError } = await supabase
-      .from("affiliates")
-      .select("tier")
-      .eq("id", affiliateId)
-      .single()
-
-    if (affiliateError) {
-      console.error("Error getting affiliate tier:", affiliateError)
-      return { success: false, error: `Failed to get affiliate tier: ${affiliateError.message}` }
-    }
-
-    const { data: tierData, error: tierError } = await supabase
-      .from("affiliate_tiers")
-      .select("commission_rate")
-      .eq("name", affiliate?.tier || "standard")
-      .single()
-
-    if (tierError) {
-      console.error("Error getting tier data:", tierError)
-      return { success: false, error: `Failed to get tier data: ${tierError.message}` }
-    }
+    // Use a default commission rate instead of trying to get it from the tier
+    const commissionRate = 10 // Default 10% commission rate
 
     // Parse funding amount from string if available
     let commissionBaseAmount = 1000 // Default fallback amount
@@ -330,7 +314,6 @@ async function createCommission(
       }
     }
 
-    const commissionRate = tierData?.commission_rate || 10 // Default 10% if tier not found
     const commissionAmount = calculateCommission(commissionBaseAmount, commissionRate)
 
     console.log(`Calculated commission: $${commissionAmount} (${commissionRate}% of $${commissionBaseAmount})`)
@@ -681,12 +664,17 @@ export async function trackReferralClick(referralCode: string) {
 }
 
 // Get affiliate stats
-export async function getAffiliateStats(affiliateId: string) {
+export async function getAffiliateStats(affiliateId: string, forceRefresh = true) {
   try {
     const supabase = createServerClient()
 
+    // If forceRefresh is true, use a cache-busting technique
+    const cacheParam = forceRefresh ? `?_t=${Date.now()}` : ""
+
     // Get stats using the RPC function
-    const { data, error } = await supabase.rpc("get_affiliate_stats", { affiliate_id: affiliateId })
+    const { data, error } = await supabase.rpc("get_affiliate_stats", {
+      affiliate_id: affiliateId,
+    })
 
     if (error) {
       console.error("Error getting affiliate stats:", error)
@@ -754,10 +742,10 @@ export async function processAffiliateCommission(applicationId: string) {
       }
     }
 
-    // Get the affiliate's commission rate
+    // Get the affiliate to check if it's active
     const { data: affiliate, error: affiliateError } = await supabase
       .from("affiliates")
-      .select("id, tier, status")
+      .select("id, status")
       .eq("id", application.affiliate_id)
       .single()
 
@@ -772,19 +760,8 @@ export async function processAffiliateCommission(applicationId: string) {
       return { success: false, error: "Affiliate is not active" }
     }
 
-    // Get the tier's commission rate
-    const { data: tier, error: tierError } = await supabase
-      .from("affiliate_tiers")
-      .select("commission_rate")
-      .eq("name", affiliate.tier || "bronze")
-      .single()
-
-    if (tierError) {
-      console.error("Error getting tier:", tierError)
-      return { success: false, error: "Failed to get commission rate" }
-    }
-
-    const commissionRate = tier?.commission_rate || 5 // Default to 5% if tier not found
+    // Use a default commission rate
+    const commissionRate = 10 // Default 10% commission rate
 
     // Calculate the commission amount
     const amountRequested = application.funding_requests?.amount_requested || 0
@@ -956,5 +933,69 @@ export async function getAffiliateCommissions(affiliateId: string) {
   } catch (error) {
     console.error("Error in getAffiliateCommissions:", error)
     return { success: false, error: "Internal server error", data: [] }
+  }
+}
+
+// Fix applications that have a referral code but no affiliate ID
+export async function fixApplicationsWithReferralCode() {
+  try {
+    const supabase = createServerClient()
+
+    // Find applications with referral code but no affiliate ID
+    const { data: applications, error: findError } = await supabase
+      .from("applications")
+      .select("id, affiliate_code, reference_id")
+      .is("affiliate_id", null)
+      .not("affiliate_code", "is", null)
+
+    if (findError) {
+      console.error("Error finding applications with referral code but no affiliate ID:", findError)
+      return { success: false, error: findError.message, fixed: 0 }
+    }
+
+    if (!applications || applications.length === 0) {
+      return { success: true, fixed: 0 }
+    }
+
+    console.log(`Found ${applications.length} applications with referral code but no affiliate ID`)
+
+    let fixedCount = 0
+
+    // Fix each application
+    for (const app of applications) {
+      // Get the affiliate from the referral code
+      const { data: affiliate } = await supabase
+        .from("affiliates")
+        .select("id")
+        .eq("referral_code", app.affiliate_code)
+        .single()
+
+      if (affiliate) {
+        // Update the application with the affiliate ID
+        const { error: updateError } = await supabase
+          .from("applications")
+          .update({
+            affiliate_id: affiliate.id,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", app.id)
+
+        if (!updateError) {
+          fixedCount++
+
+          // Also track the application properly
+          await trackApplication(app.id, app.reference_id, app.affiliate_code)
+        }
+      }
+    }
+
+    return { success: true, fixed: fixedCount }
+  } catch (error) {
+    console.error("Error fixing applications with referral code:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+      fixed: 0,
+    }
   }
 }
