@@ -1,17 +1,15 @@
-"use client"
-
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Copy, User, DollarSign, BarChart, LinkIcon } from "lucide-react"
+import { User, DollarSign, BarChart } from "lucide-react"
 import { createServerClient } from "@/lib/supabase/server"
 import { formatCurrency } from "@/lib/utils/affiliate-utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { AffiliateRealTimeUpdater } from "@/components/admin/AffiliateRealTimeUpdater"
 import { DashboardHeader } from "@/components/admin/DashboardHeader"
+import { AffiliateReferralButtons } from "@/components/admin/AffiliateReferralButtons"
 
 export default async function AffiliateDetailPage({ params }: { params: { id: string } }) {
   const { id } = params
@@ -133,45 +131,7 @@ export default async function AffiliateDetailPage({ params }: { params: { id: st
             <AffiliateRealTimeUpdater affiliateId={id} />
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2">
-            <div className="flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-md">
-              <code className="text-xs font-mono">{affiliate.referral_code}</code>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(affiliate.referral_code)
-                    // You could add a toast notification here if you have a toast component
-                  } catch (err) {
-                    console.error("Failed to copy text: ", err)
-                  }
-                }}
-                title="Copy referral code"
-              >
-                <Copy className="h-3 w-3" />
-              </Button>
-            </div>
-
-            <Button
-              size="sm"
-              className="gap-1"
-              onClick={async () => {
-                const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
-                const referralLink = `${baseUrl}/applynow?ref=${affiliate.referral_code}`
-                try {
-                  await navigator.clipboard.writeText(referralLink)
-                  // You could add a toast notification here if you have a toast component
-                } catch (err) {
-                  console.error("Failed to copy link: ", err)
-                }
-              }}
-            >
-              <LinkIcon className="h-3.5 w-3.5" />
-              <span>Copy Referral Link</span>
-            </Button>
-          </div>
+          <AffiliateReferralButtons referralCode={affiliate.referral_code} baseUrl={baseUrl} />
         </div>
       </div>
 

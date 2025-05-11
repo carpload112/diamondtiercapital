@@ -1,23 +1,22 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { createClient } from "@/lib/supabase/client"
-import { Badge } from "@/components/ui/badge"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
 interface AffiliateRealTimeUpdaterProps {
   affiliateId: string
 }
 
 export function AffiliateRealTimeUpdater({ affiliateId }: AffiliateRealTimeUpdaterProps) {
+  const [hasNewActivity, setHasNewActivity] = useState(false)
   const [lastActivity, setLastActivity] = useState<string | null>(null)
-  const [isActive, setIsActive] = useState(false)
 
   useEffect(() => {
-    const supabase = createClient()
+    const supabase = createClientComponentClient()
 
-    // Subscribe to affiliate clicks
-    const clicksSubscription = supabase
-      .channel(`affiliate-clicks-${affiliateId}`)
+    // Subscribe to real-time changes for this affiliate
+    const channel = supabase
+      .channel(`affiliate-${affiliateId}`)
       .on(
         "postgres_changes",
         {
@@ -27,20 +26,10 @@ export function AffiliateRealTimeUpdater({ affiliateId }: AffiliateRealTimeUpdat
           filter: `affiliate_id=eq.${affiliateId}`,
         },
         (payload) => {
+          setHasNewActivity(true)
           setLastActivity("New click recorded")
-          setIsActive(true)
-
-          // Reset active state after 5 seconds
-          setTimeout(() => {
-            setIsActive(false)
-          }, 5000)
         },
       )
-      .subscribe()
-
-    // Subscribe to affiliate applications
-    const applicationsSubscription = supabase
-      .channel(`affiliate-applications-${affiliateId}`)
       .on(
         "postgres_changes",
         {
@@ -50,20 +39,10 @@ export function AffiliateRealTimeUpdater({ affiliateId }: AffiliateRealTimeUpdat
           filter: `affiliate_id=eq.${affiliateId}`,
         },
         (payload) => {
+          setHasNewActivity(true)
           setLastActivity("New application submitted")
-          setIsActive(true)
-
-          // Reset active state after 5 seconds
-          setTimeout(() => {
-            setIsActive(false)
-          }, 5000)
         },
       )
-      .subscribe()
-
-    // Subscribe to affiliate commissions
-    const commissionsSubscription = supabase
-      .channel(`affiliate-commissions-${affiliateId}`)
       .on(
         "postgres_changes",
         {
@@ -73,29 +52,22 @@ export function AffiliateRealTimeUpdater({ affiliateId }: AffiliateRealTimeUpdat
           filter: `affiliate_id=eq.${affiliateId}`,
         },
         (payload) => {
+          setHasNewActivity(true)
           setLastActivity("New commission earned")
-          setIsActive(true)
-
-          // Reset active state after 5 seconds
-          setTimeout(() => {
-            setIsActive(false)
-          }, 5000)
         },
       )
       .subscribe()
 
     return () => {
-      supabase.removeChannel(clicksSubscription)
-      supabase.removeChannel(applicationsSubscription)
-      supabase.removeChannel(commissionsSubscription)
+      supabase.removeChannel(channel)
     }
   }, [affiliateId])
 
-  if (!lastActivity) return null
+  if (!hasNewActivity) return null
 
   return (
-    <div className="mt-2">
-      {isActive && <Badge className="bg-green-100 text-green-800 animate-pulse">{lastActivity}</Badge>}
+    <div className="mt-2 text-xs text-green-600 animate-pulse">
+      <span className="font-medium">New activity:</span> {lastActivity}
     </div>
   )
 }
