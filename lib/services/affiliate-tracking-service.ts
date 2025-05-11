@@ -108,8 +108,8 @@ export async function trackApplication(
       // Continue with other operations even if this fails
     }
 
-    // Calculate and create commission
-    const commissionResult = await createCommission(affiliate.id, applicationId, fundingAmount)
+    // Calculate and create commission - always use $100 for pending applications
+    const commissionResult = await createCommission(affiliate.id, applicationId, "100")
     if (!commissionResult.success) {
       console.warn("Warning creating commission:", commissionResult.error)
       // Continue with other operations even if this fails
@@ -298,25 +298,37 @@ async function createCommission(
       return { success: true }
     }
 
+    // Get application status
+    const { data: application, error: appError } = await supabase
+      .from("applications")
+      .select("status")
+      .eq("id", applicationId)
+      .single()
+
+    if (appError) {
+      console.error("Error getting application status:", appError)
+      // Continue with default values
+    }
+
     // Use a default commission rate instead of trying to get it from the tier
     const commissionRate = 10 // Default 10% commission rate
 
-    // Parse funding amount from string if available
-    let commissionBaseAmount = 1000 // Default fallback amount
-    if (fundingAmount) {
+    // For pending applications, always use $100 as the commission amount
+    let commissionAmount = 100 // Default $100 for pending applications
+
+    // If application is approved, calculate based on funding amount
+    if (application && application.status === "approved" && fundingAmount) {
       // Extract numeric value from funding amount string (e.g. "$50,000-$100,000" -> 50000)
       const match = fundingAmount.match(/\$?(\d{1,3}(,\d{3})*(\.\d+)?)/)
       if (match && match[1]) {
         const numericValue = Number(match[1].replace(/,/g, ""))
         if (!isNaN(numericValue)) {
-          commissionBaseAmount = numericValue
+          commissionAmount = calculateCommission(numericValue, commissionRate)
         }
       }
     }
 
-    const commissionAmount = calculateCommission(commissionBaseAmount, commissionRate)
-
-    console.log(`Calculated commission: $${commissionAmount} (${commissionRate}% of $${commissionBaseAmount})`)
+    console.log(`Calculated commission: $${commissionAmount} (${commissionRate}% of funding or $100 for pending)`)
 
     // Create the commission record
     const { error: insertError } = await supabase.from("affiliate_commissions").insert({
@@ -449,9 +461,23 @@ async function processMLMCommissions(
 
     console.log(`Found ${relationships.length} parent affiliates for affiliate ${affiliateId}`)
 
-    // Parse funding amount from string if available
-    let commissionBaseAmount = 1000 // Default fallback amount
-    if (fundingAmount) {
+    // Get application status
+    const { data: application, error: appError } = await supabase
+      .from("applications")
+      .select("status")
+      .eq("id", applicationId)
+      .single()
+
+    if (appError) {
+      console.error("Error getting application status:", appError)
+      // Continue with default values
+    }
+
+    // For pending applications, use $100 as the base amount for MLM calculations
+    let commissionBaseAmount = 100 // Default $100 for pending applications
+
+    // If application is approved and we have a funding amount, use that instead
+    if (application && application.status === "approved" && fundingAmount) {
       // Extract numeric value from funding amount string (e.g. "$50,000-$100,000" -> 50000)
       const match = fundingAmount.match(/\$?(\d{1,3}(,\d{3})*(\.\d+)?)/)
       if (match && match[1]) {

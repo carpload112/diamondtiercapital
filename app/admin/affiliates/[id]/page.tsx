@@ -34,14 +34,64 @@ export default function AffiliateDetailPage({ params }: { params: { id: string }
   const [error, setError] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const [lastUpdated, setLastUpdated] = useState(new Date())
+  const [debugInfo, setDebugInfo] = useState<any>(null)
+
+  // Safe currency formatter that handles all edge cases
+  const safeCurrency = (value: any): string => {
+    if (value === null || value === undefined) return formatCurrency(0)
+    if (typeof value === "number") return formatCurrency(value)
+    if (typeof value === "string") {
+      const cleaned = value.replace(/[^0-9.]/g, "")
+      const num = Number.parseFloat(cleaned)
+      return formatCurrency(isNaN(num) ? 0 : num)
+    }
+    return formatCurrency(0)
+  }
+
+  // Safe number formatter for currency
+  const safeFormatCurrency = (value: any) => {
+    if (value === null || value === undefined) return formatCurrency(0)
+    const num = typeof value === "string" ? Number.parseFloat(value) : value
+    return formatCurrency(isNaN(num) ? 0 : num)
+  }
 
   const { id } = params
 
   // Create Supabase client
   const supabase = createClientComponentClient()
 
+  // Safe number conversion
+  const safeNumber = (value: any): number => {
+    if (value === null || value === undefined) return 0
+
+    // If it's already a number, return it
+    if (typeof value === "number") return value
+
+    // Try to convert string to number
+    const num = Number(value)
+    return isNaN(num) ? 0 : num
+  }
+
   // Calculate stats from raw data
   const calculateStats = (clicks: any[], applications: any[], commissions: any[]) => {
+    // Log raw commission data for debugging
+    console.log("Raw commission data:", commissions)
+
+    // Debug info for UI
+    const debugCommissions = commissions.map((c) => ({
+      id: c.id,
+      amount: c.amount,
+      amount_type: typeof c.amount,
+      parsed: safeNumber(c.amount),
+      status: c.status,
+    }))
+
+    setDebugInfo({
+      commissions: debugCommissions,
+      clicks: clicks.length,
+      applications: applications.length,
+    })
+
     // Count applications by status
     const approvedApplications = applications.filter((app) => app.status === "approved").length
     const pendingApplications = applications.filter(
@@ -49,17 +99,48 @@ export default function AffiliateDetailPage({ params }: { params: { id: string }
     ).length
     const rejectedApplications = applications.filter((app) => app.status === "rejected").length
 
-    // Calculate commission amounts
-    const totalCommissions = commissions.reduce((sum, commission) => sum + Number(commission.amount || 0), 0)
-    const paidCommissions = commissions
-      .filter((commission) => commission.status === "paid")
-      .reduce((sum, commission) => sum + Number(commission.amount || 0), 0)
-    const pendingCommissions = commissions
-      .filter((commission) => commission.status === "pending")
-      .reduce((sum, commission) => sum + Number(commission.amount || 0), 0)
+    // Calculate commission amounts with safer parsing
+    let totalCommissions = 0
+    let paidCommissions = 0
+    let pendingCommissions = 0
 
-    // Calculate conversion rate
+    commissions.forEach((commission) => {
+      const amount = safeNumber(commission.amount)
+      totalCommissions += amount
+
+      if (commission.status === "paid") {
+        paidCommissions += amount
+      } else if (commission.status === "pending" || !commission.status) {
+        pendingCommissions += amount
+      }
+    })
+
+    // Add $100 for each pending application that doesn't have a commission
+    const applicationIdsWithCommissions = new Set(commissions.map((c) => c.application_id))
+    const pendingAppsWithoutCommissions = applications.filter(
+      (app) => (app.status === "pending" || app.status === "in_review") && !applicationIdsWithCommissions.has(app.id),
+    ).length
+
+    // Add $100 for each pending application without a commission
+    const additionalPendingCommissions = pendingAppsWithoutCommissions * 100
+    pendingCommissions += additionalPendingCommissions
+    totalCommissions += additionalPendingCommissions
+
+    // Calculate conversion rate (applications per click)
     const conversionRate = clicks.length > 0 ? (applications.length / clicks.length) * 100 : 0
+
+    console.log("Calculated stats:", {
+      total_applications: applications.length,
+      approved_applications: approvedApplications,
+      pending_applications: pendingApplications,
+      rejected_applications: rejectedApplications,
+      total_commissions: totalCommissions,
+      paid_commissions: paidCommissions,
+      pending_commissions: pendingCommissions,
+      conversion_rate: conversionRate,
+      pending_apps_without_commissions: pendingAppsWithoutCommissions,
+      additional_pending_commissions: additionalPendingCommissions,
+    })
 
     return {
       total_clicks: clicks.length,
@@ -113,6 +194,8 @@ export default function AffiliateDetailPage({ params }: { params: { id: string }
 
         if (clicksError) {
           console.error("Error loading clicks:", clicksError)
+        } else {
+          console.log(`Loaded ${clicksData?.length || 0} clicks`)
         }
 
         // First, get basic application data
@@ -146,6 +229,8 @@ export default function AffiliateDetailPage({ params }: { params: { id: string }
 
           if (applicantDetailsError) {
             console.error("Error loading applicant details:", applicantDetailsError)
+          } else {
+            console.log(`Loaded ${applicantDetailsData?.length || 0} applicant details`)
           }
 
           // Fetch business details
@@ -156,6 +241,8 @@ export default function AffiliateDetailPage({ params }: { params: { id: string }
 
           if (businessDetailsError) {
             console.error("Error loading business details:", businessDetailsError)
+          } else {
+            console.log(`Loaded ${businessDetailsData?.length || 0} business details`)
           }
 
           // Create lookup maps
@@ -196,7 +283,26 @@ export default function AffiliateDetailPage({ params }: { params: { id: string }
           setApplications([])
         }
 
-        // Get affiliate's commissions
+        // Get affiliate's commissions with a direct SQL query for accurate totals
+        try {
+          // First try to get commission totals directly from SQL for accuracy
+          const { data: commissionTotals, error: totalsError } = await supabase.rpc("get_affiliate_commission_totals", {
+            affiliate_id_param: id,
+          })
+
+          if (!totalsError && commissionTotals && commissionTotals.length > 0) {
+            console.log("Commission totals from SQL:", commissionTotals[0])
+            stats.total_commissions = commissionTotals[0].total_amount || 0
+            stats.paid_commissions = commissionTotals[0].paid_amount || 0
+            stats.pending_commissions = commissionTotals[0].pending_amount || 0
+          } else {
+            console.log("SQL totals not available, falling back to manual calculation")
+          }
+        } catch (sqlError) {
+          console.log("SQL calculation error:", sqlError)
+        }
+
+        // Get raw commission data for display and fallback calculation
         const { data: commissionsData, error: commissionsError } = await supabase
           .from("affiliate_commissions")
           .select(`
@@ -216,40 +322,122 @@ export default function AffiliateDetailPage({ params }: { params: { id: string }
         } else {
           console.log(`Loaded ${commissionsData?.length || 0} commissions`)
 
-          // If we need to get application reference IDs, we can do a separate query
-          if (commissionsData && commissionsData.length > 0) {
-            // Get all application IDs from commissions
-            const applicationIds = commissionsData.map((comm) => comm.application_id).filter(Boolean)
+          // Log the raw commission data to see what we're working with
+          console.log(
+            "Raw commission data sample:",
+            commissionsData?.slice(0, 3).map((c) => ({
+              id: c.id,
+              amount: c.amount,
+              amount_type: typeof c.amount,
+              status: c.status,
+            })),
+          )
 
-            if (applicationIds.length > 0) {
-              // Get reference IDs for these applications
-              const { data: appRefData } = await supabase
-                .from("applications")
-                .select("id, reference_id")
-                .in("id", applicationIds)
+          // Manual calculation as fallback
+          if (
+            (!stats.total_commissions || stats.total_commissions === 0) &&
+            commissionsData &&
+            commissionsData.length > 0
+          ) {
+            let totalAmount = 0
+            let paidAmount = 0
+            let pendingAmount = 0
 
-              // Create a lookup map
-              const appRefMap = new Map()
-              if (appRefData) {
-                appRefData.forEach((app) => {
-                  appRefMap.set(app.id, app.reference_id)
-                })
+            commissionsData.forEach((commission) => {
+              // Handle all possible data formats
+              let amount = 0
+
+              if (commission.amount !== null && commission.amount !== undefined) {
+                if (typeof commission.amount === "number") {
+                  amount = commission.amount
+                } else if (typeof commission.amount === "string") {
+                  // Remove any non-numeric characters except decimal point
+                  const cleanedAmount = commission.amount.replace(/[^0-9.]/g, "")
+                  amount = Number.parseFloat(cleanedAmount)
+                }
               }
 
-              // Enhance commission data with reference IDs
-              const enhancedCommissions = commissionsData.map((comm) => ({
-                ...comm,
-                application: {
-                  reference_id: appRefMap.get(comm.application_id) || "N/A",
-                },
-              }))
+              // Only add valid numbers
+              if (!isNaN(amount)) {
+                totalAmount += amount
 
-              setCommissions(enhancedCommissions)
-            } else {
-              setCommissions(commissionsData)
+                if (commission.status === "paid") {
+                  paidAmount += amount
+                } else {
+                  pendingAmount += amount
+                }
+              }
+            })
+
+            console.log("Manually calculated commission totals:", {
+              total: totalAmount,
+              paid: paidAmount,
+              pending: pendingAmount,
+            })
+
+            stats.total_commissions = totalAmount
+            stats.paid_commissions = paidAmount
+            stats.pending_commissions = pendingAmount
+          }
+
+          // Get all application IDs from commissions
+          const applicationIds = commissionsData.map((comm) => comm.application_id).filter(Boolean)
+
+          // Create a set of application IDs that already have commissions
+          const applicationIdsWithCommissions = new Set(applicationIds)
+
+          // Find pending applications without commissions
+          const pendingAppsWithoutCommissions =
+            basicApplicationsData?.filter(
+              (app) =>
+                (app.status === "pending" || app.status === "in_review") && !applicationIdsWithCommissions.has(app.id),
+            ) || []
+
+          console.log(`Found ${pendingAppsWithoutCommissions.length} pending applications without commissions`)
+
+          // Create virtual commission entries for pending applications without commissions
+          const virtualCommissions = pendingAppsWithoutCommissions.map((app) => ({
+            id: `virtual-${app.id}`,
+            amount: 100,
+            rate: 10,
+            status: "pending",
+            created_at: app.created_at,
+            payout_date: null,
+            application_id: app.id,
+            application: {
+              reference_id: app.reference_id || "N/A",
+            },
+            isVirtual: true,
+          }))
+
+          if (applicationIds.length > 0) {
+            // Get reference IDs for these applications
+            const { data: appRefData } = await supabase
+              .from("applications")
+              .select("id, reference_id")
+              .in("id", applicationIds)
+
+            // Create a lookup map
+            const appRefMap = new Map()
+            if (appRefData) {
+              appRefData.forEach((app) => {
+                appRefMap.set(app.id, app.reference_id)
+              })
             }
+
+            // Enhance commission data with reference IDs
+            const enhancedCommissions = commissionsData.map((comm) => ({
+              ...comm,
+              application: {
+                reference_id: appRefMap.get(comm.application_id) || "N/A",
+              },
+            }))
+
+            // Combine real commissions with virtual ones
+            setCommissions([...enhancedCommissions, ...virtualCommissions])
           } else {
-            setCommissions([])
+            // If no real commissions, just use virtual ones
+            setCommissions(virtualCommissions)
           }
         }
 
@@ -446,9 +634,12 @@ export default function AffiliateDetailPage({ params }: { params: { id: string }
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.total_applications || 0}</div>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex flex-wrap items-center gap-2 mt-1">
               <Badge className="bg-green-100 text-green-800">{stats.approved_applications || 0} Approved</Badge>
               <Badge className="bg-amber-100 text-amber-800">{stats.pending_applications || 0} Pending</Badge>
+              {stats.rejected_applications > 0 && (
+                <Badge className="bg-red-100 text-red-800">{stats.rejected_applications} Rejected</Badge>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -461,11 +652,23 @@ export default function AffiliateDetailPage({ params }: { params: { id: string }
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(stats.total_commissions || 0)}</div>
-            <div className="flex items-center gap-2 mt-1">
-              <Badge className="bg-green-100 text-green-800">{formatCurrency(stats.paid_commissions || 0)} Paid</Badge>
+            <div className="text-2xl font-bold text-green-600">
+              {typeof stats.total_commissions === "number"
+                ? formatCurrency(stats.total_commissions)
+                : formatCurrency(0)}
+            </div>
+            <div className="flex flex-wrap items-center gap-2 mt-1">
+              <Badge className="bg-green-100 text-green-800">
+                {typeof stats.paid_commissions === "number"
+                  ? formatCurrency(stats.paid_commissions)
+                  : formatCurrency(0)}{" "}
+                Paid
+              </Badge>
               <Badge className="bg-amber-100 text-amber-800">
-                {formatCurrency(stats.pending_commissions || 0)} Pending
+                {typeof stats.pending_commissions === "number"
+                  ? formatCurrency(stats.pending_commissions)
+                  : formatCurrency(0)}{" "}
+                Pending
               </Badge>
             </div>
           </CardContent>
@@ -565,13 +768,13 @@ export default function AffiliateDetailPage({ params }: { params: { id: string }
                 <TableBody>
                   {commissions && commissions.length > 0 ? (
                     commissions.map((commission) => (
-                      <TableRow key={commission.id}>
+                      <TableRow key={commission.id} className={commission.isVirtual ? "bg-amber-50" : ""}>
                         <TableCell className="font-mono text-xs">
                           {commission.application?.reference_id || "N/A"}
                         </TableCell>
-                        <TableCell className="font-medium">{formatCurrency(commission.amount)}</TableCell>
+                        <TableCell className="font-medium">{safeCurrency(commission.amount)}</TableCell>
                         <TableCell>{commission.rate}%</TableCell>
-                        <TableCell>{getStatusBadge(commission.status)}</TableCell>
+                        <TableCell>{getStatusBadge(commission.status || "pending")}</TableCell>
                         <TableCell className="text-xs text-gray-500">{formatDate(commission.created_at)}</TableCell>
                       </TableRow>
                     ))
@@ -588,6 +791,14 @@ export default function AffiliateDetailPage({ params }: { params: { id: string }
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Debug Info (only in development) */}
+      {process.env.NODE_ENV === "development" && debugInfo && (
+        <div className="mt-8 p-4 bg-gray-100 rounded-lg">
+          <h3 className="text-sm font-semibold mb-2">Debug Information</h3>
+          <pre className="text-xs overflow-auto max-h-40">{JSON.stringify(debugInfo, null, 2)}</pre>
+        </div>
+      )}
     </div>
   )
 }
