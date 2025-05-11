@@ -405,13 +405,16 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
         description: "Generating Excel file...",
       })
 
+      // Log the data we're exporting to help with debugging
+      console.log("Exporting application data:", application)
+
       // Dynamically import xlsx to reduce bundle size
       const XLSX = await import("xlsx")
 
       // Create a workbook with multiple sheets
       const wb = XLSX.utils.book_new()
 
-      // Format application data for Excel
+      // Format application data for Excel - ensure we're capturing all fields from the UI
       const applicationSheet = [
         ["Application ID", application.id],
         ["Reference ID", application.reference_id || "N/A"],
@@ -423,6 +426,7 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
         ["Full Name", applicantName],
         ["Email", email],
         ["Phone", phone],
+        ["Credit Score", creditScore || "N/A"],
         ["Preferred Contact", getValue(application, "applicant_details.preferred_contact", "N/A")],
         ["", ""],
         ["BUSINESS DETAILS", ""],
@@ -455,11 +459,15 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
 
       // Get bank statements
       const supabase = createClient()
-      const { data: bankStatements } = await supabase
+      const { data: bankStatements, error: bankStatementsError } = await supabase
         .from("bank_statements")
         .select("id, file_name, file_type, file_size, month_year, notes")
         .eq("application_id", application.id)
         .order("month_year", { ascending: false })
+
+      if (bankStatementsError) {
+        console.error("Error fetching bank statements for export:", bankStatementsError)
+      }
 
       if (bankStatements && bankStatements.length > 0) {
         // Format bank statements for Excel
