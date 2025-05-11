@@ -271,10 +271,39 @@ export async function uploadBankStatement({
   const supabase = createServerClient()
 
   try {
+    console.log("Starting bank statement upload for application:", applicationId)
+
+    // Validate inputs
+    if (!applicationId) {
+      throw new Error("Application ID is required")
+    }
+
+    if (!file) {
+      throw new Error("File is required")
+    }
+
+    if (!monthYear) {
+      throw new Error("Month/Year is required")
+    }
+
+    // Check if the application exists
+    const { data: applicationExists, error: applicationCheckError } = await supabase
+      .from("applications")
+      .select("id")
+      .eq("id", applicationId)
+      .single()
+
+    if (applicationCheckError || !applicationExists) {
+      console.error("Application not found:", applicationCheckError)
+      throw new Error("Invalid application ID. Please try again.")
+    }
+
     // Generate a unique file name
     const fileExt = file.name.split(".").pop()
     const fileName = `${applicationId}_${monthYear.replace("/", "-")}_${Date.now()}.${fileExt}`
     const filePath = `bank-statements/${fileName}`
+
+    console.log("Uploading file to storage:", filePath)
 
     // Upload file to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
@@ -284,7 +313,12 @@ export async function uploadBankStatement({
         upsert: false,
       })
 
-    if (uploadError) throw uploadError
+    if (uploadError) {
+      console.error("Storage upload error:", uploadError)
+      throw uploadError
+    }
+
+    console.log("File uploaded successfully, getting public URL")
 
     // Get the public URL for the uploaded file
     const { data: urlData } = supabase.storage.from("application-documents").getPublicUrl(filePath)
@@ -292,6 +326,8 @@ export async function uploadBankStatement({
     if (!urlData || !urlData.publicUrl) {
       throw new Error("Failed to get public URL for uploaded file")
     }
+
+    console.log("Got public URL:", urlData.publicUrl)
 
     // Insert record into bank_statements table
     const { error: insertError } = await supabase.from("bank_statements").insert({
@@ -304,9 +340,13 @@ export async function uploadBankStatement({
       notes: notes || null,
     })
 
-    if (insertError) throw insertError
+    if (insertError) {
+      console.error("Database insert error:", insertError)
+      throw insertError
+    }
 
-    return { success: true, filePath }
+    console.log("Bank statement record created successfully")
+    return { success: true, filePath, publicUrl: urlData.publicUrl }
   } catch (error) {
     console.error("Error uploading bank statement:", error)
     return {

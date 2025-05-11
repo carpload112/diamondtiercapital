@@ -1,9 +1,30 @@
 "use client"
 
-import { useState, useRef } from "react"
+import type React from "react"
+
+import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
-import { ArrowRight, ArrowLeft, Loader2 } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import {
+  ArrowRight,
+  ArrowLeft,
+  Loader2,
+  CheckCircle2,
+  CreditCard,
+  DollarSign,
+  Building2,
+  User,
+  FileText,
+  Shield,
+  LockIcon,
+  CheckIcon,
+  ShieldIcon,
+} from "lucide-react"
 import FormStep from "../components/FormStep"
 import FormProgress from "../components/FormProgress"
 import MobileStepper from "../components/MobileStepper"
@@ -28,9 +49,11 @@ const ApplyNowPage = () => {
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({})
   const [showForm, setShowForm] = useState(false)
   const [applicationId, setApplicationId] = useState<string | null>(null)
+  const [stepCompletion, setStepCompletion] = useState(0)
   const { toast } = useToast()
 
   const formRef = useRef<HTMLDivElement>(null)
+  const headerRef = useRef<HTMLDivElement>(null)
 
   // Define the form steps with improved descriptions and tooltips
   const formSteps = [
@@ -278,9 +301,36 @@ const ApplyNowPage = () => {
     },
   ]
 
+  // Calculate completion percentage for the current step
+  useEffect(() => {
+    const calculateStepCompletion = () => {
+      const currentFields = formSteps[currentStep].fields
+      const requiredFields = currentFields.filter((field) => field.required && field.type !== "custom")
+
+      if (requiredFields.length === 0) return 100
+
+      const completedFields = requiredFields.filter((field) => !!formData[field.name])
+      return Math.round((completedFields.length / requiredFields.length) * 100)
+    }
+
+    setStepCompletion(calculateStepCompletion())
+  }, [currentStep, formData, formSteps])
+
+  const scrollToForm = () => {
+    setShowForm(true)
+    setTimeout(() => {
+      formRef.current?.scrollIntoView({ behavior: "smooth" })
+    }, 100)
+  }
+
   const handleInputChange = (name: string, value: any) => {
     setFormData((prev) => ({ ...prev, [name]: value }))
-    setErrors((prev) => ({ ...prev, [name]: "" })) // Clear error on change
+    setTouchedFields((prev) => ({ ...prev, [name]: true }))
+    setErrors((prev) => {
+      const newErrors = { ...prev }
+      delete newErrors[name]
+      return newErrors
+    })
   }
 
   const validateStep = () => {
@@ -299,6 +349,30 @@ const ApplyNowPage = () => {
   }
 
   const nextStep = () => {
+    // Special handling for bank statement step
+    if (currentStep === 4) {
+      // If we're on the bank statement step and don't have an applicationId yet,
+      // we need to create one first
+      if (!applicationId) {
+        toast({
+          title: "Action required",
+          description: "Please click 'Prepare for Upload' to continue with bank statement uploads.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      // If we have an applicationId but no bank statements uploaded yet
+      if (!formData.bankStatements) {
+        toast({
+          title: "Bank statements required",
+          description: "Please upload at least one bank statement to continue.",
+          variant: "destructive",
+        })
+        return
+      }
+    }
+
     if (!validateStep()) {
       // Mark all fields as touched to show errors
       const touchedAll: Record<string, boolean> = {}
@@ -322,7 +396,8 @@ const ApplyNowPage = () => {
       handleInitialSubmit()
     } else if (currentStep < formSteps.length - 1) {
       setCurrentStep(currentStep + 1)
-      window.scrollTo({ top: formRef.current?.offsetTop || 0, behavior: "smooth" })
+      // Smooth scroll to the form header
+      headerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
     } else {
       handleFinalSubmit()
     }
@@ -341,7 +416,7 @@ const ApplyNowPage = () => {
       if (result.success && result.applicationId) {
         setApplicationId(result.applicationId)
         setCurrentStep(currentStep + 1)
-        window.scrollTo({ top: formRef.current?.offsetTop || 0, behavior: "smooth" })
+        headerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
 
         toast({
           title: "Information Saved",
@@ -403,87 +478,423 @@ const ApplyNowPage = () => {
   const prevStep = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1)
-      window.scrollTo({ top: formRef.current?.offsetTop || 0, behavior: "smooth" })
+      headerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
     }
   }
 
   // Custom component renderer for bank statement uploader
   const renderCustomComponent = (field: any) => {
-    if (field.component === "BankStatementUploader" && applicationId) {
+    if (field.component === "BankStatementUploader") {
+      // Check if we have an applicationId
+      if (!applicationId) {
+        // Create a temporary application ID if we don't have one yet
+        const handleCreateTempApplication = async () => {
+          setIsSubmitting(true)
+          try {
+            // Validate that we have the minimum required data
+            if (!formData.fullName || !formData.email || !formData.businessName) {
+              throw new Error("Please complete the personal and business information steps first")
+            }
+
+            // Submit the initial application data to get an application ID
+            const result = await submitApplication({
+              ...formData,
+              status: "draft", // Mark as draft until final submission
+            })
+
+            if (result.success && result.applicationId) {
+              setApplicationId(result.applicationId)
+              toast({
+                title: "Ready for uploads",
+                description: "You can now upload your bank statements.",
+              })
+            } else {
+              throw new Error(result.error || "Failed to prepare for uploads")
+            }
+          } catch (error) {
+            console.error("Error creating temporary application:", error)
+            toast({
+              title: "Upload preparation failed",
+              description:
+                error instanceof Error ? error.message : "There was an error preparing for uploads. Please try again.",
+              variant: "destructive",
+            })
+          } finally {
+            setIsSubmitting(false)
+          }
+        }
+
+        return (
+          <div className="p-6 border border-dashed border-gray-300 rounded-lg bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700 text-center">
+            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Prepare for Bank Statement Upload
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              We need to save your information before you can upload bank statements.
+            </p>
+            <Button
+              onClick={handleCreateTempApplication}
+              disabled={isSubmitting}
+              className="gap-2 bg-blue-600 hover:bg-blue-700"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Preparing...</span>
+                </>
+              ) : (
+                <>
+                  <span>Prepare for Upload</span>
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </div>
+        )
+      }
+
+      // If we have an applicationId, render the uploader
       return (
-        <BankStatementUploader
-          applicationId={applicationId}
-          onUploadComplete={() => {
-            // Mark this step as complete when uploads are done
-            handleInputChange("bankStatements", true)
-          }}
-        />
+        <div className="space-y-4">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg p-4 mb-4">
+            <div className="flex items-start gap-3">
+              <div className="bg-blue-100 dark:bg-blue-800 rounded-full p-2 mt-1">
+                <FileText className="h-4 w-4 text-blue-600 dark:text-blue-300" />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300">Bank Statement Instructions</h3>
+                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                  Please upload your last 3 months of business bank statements. Accepted formats: PDF, JPG, PNG, Excel
+                  (max 10MB each).
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <BankStatementUploader
+            applicationId={applicationId}
+            onUploadComplete={() => {
+              // Mark this step as complete when uploads are done
+              handleInputChange("bankStatements", true)
+              toast({
+                title: "Upload successful",
+                description: "Your bank statements have been uploaded successfully.",
+              })
+            }}
+          />
+        </div>
       )
     }
-    return <div className="text-sm text-red-500">Please complete previous steps first</div>
+    return null
+  }
+
+  // Get the icon component for the current step
+  const getStepIcon = (iconName: string) => {
+    const icons: Record<string, React.ReactNode> = {
+      User: <User className="h-6 w-6" />,
+      Building2: <Building2 className="h-6 w-6" />,
+      LineChart: <DollarSign className="h-6 w-6" />,
+      DollarSign: <DollarSign className="h-6 w-6" />,
+      FileText: <FileText className="h-6 w-6" />,
+    }
+    return icons[iconName] || <FileText className="h-6 w-6" />
   }
 
   return (
-    <div className="container py-12">
-      <Card>
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl">Apply Now</CardTitle>
-          <CardDescription>Start your application in minutes.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-6">
-          <div className="hidden md:block">
-            <FormProgress steps={formSteps} currentStep={currentStep} />
-          </div>
-          <div className="md:hidden">
-            <MobileStepper steps={formSteps} currentStep={currentStep} />
-          </div>
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
+      <div className="container max-w-5xl mx-auto px-4 py-16">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <Badge className="mb-4 px-3 py-1 text-sm bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 rounded-full">
+            Business Funding
+          </Badge>
+          <h1 className="text-3xl md:text-4xl font-bold mb-6 text-gray-900 dark:text-white">
+            Get Funding For Your Business
+          </h1>
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-xl mx-auto">
+            Complete our simple application process to access the funding your business needs.
+          </p>
+        </div>
 
-          {!isComplete ? (
-            <div ref={formRef}>
-              <FormStep
-                key={currentStep}
-                step={formSteps[currentStep]}
-                formData={formData}
-                onChange={handleInputChange}
-                errors={errors}
-                touchedFields={touchedFields || {}}
-                setTouchedFields={setTouchedFields}
-                renderCustomComponent={renderCustomComponent}
-              />
-            </div>
-          ) : (
-            <ApplicationSuccess referenceId={referenceId} />
-          )}
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={prevStep} disabled={currentStep === 0 || isSubmitting}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Previous
-          </Button>
-          <Button
-            onClick={nextStep}
-            disabled={isSubmitting || (currentStep === 4 && !formData.bankStatements)}
-            className="gap-2"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Processing...</span>
-              </>
-            ) : currentStep === formSteps.length - 1 ? (
-              <>
-                <span>Submit Application</span>
-                <ArrowRight className="h-4 w-4" />
-              </>
-            ) : (
-              <>
-                <span>Continue</span>
-                <ArrowRight className="h-4 w-4" />
-              </>
-            )}
-          </Button>
-        </CardFooter>
-      </Card>
+        {/* Step-by-Step Process */}
+        {!showForm && (
+          <div className="grid gap-8 mb-16">
+            {/* Step 1: Check Credit Score */}
+            <Card className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
+              <div className="grid md:grid-cols-5 items-stretch">
+                <div className="md:col-span-2 bg-gradient-to-br from-blue-600 to-blue-700 text-white p-6 flex flex-col justify-center">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 rounded-full bg-white text-blue-600 flex items-center justify-center flex-shrink-0">
+                      <span className="font-bold">1</span>
+                    </div>
+                    <h2 className="text-xl font-bold">Check Your Credit</h2>
+                  </div>
+                  <p className="mb-4 text-blue-100">
+                    Start by checking your exact credit score with Identity IQ. This helps us match you with the best
+                    funding options.
+                  </p>
+                  <div className="mt-auto">
+                    <div className="bg-white p-4 rounded-lg inline-block">
+                      <Image
+                        src="/images/identityiq-logo.svg"
+                        alt="Identity IQ"
+                        width={150}
+                        height={45}
+                        className="h-auto"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="md:col-span-3 p-6 flex flex-col justify-center">
+                  <p className="mb-6 text-gray-700 dark:text-gray-300">
+                    Get your credit score for just $1 (7-day trial) to see exactly where you stand. This helps us find
+                    the best funding options for your situation.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4 items-center">
+                    <Button className="gap-2 bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto" size="lg" asChild>
+                      <a
+                        href="https://member.identityiq.com/sc-securemax.aspx?offercode=431279M1"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <CreditCard className="h-4 w-4" />
+                        Check Your Credit ($1 Trial)
+                      </a>
+                    </Button>
+                    <button
+                      onClick={() => scrollToForm()}
+                      className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 underline"
+                    >
+                      Skip this step
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
+                    7-day free trial for $1, then $24.99/month. Cancel anytime.
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            {/* Step 2-3 Combined */}
+            <Card className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow duration-300">
+              <div className="grid md:grid-cols-2 gap-0">
+                {/* Step 2 */}
+                <div className="border-r border-gray-200 dark:border-gray-700 p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center flex-shrink-0">
+                      <span className="font-bold">2</span>
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Apply Now</h2>
+                  </div>
+                  <p className="mb-4 text-gray-700 dark:text-gray-300">
+                    Fill out our simple application form with your business details. Takes just 3 minutes.
+                  </p>
+                  <ul className="space-y-2 mb-6">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400 mt-1 flex-shrink-0" />
+                      <span className="text-gray-700 dark:text-gray-300">Basic personal information</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400 mt-1 flex-shrink-0" />
+                      <span className="text-gray-700 dark:text-gray-300">Business details</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400 mt-1 flex-shrink-0" />
+                      <span className="text-gray-700 dark:text-gray-300">Funding requirements</span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Step 3 */}
+                <div className="p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center flex-shrink-0">
+                      <span className="font-bold">3</span>
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Get Funded</h2>
+                  </div>
+                  <p className="mb-4 text-gray-700 dark:text-gray-300">
+                    Our team will review your application and contact you with funding options tailored to your
+                    business.
+                  </p>
+                  <ul className="space-y-2 mb-6">
+                    <li className="flex items-start gap-2">
+                      <DollarSign className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
+                      <span className="text-gray-700 dark:text-gray-300">SBA loans up to $5 million</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <DollarSign className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
+                      <span className="text-gray-700 dark:text-gray-300">Business credit cards with rewards</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <DollarSign className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
+                      <span className="text-gray-700 dark:text-gray-300">Unsecured financing options</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <CardFooter className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-800/30 p-6 flex justify-center">
+                <Button
+                  size="lg"
+                  className="gap-2 bg-blue-600 hover:bg-blue-700 px-10 py-6 text-lg shadow-md hover:shadow-lg transition-all duration-300"
+                  onClick={() => scrollToForm()}
+                >
+                  Start Your Application
+                  <ArrowRight className="h-5 w-5" />
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        )}
+
+        {/* Application Form Section */}
+        {(showForm || isComplete) && (
+          <div ref={formRef} id="application-form" className="max-w-3xl mx-auto pt-8">
+            <Card className="border-0 shadow-xl overflow-hidden bg-white dark:bg-gray-800 mb-8 transition-all duration-300">
+              <div ref={headerRef}>
+                <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6">
+                  <div className="flex items-center gap-3 mb-2">
+                    {!isComplete && (
+                      <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                        {getStepIcon(formSteps[currentStep].icon)}
+                      </div>
+                    )}
+                    <div>
+                      <CardTitle className="text-2xl">
+                        {isComplete ? "Application Submitted" : formSteps[currentStep].title}
+                      </CardTitle>
+                      <CardDescription className="text-blue-100">
+                        {isComplete ? "Thank you for your application" : formSteps[currentStep].description}
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+              </div>
+              <CardContent className="p-6 sm:p-8">
+                {!isComplete ? (
+                  <>
+                    {/* Progress indicators */}
+                    <FormProgress steps={formSteps} currentStep={currentStep} completion={stepCompletion} />
+                    <MobileStepper
+                      currentStep={currentStep}
+                      totalSteps={formSteps.length}
+                      completion={stepCompletion}
+                    />
+
+                    <Separator className="my-6" />
+
+                    <div className="my-6">
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={currentStep}
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <FormStep
+                            step={formSteps[currentStep]}
+                            formData={formData}
+                            onChange={handleInputChange}
+                            errors={errors}
+                            touchedFields={touchedFields || {}}
+                            setTouchedFields={setTouchedFields}
+                            renderCustomComponent={renderCustomComponent}
+                          />
+                        </motion.div>
+                      </AnimatePresence>
+                    </div>
+
+                    <Separator className="my-6" />
+
+                    <div className="flex justify-between items-center mt-8">
+                      <Button
+                        onClick={prevStep}
+                        disabled={currentStep === 0 || isSubmitting}
+                        variant="outline"
+                        className="gap-2 transition-all duration-300 hover:translate-x-[-4px]"
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                        <span>Back</span>
+                      </Button>
+
+                      <div className="hidden md:flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                        <Shield className="h-4 w-4 text-green-500" />
+                        Your information is secure
+                      </div>
+
+                      <Button
+                        onClick={nextStep}
+                        disabled={isSubmitting || (currentStep === 4 && !formData.bankStatements)}
+                        className="gap-2 transition-all duration-300 hover:translate-x-[4px] bg-blue-600 hover:bg-blue-700"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Processing...</span>
+                          </>
+                        ) : currentStep === formSteps.length - 1 ? (
+                          <>
+                            <span>Submit Application</span>
+                            <ArrowRight className="h-4 w-4" />
+                          </>
+                        ) : (
+                          <>
+                            <span>Continue</span>
+                            <ArrowRight className="h-4 w-4" />
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <ApplicationSuccess referenceId={referenceId} />
+                )}
+              </CardContent>
+              <CardFooter className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-800/30 p-6 border-t border-gray-100 dark:border-gray-700">
+                <div className="w-full flex flex-col items-center justify-center space-y-3">
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 mb-1">
+                    <Shield className="h-5 w-5 text-green-500" />
+                    <span className="font-medium">Secure & Confidential</span>
+                  </div>
+
+                  <p className="text-center text-sm text-gray-500 dark:text-gray-400 max-w-lg">
+                    Your information is secure and will never be shared without your permission. By submitting this
+                    form, you agree to our{" "}
+                    <Link
+                      href="/terms-of-service"
+                      className="font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline transition-colors"
+                    >
+                      Terms of Service
+                    </Link>{" "}
+                    and{" "}
+                    <Link
+                      href="/privacy-policy"
+                      className="font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline transition-colors"
+                    >
+                      Privacy Policy
+                    </Link>
+                    .
+                  </p>
+
+                  <div className="flex items-center gap-3 pt-2">
+                    <div className="w-10 h-6 bg-gray-200 dark:bg-gray-700 rounded-md flex items-center justify-center">
+                      <LockIcon className="h-3 w-3 text-gray-500 dark:text-gray-400" />
+                    </div>
+                    <div className="w-10 h-6 bg-gray-200 dark:bg-gray-700 rounded-md flex items-center justify-center">
+                      <ShieldIcon className="h-3 w-3 text-gray-500 dark:text-gray-400" />
+                    </div>
+                    <div className="w-10 h-6 bg-gray-200 dark:bg-gray-700 rounded-md flex items-center justify-center">
+                      <CheckIcon className="h-3 w-3 text-gray-500 dark:text-gray-400" />
+                    </div>
+                  </div>
+                </div>
+              </CardFooter>
+            </Card>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

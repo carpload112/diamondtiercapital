@@ -130,39 +130,57 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
             })
           }, 200)
 
-          // Upload the file
-          const result = await uploadBankStatement({
-            applicationId,
-            file,
-            monthYear: months[month],
-            notes: notes,
-          })
+          try {
+            // Upload the file
+            const result = await uploadBankStatement({
+              applicationId,
+              file,
+              monthYear: months[month],
+              notes: notes,
+            })
 
-          clearInterval(interval)
+            clearInterval(interval)
 
-          if (result.success) {
-            setUploadProgress((prev) => ({ ...prev, [month]: 100 }))
-          } else {
-            setUploadProgress((prev) => ({ ...prev, [month]: 0 }))
-            throw new Error(result.error || "Upload failed")
+            if (result.success) {
+              setUploadProgress((prev) => ({ ...prev, [month]: 100 }))
+            } else {
+              setUploadProgress((prev) => ({ ...prev, [month]: 0 }))
+              throw new Error(result.error || "Upload failed")
+            }
+          } catch (error) {
+            clearInterval(interval)
+            console.error(`Error uploading ${month} statement:`, error)
+            toast({
+              title: `Failed to upload ${month} statement`,
+              description: error instanceof Error ? error.message : "An unknown error occurred",
+              variant: "destructive",
+            })
+            // Continue with other uploads even if one fails
           }
         }
       }
 
-      toast({
-        title: "Upload successful",
-        description: "Bank statements have been uploaded successfully",
-      })
+      // Check if at least one file was uploaded successfully
+      const anySuccess = Object.values(uploadProgress).some((progress) => progress === 100)
 
-      // Reset form
-      setFiles({ month1: null, month2: null, month3: null })
-      setMonths({ month1: "", month2: "", month3: "" })
-      setNotes("")
-      setUploadProgress({ month1: 0, month2: 0, month3: 0 })
+      if (anySuccess) {
+        toast({
+          title: "Upload successful",
+          description: "Bank statements have been uploaded successfully",
+        })
 
-      // Notify parent component
-      if (onUploadComplete) {
-        onUploadComplete()
+        // Reset form
+        setFiles({ month1: null, month2: null, month3: null })
+        setMonths({ month1: "", month2: "", month3: "" })
+        setNotes("")
+        setUploadProgress({ month1: 0, month2: 0, month3: 0 })
+
+        // Notify parent component
+        if (onUploadComplete) {
+          onUploadComplete()
+        }
+      } else {
+        throw new Error("No files were uploaded successfully")
       }
     } catch (error) {
       console.error("Error uploading bank statements:", error)
@@ -455,6 +473,14 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
             </>
           )}
         </Button>
+        {process.env.NODE_ENV !== "production" && (
+          <div className="mt-4 p-3 border border-dashed border-amber-300 bg-amber-50 rounded-md">
+            <p className="text-xs font-medium text-amber-800 mb-1">Debug Information:</p>
+            <p className="text-xs text-amber-700">Application ID: {applicationId || "Not set"}</p>
+            <p className="text-xs text-amber-700">Files selected: {Object.values(files).filter(Boolean).length}</p>
+            <p className="text-xs text-amber-700">Months selected: {Object.values(months).filter(Boolean).length}</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
