@@ -1,5 +1,5 @@
 import { DashboardHeader } from "@/components/admin/DashboardHeader"
-import { AffiliateForm } from "@/components/admin/AffiliateForm"
+import { AffiliateFormWrapper } from "@/components/admin/AffiliateFormWrapper"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -29,15 +29,7 @@ export default function AddAffiliatePage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <AffiliateForm
-            mode="create"
-            onSuccess={() => {
-              window.location.href = "/admin/affiliates"
-            }}
-            onCancel={() => {
-              window.location.href = "/admin/affiliates"
-            }}
-          />
+          <AffiliateFormWrapper mode="create" />
         </CardContent>
       </Card>
     </div>
