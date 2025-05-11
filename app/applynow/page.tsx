@@ -36,7 +36,8 @@ import { BankStatementUploader } from "@/components/BankStatementUploader"
 
 const ApplyNowPage = () => {
   const searchParams = useSearchParams()
-  const referralCode = searchParams.get("referralCode")
+  // Support both referralCode and ref parameters
+  const referralCode = searchParams.get("referralCode") || searchParams.get("ref")
 
   const [currentStep, setCurrentStep] = useState(0)
   const [formData, setFormData] = useState<Record<string, any>>({

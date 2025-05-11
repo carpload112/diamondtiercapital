@@ -2,8 +2,7 @@
 
 import { createServerClient } from "./server"
 import { v4 as uuidv4 } from "uuid"
-import { getAffiliateByReferralCode, createCommission } from "./affiliate-actions"
-import { calculateCommission } from "../utils/affiliate-utils"
+import { affiliateTrackingService } from "../services/affiliate-tracking-service"
 
 export interface ApplicationFormData {
   // Personal Information
@@ -37,6 +36,7 @@ export interface ApplicationFormData {
   termsAgreed: boolean
   marketingConsent?: boolean
   referralCode?: string
+  ref?: string // Support both referralCode and ref parameters
 
   // For updates
   applicationId?: string
@@ -277,85 +277,22 @@ export async function submitApplication(formData: ApplicationFormData) {
       }
     }
 
-    // Add affiliate tracking if referral code is provided
-    if (formData.referralCode) {
+    // Process affiliate tracking if referral code is provided
+    // Support both referralCode and ref parameters
+    const referralCode = formData.referralCode || formData.ref
+    if (referralCode) {
       try {
-        // Get the affiliate from the referral code
-        const { data: affiliate } = await getAffiliateByReferralCode(formData.referralCode)
+        // Use the new affiliate tracking service
+        const trackingResult = await affiliateTrackingService.trackApplication(
+          applicationId,
+          referenceId,
+          referralCode,
+          formData.fundingAmount,
+        )
 
-        if (affiliate) {
-          // Update the application with the affiliate ID
-          await supabase
-            .from("applications")
-            .update({
-              affiliate_id: affiliate.id,
-              affiliate_code: formData.referralCode,
-            })
-            .eq("id", applicationId)
-
-          // Trigger a real-time update for the affiliate's dashboard
-          // This creates a notification record that can be used to refresh the affiliate's stats
-          await supabase.from("affiliate_notifications").insert({
-            affiliate_id: affiliate.id,
-            type: "new_application",
-            application_id: applicationId,
-            read: false,
-            data: {
-              application_reference: referenceId,
-              timestamp: new Date().toISOString(),
-            },
-          })
-
-          // For now, we'll create a pending commission based on a default amount
-          // In a real system, this would be calculated based on the actual funding amount
-          const defaultCommissionAmount = 1000 // $1000 placeholder
-          const { data: tierData } = await supabase
-            .from("affiliate_tiers")
-            .select("commission_rate")
-            .eq("name", affiliate.tier)
-            .single()
-
-          const commissionRate = tierData?.commission_rate || 10 // Default 10% if tier not found
-          const commissionAmount = calculateCommission(defaultCommissionAmount, commissionRate)
-
-          // Create the commission record
-          await createCommission({
-            affiliateId: affiliate.id,
-            applicationId: applicationId,
-            amount: commissionAmount,
-            rate: commissionRate,
-          })
-
-          // Process MLM commissions if applicable
-          const { data: mlmSettings } = await supabase
-            .from("affiliate_mlm_settings")
-            .select("*")
-            .order("level", { ascending: true })
-
-          if (mlmSettings && mlmSettings.length > 0) {
-            // Get parent affiliates up to the maximum level in the MLM structure
-            const { data: relationships } = await supabase
-              .from("affiliate_relationships")
-              .select("parent_affiliate_id")
-              .eq("child_affiliate_id", affiliate.id)
-
-            if (relationships && relationships.length > 0) {
-              for (let i = 0; i < Math.min(relationships.length, mlmSettings.length); i++) {
-                const parentId = relationships[i].parent_affiliate_id
-                const mlmRate = mlmSettings[i].commission_percentage
-                const mlmAmount = calculateCommission(defaultCommissionAmount, mlmRate)
-
-                // Create commission for the parent affiliate
-                await createCommission({
-                  affiliateId: parentId,
-                  applicationId: applicationId,
-                  amount: mlmAmount,
-                  rate: mlmRate,
-                  status: "pending",
-                })
-              }
-            }
-          }
+        if (!trackingResult.success) {
+          console.warn("Affiliate tracking warning:", trackingResult.error)
+          // Continue with application submission even if affiliate tracking fails
         }
       } catch (affiliateError) {
         // Log the error but don't fail the application submission

@@ -6,7 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Copy, User, DollarSign, BarChart, LinkIcon } from "lucide-react"
 import { createServerClient } from "@/lib/supabase/server"
-import { getAffiliateById, getAffiliateStats } from "@/lib/supabase/affiliate-actions"
+import { getAffiliateById } from "@/lib/supabase/affiliate-actions"
+import { affiliateTrackingService } from "@/lib/services/affiliate-tracking-service"
 import { formatCurrency } from "@/lib/utils/affiliate-utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { AffiliateRealTimeUpdater } from "@/components/admin/AffiliateRealTimeUpdater"
@@ -21,8 +22,8 @@ export default async function AffiliateDetailPage({ params }: { params: { id: st
     notFound()
   }
 
-  // Get affiliate stats
-  const { data: stats } = await getAffiliateStats(id)
+  // Get affiliate stats using the improved service
+  const { data: stats } = await affiliateTrackingService.getAffiliateStats(id)
 
   // Get affiliate's applications
   const supabase = createServerClient()
