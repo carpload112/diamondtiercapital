@@ -423,9 +423,9 @@ export async function getAffiliateStats(affiliateId: string) {
   }
 }
 
-// Export a compatibility object for existing code
-export const affiliateTrackingService = {
-  trackApplication,
-  recordClick,
-  getAffiliateStats,
-}
+// DO NOT export an object in a "use server" file
+// export const affiliateTrackingService = {
+//   trackApplication,
+//   recordClick,
+//   getAffiliateStats,
+// }
