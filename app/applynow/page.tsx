@@ -33,7 +33,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { submitApplication } from "@/lib/supabase/actions"
 import { useSearchParams } from "next/navigation"
 import { BankStatementUploader } from "@/components/BankStatementUploader"
-import { isValidReferralCode } from "@/lib/services/affiliate-tracking-service"
+import { isValidReferralCode, getReferralCodeFromCookies } from "@/lib/services/affiliate-tracking-service"
 
 const ApplyNowPage = () => {
   const searchParams = useSearchParams()
@@ -60,9 +60,10 @@ const ApplyNowPage = () => {
   // Validate referral code when component mounts
   useEffect(() => {
     const validateReferralCode = async () => {
+      // First check URL parameters
       if (referralCode) {
         try {
-          console.log(`Validating referral code: ${referralCode}`)
+          console.log(`Validating referral code from URL: ${referralCode}`)
           const isValid = await isValidReferralCode(referralCode)
 
           if (isValid) {
@@ -79,6 +80,7 @@ const ApplyNowPage = () => {
               description: "Your referral code has been successfully applied to your application.",
               variant: "default",
             })
+            return // Exit early if URL parameter is valid
           } else {
             console.warn(`Referral code ${referralCode} is invalid`)
             setReferralCode(null)
@@ -96,6 +98,36 @@ const ApplyNowPage = () => {
           setReferralCode(null)
           setReferralCodeValidated(false)
         }
+      }
+
+      // If no valid URL parameter, check cookies
+      try {
+        const cookieCode = await getReferralCodeFromCookies()
+        if (cookieCode) {
+          console.log(`Found referral code in cookies: ${cookieCode}`)
+          const isValid = await isValidReferralCode(cookieCode)
+
+          if (isValid) {
+            console.log(`Cookie referral code ${cookieCode} is valid`)
+            setReferralCode(cookieCode)
+            setReferralCodeValidated(true)
+            setFormData((prev) => ({
+              ...prev,
+              referralCode: cookieCode,
+            }))
+
+            // Show toast notification
+            toast({
+              title: "Referral Code Applied",
+              description: "A saved referral code has been applied to your application.",
+              variant: "default",
+            })
+          } else {
+            console.warn(`Cookie referral code ${cookieCode} is invalid`)
+          }
+        }
+      } catch (error) {
+        console.error("Error checking cookie referral code:", error)
       }
     }
 

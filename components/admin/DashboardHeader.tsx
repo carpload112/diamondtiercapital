@@ -1,4 +1,9 @@
+"use client"
+
+import type React from "react"
+
 import Link from "next/link"
+import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 
 interface DashboardHeaderProps {
@@ -6,19 +11,39 @@ interface DashboardHeaderProps {
   description?: string
   backLink?: string
   backLinkText?: string
+  actions?: React.ReactNode
+  className?: string
 }
 
-export function DashboardHeader({ title, description, backLink, backLinkText }: DashboardHeaderProps) {
+function DashboardHeader({
+  title,
+  description,
+  backLink,
+  backLinkText = "Back",
+  actions,
+  className = "",
+}: DashboardHeaderProps) {
   return (
-    <div className="mb-6">
+    <div className={`mb-6 ${className}`}>
       {backLink && (
-        <Link href={backLink} className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 mb-2">
-          <ArrowLeft className="h-3 w-3 mr-1" />
-          {backLinkText || "Back"}
-        </Link>
+        <Button variant="ghost" size="sm" className="mb-2 -ml-2 h-8 text-muted-foreground" asChild>
+          <Link href={backLink}>
+            <ArrowLeft className="mr-1 h-4 w-4" />
+            {backLinkText}
+          </Link>
+        </Button>
       )}
-      <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-      {description && <p className="text-muted-foreground">{description}</p>}
+
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+          {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
+        </div>
+
+        {actions && <div className="flex items-center gap-2">{actions}</div>}
+      </div>
     </div>
   )
 }
+
+export { DashboardHeader }

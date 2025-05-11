@@ -2,7 +2,7 @@
 
 import { createServerClient } from "./server"
 import { v4 as uuidv4 } from "uuid"
-import { trackApplication } from "../services/affiliate-tracking-service"
+import { trackApplication, validateAndNormalizeReferralCode } from "../services/affiliate-tracking-service"
 
 export interface ApplicationFormData {
   // Personal Information
@@ -54,10 +54,13 @@ export async function submitApplication(formData: ApplicationFormData) {
     const applicationId = formData.applicationId || uuidv4()
     const referenceId = `APP${Math.random().toString(36).substring(2, 7).toUpperCase()}`
 
+    // Validate and normalize referral code (support both referralCode and ref parameters)
+    const referralCode = await validateAndNormalizeReferralCode(formData.referralCode || formData.ref)
+
     // Log the form data for debugging
     console.log("Submit application form data:", {
       ...formData,
-      referralCode: formData.referralCode || formData.ref || "none",
+      referralCode: referralCode || "none",
     })
 
     if (!isUpdate) {
@@ -69,6 +72,8 @@ export async function submitApplication(formData: ApplicationFormData) {
         credit_check_completed: false,
         submitted_at: new Date().toISOString(),
         notes: formData.additionalInfo || "",
+        // Store referral code directly in the application for redundancy
+        affiliate_code: referralCode || null,
       })
 
       if (applicationError) {
@@ -150,6 +155,8 @@ export async function submitApplication(formData: ApplicationFormData) {
         additional_info: formData.additionalInfo || null,
         terms_agreed: formData.termsAgreed || false,
         marketing_consent: formData.marketingConsent || false,
+        // Store referral code in additional_information as well for redundancy
+        referral_code: referralCode || null,
       })
 
       if (additionalError) {
@@ -164,6 +171,8 @@ export async function submitApplication(formData: ApplicationFormData) {
           status: formData.status,
           updated_at: new Date().toISOString(),
           notes: formData.additionalInfo || null,
+          // Update affiliate code if provided
+          ...(referralCode ? { affiliate_code: referralCode } : {}),
         })
         .eq("id", applicationId)
 
@@ -259,7 +268,8 @@ export async function submitApplication(formData: ApplicationFormData) {
         formData.hearAboutUs ||
         formData.additionalInfo !== undefined ||
         formData.termsAgreed !== undefined ||
-        formData.marketingConsent !== undefined
+        formData.marketingConsent !== undefined ||
+        referralCode
       ) {
         const updateData: any = {}
 
@@ -267,6 +277,7 @@ export async function submitApplication(formData: ApplicationFormData) {
         if (formData.additionalInfo !== undefined) updateData.additional_info = formData.additionalInfo
         if (formData.termsAgreed !== undefined) updateData.terms_agreed = formData.termsAgreed
         if (formData.marketingConsent !== undefined) updateData.marketing_consent = formData.marketingConsent
+        if (referralCode) updateData.referral_code = referralCode
 
         const { error: updateAdditionalError } = await supabase
           .from("additional_information")
@@ -281,8 +292,6 @@ export async function submitApplication(formData: ApplicationFormData) {
     }
 
     // Process affiliate tracking if referral code is provided
-    // Support both referralCode and ref parameters
-    const referralCode = formData.referralCode || formData.ref
     if (referralCode) {
       try {
         console.log(`Processing affiliate tracking for referral code: ${referralCode}`)
@@ -293,12 +302,42 @@ export async function submitApplication(formData: ApplicationFormData) {
         if (!trackingResult.success) {
           console.warn("Affiliate tracking warning:", trackingResult.error)
           // Continue with application submission even if affiliate tracking fails
+
+          // Create a tracking retry record for manual review
+          await supabase
+            .from("affiliate_tracking_retries")
+            .insert({
+              application_id: applicationId,
+              referral_code: referralCode,
+              error_message: trackingResult.error || "Unknown error",
+              created_at: new Date().toISOString(),
+              status: "pending",
+            })
+            .catch((err) => {
+              console.error("Error creating tracking retry record:", err)
+              // Don't throw, just log
+            })
         } else {
           console.log(`Successfully tracked application ${applicationId} for affiliate ${trackingResult.affiliateId}`)
         }
       } catch (affiliateError) {
         // Log the error but don't fail the application submission
         console.error("Error processing affiliate:", affiliateError)
+
+        // Create a tracking retry record for manual review
+        await supabase
+          .from("affiliate_tracking_retries")
+          .insert({
+            application_id: applicationId,
+            referral_code: referralCode,
+            error_message: affiliateError instanceof Error ? affiliateError.message : "Unknown error",
+            created_at: new Date().toISOString(),
+            status: "pending",
+          })
+          .catch((err) => {
+            console.error("Error creating tracking retry record:", err)
+            // Don't throw, just log
+          })
       }
     } else {
       console.log("No referral code provided, skipping affiliate tracking")
