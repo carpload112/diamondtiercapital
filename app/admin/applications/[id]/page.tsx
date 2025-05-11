@@ -822,6 +822,30 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                   </CardContent>
                 </Card>
               )}
+
+              {/* Bank Statements in Overview */}
+              <Card className="md:col-span-2 xl:col-span-3">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-blue-500" />
+                    Bank Statements
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <BankStatementViewer
+                    applicationId={params.id}
+                    isAdmin={true}
+                    readOnly={true}
+                    onDelete={() => {
+                      toast({
+                        title: "Bank statement deleted",
+                        description: "The bank statement has been deleted successfully",
+                      })
+                      fetchApplicationDetails() // Refresh data after deletion
+                    }}
+                  />
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 
