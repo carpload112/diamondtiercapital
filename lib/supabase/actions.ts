@@ -305,13 +305,28 @@ export async function uploadBankStatement({
 
     console.log("Uploading file to storage:", filePath)
 
-    // Upload file to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("application-documents")
-      .upload(filePath, file, {
-        cacheControl: "3600",
-        upsert: false,
-      })
+    // First, check available buckets
+    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets()
+
+    if (bucketsError) {
+      console.error("Error listing buckets:", bucketsError)
+      throw new Error("Could not access storage buckets")
+    }
+
+    // Use the first available bucket or default to 'public'
+    let bucketName = "public"
+    if (buckets && buckets.length > 0) {
+      bucketName = buckets[0].name
+      console.log("Using existing bucket:", bucketName)
+    } else {
+      console.log("No buckets found, using default 'public' bucket")
+    }
+
+    // Upload file to Supabase Storage using the available bucket
+    const { data: uploadData, error: uploadError } = await supabase.storage.from(bucketName).upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: false,
+    })
 
     if (uploadError) {
       console.error("Storage upload error:", uploadError)
@@ -321,7 +336,7 @@ export async function uploadBankStatement({
     console.log("File uploaded successfully, getting public URL")
 
     // Get the public URL for the uploaded file
-    const { data: urlData } = supabase.storage.from("application-documents").getPublicUrl(filePath)
+    const { data: urlData } = supabase.storage.from(bucketName).getPublicUrl(filePath)
 
     if (!urlData || !urlData.publicUrl) {
       throw new Error("Failed to get public URL for uploaded file")
@@ -404,7 +419,11 @@ export async function deleteBankStatement(statementId: string) {
     if (statement && statement.file_url) {
       const filePath = statement.file_url.split("/").pop()
       if (filePath) {
-        await supabase.storage.from("application-documents").remove([`bank-statements/${filePath}`])
+        // Get available buckets
+        const { data: buckets } = await supabase.storage.listBuckets()
+        const bucketName = buckets && buckets.length > 0 ? buckets[0].name : "public"
+
+        await supabase.storage.from(bucketName).remove([`bank-statements/${filePath}`])
       }
     }
 

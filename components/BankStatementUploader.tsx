@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { UploadIcon as FileUpload, Upload, X, FileCheck, AlertCircle } from "lucide-react"
+import { UploadIcon as FileUpload, Upload, X, FileCheck, AlertCircle, Info } from "lucide-react"
 import { uploadBankStatement } from "@/lib/supabase/actions"
 
 interface BankStatementUploaderProps {
@@ -36,12 +36,25 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
     month2: 0,
     month3: 0,
   })
+  const [uploadStatus, setUploadStatus] = useState<{ success: boolean; message: string } | null>(null)
   const fileInputRefs = {
     month1: useRef<HTMLInputElement>(null),
     month2: useRef<HTMLInputElement>(null),
     month3: useRef<HTMLInputElement>(null),
   }
   const { toast } = useToast()
+
+  // Validate application ID on component mount
+  useEffect(() => {
+    if (!applicationId) {
+      setUploadStatus({
+        success: false,
+        message: "Missing application ID. Please complete the previous steps first.",
+      })
+    } else {
+      setUploadStatus(null)
+    }
+  }, [applicationId])
 
   const handleFileChange = (month: string, e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -117,9 +130,11 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
     if (!isValid) return
 
     setUploading(true)
+    setUploadStatus(null)
 
     try {
       // Upload each file
+      let successCount = 0
       for (const [month, file] of Object.entries(files)) {
         if (file) {
           // Simulate progress
@@ -143,6 +158,7 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
 
             if (result.success) {
               setUploadProgress((prev) => ({ ...prev, [month]: 100 }))
+              successCount++
             } else {
               setUploadProgress((prev) => ({ ...prev, [month]: 0 }))
               throw new Error(result.error || "Upload failed")
@@ -161,12 +177,15 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
       }
 
       // Check if at least one file was uploaded successfully
-      const anySuccess = Object.values(uploadProgress).some((progress) => progress === 100)
+      if (successCount > 0) {
+        setUploadStatus({
+          success: true,
+          message: `Successfully uploaded ${successCount} bank statement(s)`,
+        })
 
-      if (anySuccess) {
         toast({
           title: "Upload successful",
-          description: "Bank statements have been uploaded successfully",
+          description: `Successfully uploaded ${successCount} bank statement(s)`,
         })
 
         // Reset form
@@ -180,6 +199,10 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
           onUploadComplete()
         }
       } else {
+        setUploadStatus({
+          success: false,
+          message: "No files were uploaded successfully. Please try again.",
+        })
         throw new Error("No files were uploaded successfully")
       }
     } catch (error) {
@@ -213,6 +236,29 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {uploadStatus && (
+          <div
+            className={`p-3 rounded-md ${
+              uploadStatus.success ? "bg-green-50 border border-green-200" : "bg-amber-50 border border-amber-200"
+            }`}
+          >
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                {uploadStatus.success ? (
+                  <FileCheck className="h-5 w-5 text-green-500" />
+                ) : (
+                  <Info className="h-5 w-5 text-amber-500" />
+                )}
+              </div>
+              <div className="ml-3">
+                <p className={`text-sm ${uploadStatus.success ? "text-green-700" : "text-amber-700"}`}>
+                  {uploadStatus.message}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="text-sm text-gray-500 mb-4">
           Please upload your last 3 months of business bank statements. Accepted formats: PDF, JPG, PNG, Excel.
         </div>
@@ -254,6 +300,7 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
                     variant="outline"
                     className="w-full text-left justify-start"
                     onClick={() => fileInputRefs.month1.current?.click()}
+                    disabled={!applicationId}
                   >
                     <Upload className="h-4 w-4 mr-2" />
                     Choose File
@@ -326,6 +373,7 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
                     variant="outline"
                     className="w-full text-left justify-start"
                     onClick={() => fileInputRefs.month2.current?.click()}
+                    disabled={!applicationId}
                   >
                     <Upload className="h-4 w-4 mr-2" />
                     Choose File
@@ -398,6 +446,7 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
                     variant="outline"
                     className="w-full text-left justify-start"
                     onClick={() => fileInputRefs.month3.current?.click()}
+                    disabled={!applicationId}
                   >
                     <Upload className="h-4 w-4 mr-2" />
                     Choose File
@@ -459,7 +508,7 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
           type="button"
           className="w-full"
           onClick={handleUpload}
-          disabled={uploading || !Object.values(files).some((file) => file !== null)}
+          disabled={uploading || !Object.values(files).some((file) => file !== null) || !applicationId}
         >
           {uploading ? (
             <>
