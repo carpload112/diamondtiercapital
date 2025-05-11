@@ -278,6 +278,9 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
   // Get annual revenue from business_details
   const annualRevenue = getValue(application, "business_details.annual_revenue")
 
+  // Get estimated monthly deposits from business_details
+  const estimatedMonthlyDeposits = getValue(application, "business_details.estimated_monthly_deposits")
+
   // Get credit score from business_details
   const creditScore = getValue(application, "business_details.credit_score")
 
@@ -763,10 +766,10 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-gray-500">Credit Score</p>
+                  <p className="text-xs font-medium text-gray-500">Estimated Monthly Deposits</p>
                   <div className="flex items-center gap-1">
-                    <CreditCard className="h-3 w-3 text-gray-400" />
-                    <p>{creditScore}</p>
+                    <BarChart className="h-3 w-3 text-gray-400" />
+                    <p>{getValue(application, "business_details.estimated_monthly_deposits", "N/A")}</p>
                   </div>
                 </div>
               </div>

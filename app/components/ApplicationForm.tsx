@@ -11,6 +11,8 @@ import MobileStepper from "./MobileStepper"
 import ApplicationSuccess from "./ApplicationSuccess"
 import ConfettiExplosion from "react-confetti-explosion"
 import { useToast } from "@/components/ui/use-toast"
+import { BankStatementUploader } from "@/components/BankStatementUploader"
+import { submitApplication } from "@/lib/supabase/actions"
 
 // Define the form steps with improved descriptions and tooltips
 const formSteps = [
@@ -172,6 +174,21 @@ const formSteps = [
         required: true,
       },
       {
+        name: "estimatedMonthlyDeposits",
+        label: "Estimated Monthly Deposits",
+        type: "select",
+        options: [
+          "Under $5,000",
+          "$5,000 - $10,000",
+          "$10,000 - $25,000",
+          "$25,000 - $50,000",
+          "$50,000 - $100,000",
+          "Over $100,000",
+        ],
+        required: true,
+        tooltip: "Your average monthly deposits help us determine your cash flow and funding eligibility.",
+      },
+      {
         name: "creditScore",
         label: "Estimated Personal Credit Score",
         type: "select",
@@ -179,13 +196,6 @@ const formSteps = [
         required: true,
         tooltip:
           "Your personal credit score is often considered for business financing, especially for new businesses.",
-      },
-      {
-        name: "monthlyProfit",
-        label: "Average Monthly Profit",
-        type: "select",
-        options: ["Not profitable yet", "Under $5,000", "$5,000 - $10,000", "$10,000 - $25,000", "Over $25,000"],
-        tooltip: "Your monthly profit helps determine your ability to repay financing.",
       },
       {
         name: "bankruptcy",
@@ -202,12 +212,12 @@ const formSteps = [
     icon: "FileText",
     fields: [
       {
-        name: "bankStatementsInfo",
+        name: "bankStatements",
         label: "Bank Statements",
         type: "custom",
-        component: "BankStatementUpload",
+        component: "BankStatementUploader",
         required: true,
-        tooltip: "We need your last 3 months of business bank statements to verify your business income and expenses.",
+        tooltip: "We need your last 3 months of business bank statements to verify your income and expenses.",
       },
     ],
   },
@@ -258,6 +268,7 @@ export default function ApplicationForm({ onBack }: ApplicationFormProps) {
   const [isExploding, setIsExploding] = useState(false)
   const [referenceId, setReferenceId] = useState("")
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({})
+  const [applicationId, setApplicationId] = useState<string | null>(null)
   const { toast } = useToast()
 
   // Reset errors when changing steps
@@ -280,7 +291,7 @@ export default function ApplicationForm({ onBack }: ApplicationFormProps) {
     const newErrors: Record<string, string> = {}
 
     currentFields.forEach((field) => {
-      if (field.required) {
+      if (field.required && field.type !== "custom") {
         const value = formData[field.name]
         if (!value) {
           newErrors[field.name] = "This field is required"
@@ -314,11 +325,15 @@ export default function ApplicationForm({ onBack }: ApplicationFormProps) {
       return
     }
 
-    if (currentStep < formSteps.length - 1) {
+    // If we're on the Financial Information step, submit the initial application
+    // to get an application ID for bank statement uploads
+    if (currentStep === 3 && !applicationId) {
+      handleInitialSubmit()
+    } else if (currentStep < formSteps.length - 1) {
       setCurrentStep(currentStep + 1)
       window.scrollTo({ top: 0, behavior: "smooth" })
     } else {
-      handleSubmit()
+      handleFinalSubmit()
     }
   }
 
@@ -331,30 +346,65 @@ export default function ApplicationForm({ onBack }: ApplicationFormProps) {
     }
   }
 
-  const handleSubmit = async () => {
+  const handleInitialSubmit = async () => {
     setIsSubmitting(true)
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      // Generate a reference ID
-      const refId = Math.random().toString(36).substring(2, 10).toUpperCase()
-      setReferenceId(refId)
-
-      // Show success state
-      setIsComplete(true)
-      setIsExploding(true)
-
-      // Log form data (in production, this would be sent to your API)
-      console.log("Form submitted:", formData)
-
-      toast({
-        title: "Application Submitted!",
-        description: "We've received your application and will contact you soon.",
-        variant: "default",
+      // Submit the initial application data to get an application ID
+      const result = await submitApplication({
+        ...formData,
+        status: "draft", // Mark as draft until final submission
       })
+
+      if (result.success && result.applicationId) {
+        setApplicationId(result.applicationId)
+        setCurrentStep(currentStep + 1)
+        window.scrollTo({ top: 0, behavior: "smooth" })
+
+        toast({
+          title: "Information Saved",
+          description: "Your information has been saved. Please upload your bank statements.",
+        })
+      } else {
+        throw new Error(result.error || "Failed to save application")
+      }
     } catch (error) {
+      console.error("Error submitting initial application:", error)
+      toast({
+        title: "Submission Failed",
+        description: "There was an error saving your information. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleFinalSubmit = async () => {
+    setIsSubmitting(true)
+
+    try {
+      // Update the application with final status
+      const result = await submitApplication({
+        ...formData,
+        applicationId: applicationId,
+        status: "pending", // Change from draft to pending
+      })
+
+      if (result.success) {
+        setReferenceId(result.referenceId || "")
+        setIsComplete(true)
+        setIsExploding(true)
+
+        toast({
+          title: "Application Submitted!",
+          description: "We've received your application and will contact you soon.",
+        })
+      } else {
+        throw new Error(result.error || "Failed to submit application")
+      }
+    } catch (error) {
+      console.error("Error submitting final application:", error)
       toast({
         title: "Submission Failed",
         description: "There was an error submitting your application. Please try again.",
@@ -368,7 +418,7 @@ export default function ApplicationForm({ onBack }: ApplicationFormProps) {
   // Calculate completion percentage for the current step
   const calculateStepCompletion = () => {
     const currentFields = formSteps[currentStep].fields
-    const requiredFields = currentFields.filter((field) => field.required)
+    const requiredFields = currentFields.filter((field) => field.required && field.type !== "custom")
 
     if (requiredFields.length === 0) return 100
 
@@ -377,6 +427,22 @@ export default function ApplicationForm({ onBack }: ApplicationFormProps) {
   }
 
   const stepCompletion = calculateStepCompletion()
+
+  // Custom component renderer for bank statement uploader
+  const renderCustomComponent = (field: any) => {
+    if (field.component === "BankStatementUploader" && applicationId) {
+      return (
+        <BankStatementUploader
+          applicationId={applicationId}
+          onUploadComplete={() => {
+            // Mark this step as complete when uploads are done
+            handleInputChange("bankStatements", true)
+          }}
+        />
+      )
+    }
+    return <div className="text-sm text-red-500">Please complete previous steps first</div>
+  }
 
   return (
     <div className="container mx-auto px-4 py-16">
@@ -416,6 +482,7 @@ export default function ApplicationForm({ onBack }: ApplicationFormProps) {
                   errors={errors}
                   touchedFields={touchedFields}
                   setTouchedFields={setTouchedFields}
+                  renderCustomComponent={renderCustomComponent}
                 />
               </AnimatePresence>
 
@@ -437,7 +504,7 @@ export default function ApplicationForm({ onBack }: ApplicationFormProps) {
 
                 <Button
                   onClick={nextStep}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || (currentStep === 4 && !formData.bankStatements)}
                   size="lg"
                   className="gap-2 min-w-[140px] transition-all duration-300 hover:translate-x-[4px] hover:shadow-lg"
                 >

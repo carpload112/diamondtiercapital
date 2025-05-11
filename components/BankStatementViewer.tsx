@@ -2,61 +2,49 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
-import { createClient } from "@/lib/supabase/client"
-import { FileText, Download, Trash2, RefreshCw, ExternalLink, AlertCircle } from "lucide-react"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { getBankStatements, deleteBankStatement } from "@/lib/supabase/actions"
+import { FileText, FileImage, FileSpreadsheet, File, Download, Trash2, ExternalLink, AlertCircle } from "lucide-react"
+import { formatDistanceToNow } from "date-fns"
+
+interface BankStatementViewerProps {
+  applicationId: string
+  isAdmin?: boolean
+}
 
 interface BankStatement {
   id: string
+  application_id: string
   file_name: string
   file_url: string
   file_type: string
   file_size: number
   month_year: string
-  uploaded_at: string
   notes: string | null
+  uploaded_at: string
 }
 
-interface BankStatementViewerProps {
-  applicationId: string
-  isAdmin?: boolean
-  refreshTrigger?: number
-}
-
-export function BankStatementViewer({ applicationId, isAdmin = false, refreshTrigger = 0 }: BankStatementViewerProps) {
+export function BankStatementViewer({ applicationId, isAdmin = false }: BankStatementViewerProps) {
   const [statements, setStatements] = useState<BankStatement[]>([])
   const [loading, setLoading] = useState(true)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [statementToDelete, setStatementToDelete] = useState<string | null>(null)
-  const [deleting, setDeleting] = useState(false)
+  const [deleting, setDeleting] = useState<string | null>(null)
   const { toast } = useToast()
-  const supabase = createClient()
 
   useEffect(() => {
     fetchBankStatements()
-  }, [applicationId, refreshTrigger])
+  }, [applicationId])
 
   const fetchBankStatements = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
-        .from("bank_statements")
-        .select("*")
-        .eq("application_id", applicationId)
-        .order("month_year", { ascending: false })
+      const result = await getBankStatements(applicationId)
 
-      if (error) throw error
-
-      setStatements(data || [])
+      if (result.success && result.data) {
+        setStatements(result.data)
+      } else {
+        throw new Error(result.error || "Failed to fetch bank statements")
+      }
     } catch (error) {
       console.error("Error fetching bank statements:", error)
       toast({
@@ -69,18 +57,20 @@ export function BankStatementViewer({ applicationId, isAdmin = false, refreshTri
     }
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (statementId: string) => {
     try {
-      setDeleting(true)
-      const { error } = await supabase.from("bank_statements").delete().eq("id", id)
+      setDeleting(statementId)
+      const result = await deleteBankStatement(statementId)
 
-      if (error) throw error
-
-      setStatements((prev) => prev.filter((statement) => statement.id !== id))
-      toast({
-        title: "Statement deleted",
-        description: "Bank statement has been deleted successfully",
-      })
+      if (result.success) {
+        setStatements(statements.filter((statement) => statement.id !== statementId))
+        toast({
+          title: "Statement Deleted",
+          description: "Bank statement has been deleted successfully",
+        })
+      } else {
+        throw new Error(result.error || "Failed to delete bank statement")
+      }
     } catch (error) {
       console.error("Error deleting bank statement:", error)
       toast({
@@ -89,157 +79,121 @@ export function BankStatementViewer({ applicationId, isAdmin = false, refreshTri
         variant: "destructive",
       })
     } finally {
-      setDeleting(false)
-      setDeleteDialogOpen(false)
-      setStatementToDelete(null)
+      setDeleting(null)
     }
   }
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes"
-    const k = 1024
-    const sizes = ["Bytes", "KB", "MB", "GB"]
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
+    if (bytes < 1024) return bytes + " bytes"
+    else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB"
+    else return (bytes / 1048576).toFixed(1) + " MB"
   }
 
   const getFileIcon = (fileType: string) => {
-    if (fileType.includes("pdf")) return "📄"
-    if (fileType.includes("image")) return "🖼️"
-    if (fileType.includes("excel") || fileType.includes("spreadsheet")) return "📊"
-    return "📁"
+    if (fileType.includes("pdf")) {
+      return <FileText className="h-8 w-8 text-red-500" />
+    } else if (fileType.includes("image")) {
+      return <FileImage className="h-8 w-8 text-blue-500" />
+    } else if (fileType.includes("spreadsheet") || fileType.includes("excel")) {
+      return <FileSpreadsheet className="h-8 w-8 text-green-500" />
+    } else {
+      return <File className="h-8 w-8 text-gray-500" />
+    }
   }
 
   if (loading) {
     return (
-      <Card className="w-full">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center">
-            <FileText className="h-5 w-5 mr-2 text-blue-500" />
-            Bank Statements
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex justify-center items-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-            <span className="ml-3 text-sm text-gray-500">Loading bank statements...</span>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center h-32">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+        <span className="ml-2 text-sm text-gray-500">Loading bank statements...</span>
+      </div>
+    )
+  }
+
+  if (statements.length === 0) {
+    return (
+      <div className="text-center py-8 border border-dashed rounded-lg">
+        <AlertCircle className="h-8 w-8 text-amber-500 mx-auto mb-2" />
+        <h3 className="text-lg font-medium text-gray-900 mb-1">No Bank Statements</h3>
+        <p className="text-sm text-gray-500 max-w-md mx-auto">
+          {isAdmin
+            ? "This application doesn't have any bank statements uploaded yet."
+            : "Please upload your last 3 months of bank statements to complete your application."}
+        </p>
+      </div>
     )
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center justify-between">
-          <div className="flex items-center">
-            <FileText className="h-5 w-5 mr-2 text-blue-500" />
-            Bank Statements
-          </div>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={fetchBankStatements} title="Refresh">
-            <RefreshCw className="h-4 w-4" />
-            <span className="sr-only">Refresh</span>
-          </Button>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {statements.length === 0 ? (
-          <div className="text-center py-8 border border-dashed rounded-md">
-            <AlertCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-500 mb-1">No bank statements uploaded yet</p>
-            {!isAdmin && (
-              <p className="text-xs text-gray-400">Please upload your last 3 months of business bank statements</p>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {statements.map((statement) => (
-              <div
-                key={statement.id}
-                className="flex items-center justify-between p-3 border rounded-md hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center">
-                  <div className="text-2xl mr-3">{getFileIcon(statement.file_type)}</div>
-                  <div>
-                    <div className="font-medium text-sm">{statement.month_year}</div>
-                    <div className="text-xs text-gray-500 flex items-center">
-                      <span className="truncate max-w-[150px] sm:max-w-[250px]">{statement.file_name}</span>
-                      <span className="mx-1">•</span>
-                      <span>{formatFileSize(statement.file_size)}</span>
-                    </div>
-                    {statement.notes && (
-                      <div className="text-xs text-gray-500 italic mt-1 truncate max-w-[200px] sm:max-w-[300px]">
-                        Note: {statement.notes}
-                      </div>
-                    )}
-                  </div>
+    <div className="space-y-4">
+      {statements.map((statement) => (
+        <Card key={statement.id} className="overflow-hidden">
+          <CardContent className="p-4">
+            <div className="flex items-center">
+              <div className="mr-4">{getFileIcon(statement.file_type)}</div>
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                  <h3 className="text-sm font-medium text-gray-900 truncate">{statement.month_year} Statement</h3>
+                  <span className="text-xs text-gray-500">
+                    Uploaded {formatDistanceToNow(new Date(statement.uploaded_at), { addSuffix: true })}
+                  </span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" asChild>
-                    <a href={statement.file_url} target="_blank" rel="noopener noreferrer" title="View">
-                      <ExternalLink className="h-4 w-4" />
-                      <span className="sr-only">View</span>
-                    </a>
-                  </Button>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" asChild>
-                    <a href={statement.file_url} download={statement.file_name} title="Download">
-                      <Download className="h-4 w-4" />
-                      <span className="sr-only">Download</span>
-                    </a>
-                  </Button>
-                  {isAdmin && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
-                      onClick={() => {
-                        setStatementToDelete(statement.id)
-                        setDeleteDialogOpen(true)
-                      }}
-                      title="Delete"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Delete</span>
-                    </Button>
-                  )}
+                <p className="text-xs text-gray-500 truncate mt-1">{statement.file_name}</p>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-2">
+                  <span className="text-xs text-gray-500">{formatFileSize(statement.file_size)}</span>
+                  {statement.notes && <span className="text-xs text-gray-500 italic">Note: {statement.notes}</span>}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-
-        {/* Delete Confirmation Dialog */}
-        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Delete Bank Statement</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete this bank statement? This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} disabled={deleting}>
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => statementToDelete && handleDelete(statementToDelete)}
-                disabled={deleting}
-              >
-                {deleting ? (
-                  <>
-                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
-                    Deleting...
-                  </>
-                ) : (
-                  "Delete"
+              <div className="flex items-center gap-2 ml-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => window.open(statement.file_url, "_blank")}
+                  title="View"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  <span className="sr-only">View</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => {
+                    const link = document.createElement("a")
+                    link.href = statement.file_url
+                    link.download = statement.file_name
+                    document.body.appendChild(link)
+                    link.click()
+                    document.body.removeChild(link)
+                  }}
+                  title="Download"
+                >
+                  <Download className="h-4 w-4" />
+                  <span className="sr-only">Download</span>
+                </Button>
+                {isAdmin && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => handleDelete(statement.id)}
+                    disabled={deleting === statement.id}
+                    title="Delete"
+                  >
+                    {deleting === statement.id ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                    <span className="sr-only">Delete</span>
+                  </Button>
                 )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </CardContent>
-    </Card>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   )
 }

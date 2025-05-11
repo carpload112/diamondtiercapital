@@ -22,7 +22,7 @@ export interface ApplicationFormData {
   // Financial Information
   annualRevenue?: string
   creditScore?: string
-  monthlyProfit?: string
+  estimatedMonthlyDeposits?: string // New field
   bankruptcy?: string
 
   // Financial Needs
@@ -37,90 +37,138 @@ export interface ApplicationFormData {
   termsAgreed: boolean
   marketingConsent?: boolean
   referralCode?: string
+
+  // For updates
+  applicationId?: string
+  status?: string
 }
 
 export async function submitApplication(formData: ApplicationFormData) {
   const supabase = createServerClient()
 
   try {
-    // Generate a unique application ID
-    const applicationId = uuidv4()
+    // Check if this is an update to an existing application
+    const isUpdate = !!formData.applicationId
+
+    // Generate a unique application ID if not updating
+    const applicationId = formData.applicationId || uuidv4()
     const referenceId = `APP${Math.random().toString(36).substring(2, 7).toUpperCase()}`
 
-    // Insert into applications table
-    const { error: applicationError } = await supabase.from("applications").insert({
-      id: applicationId,
-      reference_id: referenceId,
-      status: "pending",
-      credit_check_completed: false,
-      submitted_at: new Date().toISOString(),
-      notes: formData.additionalInfo || "",
-    })
+    if (!isUpdate) {
+      // Insert into applications table
+      const { error: applicationError } = await supabase.from("applications").insert({
+        id: applicationId,
+        reference_id: referenceId,
+        status: formData.status || "pending",
+        credit_check_completed: false,
+        submitted_at: new Date().toISOString(),
+        notes: formData.additionalInfo || "",
+      })
 
-    if (applicationError) {
-      console.error("Error inserting application:", applicationError)
-      throw applicationError
-    }
+      if (applicationError) {
+        console.error("Error inserting application:", applicationError)
+        throw applicationError
+      }
 
-    // Insert into applicant_details table
-    const { error: applicantError } = await supabase.from("applicant_details").insert({
-      application_id: applicationId,
-      full_name: formData.fullName,
-      email: formData.email,
-      phone: formData.phone,
-      preferred_contact: formData.preferredContact || "Email",
-    })
+      // Insert into applicant_details table
+      if (formData.fullName && formData.email) {
+        const { error: applicantError } = await supabase.from("applicant_details").insert({
+          application_id: applicationId,
+          full_name: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          preferred_contact: formData.preferredContact || "Email",
+        })
 
-    if (applicantError) {
-      console.error("Error inserting applicant details:", applicantError)
-      throw applicantError
-    }
+        if (applicantError) {
+          console.error("Error inserting applicant details:", applicantError)
+          throw applicantError
+        }
+      }
 
-    // Insert into business_details table
-    const { error: businessError } = await supabase.from("business_details").insert({
-      application_id: applicationId,
-      business_name: formData.businessName,
-      business_type: formData.businessType,
-      industry: formData.industry,
-      years_in_business: formData.yearsInBusiness,
-      ein: formData.ein || null,
-      annual_revenue: formData.annualRevenue || null,
-      monthly_profit: formData.monthlyProfit || null,
-      credit_score: formData.creditScore || null,
-      bankruptcy_history: formData.bankruptcy === "Yes",
-    })
+      // Insert into business_details table
+      if (formData.businessName) {
+        const { error: businessError } = await supabase.from("business_details").insert({
+          application_id: applicationId,
+          business_name: formData.businessName,
+          business_type: formData.businessType,
+          industry: formData.industry,
+          years_in_business: formData.yearsInBusiness,
+          ein: formData.ein || null,
+          annual_revenue: formData.annualRevenue || null,
+          estimated_monthly_deposits: formData.estimatedMonthlyDeposits || null, // New field
+          credit_score: formData.creditScore || null,
+          bankruptcy_history: formData.bankruptcy === "Yes",
+        })
 
-    if (businessError) {
-      console.error("Error inserting business details:", businessError)
-      throw businessError
-    }
+        if (businessError) {
+          console.error("Error inserting business details:", businessError)
+          throw businessError
+        }
+      }
 
-    // Insert into funding_requests table
-    const { error: fundingError } = await supabase.from("funding_requests").insert({
-      application_id: applicationId,
-      funding_amount: formData.fundingAmount,
-      funding_purpose: formData.fundingPurpose,
-      timeframe: formData.timeframe,
-      collateral: formData.collateral || null,
-    })
+      // Insert into funding_requests table
+      if (formData.fundingAmount) {
+        const { error: fundingError } = await supabase.from("funding_requests").insert({
+          application_id: applicationId,
+          funding_amount: formData.fundingAmount,
+          funding_purpose: formData.fundingPurpose,
+          timeframe: formData.timeframe,
+          collateral: formData.collateral || null,
+        })
 
-    if (fundingError) {
-      console.error("Error inserting funding request:", fundingError)
-      throw fundingError
-    }
+        if (fundingError) {
+          console.error("Error inserting funding request:", fundingError)
+          throw fundingError
+        }
+      }
 
-    // Insert into additional_information table
-    const { error: additionalError } = await supabase.from("additional_information").insert({
-      application_id: applicationId,
-      hear_about_us: formData.hearAboutUs || null,
-      additional_info: formData.additionalInfo || null,
-      terms_agreed: formData.termsAgreed,
-      marketing_consent: formData.marketingConsent || false,
-    })
+      // Insert into additional_information table
+      if (formData.termsAgreed !== undefined) {
+        const { error: additionalError } = await supabase.from("additional_information").insert({
+          application_id: applicationId,
+          hear_about_us: formData.hearAboutUs || null,
+          additional_info: formData.additionalInfo || null,
+          terms_agreed: formData.termsAgreed,
+          marketing_consent: formData.marketingConsent || false,
+        })
 
-    if (additionalError) {
-      console.error("Error inserting additional information:", additionalError)
-      throw additionalError
+        if (additionalError) {
+          console.error("Error inserting additional information:", additionalError)
+          throw additionalError
+        }
+      }
+    } else {
+      // Update existing application
+      if (formData.status) {
+        const { error: updateError } = await supabase
+          .from("applications")
+          .update({
+            status: formData.status,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", applicationId)
+
+        if (updateError) {
+          console.error("Error updating application:", updateError)
+          throw updateError
+        }
+      }
+
+      // Update business_details if estimatedMonthlyDeposits is provided
+      if (formData.estimatedMonthlyDeposits) {
+        const { error: updateBusinessError } = await supabase
+          .from("business_details")
+          .update({
+            estimated_monthly_deposits: formData.estimatedMonthlyDeposits,
+          })
+          .eq("application_id", applicationId)
+
+        if (updateBusinessError) {
+          console.error("Error updating business details:", updateBusinessError)
+          throw updateBusinessError
+        }
+      }
     }
 
     // Add affiliate tracking if referral code is provided
@@ -197,14 +245,18 @@ export async function submitApplication(formData: ApplicationFormData) {
     }
 
     console.log("Application submitted successfully with ID:", applicationId)
-    return { success: true, referenceId }
+    return {
+      success: true,
+      referenceId,
+      applicationId,
+    }
   } catch (error) {
     console.error("Error submitting application:", error)
     return { success: false, error: "Failed to submit application" }
   }
 }
 
-// New function to upload bank statements
+// Bank statement functions remain the same
 export async function uploadBankStatement({
   applicationId,
   file,
