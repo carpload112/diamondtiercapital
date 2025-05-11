@@ -2,7 +2,6 @@
 
 import { createServerClient } from "./server"
 import { v4 as uuidv4 } from "uuid"
-import { affiliateTrackingService } from "../services/affiliate-tracking-service"
 
 export interface ApplicationFormData {
   // Personal Information
@@ -282,17 +281,53 @@ export async function submitApplication(formData: ApplicationFormData) {
     const referralCode = formData.referralCode || formData.ref
     if (referralCode) {
       try {
-        // Use the new affiliate tracking service
-        const trackingResult = await affiliateTrackingService.trackApplication(
-          applicationId,
-          referenceId,
-          referralCode,
-          formData.fundingAmount,
-        )
+        console.log(`Processing affiliate tracking for referral code: ${referralCode}`)
 
-        if (!trackingResult.success) {
-          console.warn("Affiliate tracking warning:", trackingResult.error)
+        // Get the affiliate from the referral code
+        const { data: affiliate, error: affiliateError } = await supabase
+          .from("affiliates")
+          .select("id, name, referral_code")
+          .eq("referral_code", referralCode)
+          .single()
+
+        if (affiliateError || !affiliate) {
+          console.error("Error finding affiliate with referral code:", referralCode, affiliateError)
           // Continue with application submission even if affiliate tracking fails
+        } else {
+          console.log(`Found affiliate: ${affiliate.name} (${affiliate.id})`)
+
+          // Update the application with the affiliate ID
+          const { error: updateError } = await supabase
+            .from("applications")
+            .update({
+              affiliate_id: affiliate.id,
+              affiliate_code: referralCode,
+            })
+            .eq("id", applicationId)
+
+          if (updateError) {
+            console.error("Error updating application with affiliate:", updateError)
+          } else {
+            console.log(`Successfully linked application ${applicationId} to affiliate ${affiliate.id}`)
+
+            // Only create notification if this is a final submission (not draft)
+            if (formData.status === "pending") {
+              // Create a notification for the affiliate
+              const { error: notificationError } = await supabase.from("affiliate_notifications").insert({
+                affiliate_id: affiliate.id,
+                application_id: applicationId,
+                message: `New application submitted: ${referenceId}`,
+                read: false,
+                created_at: new Date().toISOString(),
+              })
+
+              if (notificationError) {
+                console.error("Error creating affiliate notification:", notificationError)
+              } else {
+                console.log(`Created notification for affiliate ${affiliate.id}`)
+              }
+            }
+          }
         }
       } catch (affiliateError) {
         // Log the error but don't fail the application submission

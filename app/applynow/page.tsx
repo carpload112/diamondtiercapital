@@ -56,6 +56,18 @@ const ApplyNowPage = () => {
   const formRef = useRef<HTMLDivElement>(null)
   const headerRef = useRef<HTMLDivElement>(null)
 
+  // Log referral code when detected
+  useEffect(() => {
+    if (referralCode) {
+      console.log("Affiliate referral detected in URL:", referralCode)
+      // Ensure referral code is in form data
+      setFormData((prev) => ({
+        ...prev,
+        referralCode: referralCode,
+      }))
+    }
+  }, [referralCode])
+
   // Define the form steps with improved descriptions and tooltips
   const formSteps = [
     {
@@ -404,15 +416,22 @@ const ApplyNowPage = () => {
     }
   }
 
+  // Update handleInitialSubmit to ensure referral code is included
   const handleInitialSubmit = async () => {
     setIsSubmitting(true)
 
     try {
-      // Submit the initial application data to get an application ID
-      const result = await submitApplication({
+      // Ensure referral code is included in the submission
+      const dataToSubmit = {
         ...formData,
+        referralCode: formData.referralCode || referralCode, // Use from form data or URL
         status: "draft", // Mark as draft until final submission
-      })
+      }
+
+      console.log("Submitting initial application with data:", dataToSubmit)
+
+      // Submit the initial application data to get an application ID
+      const result = await submitApplication(dataToSubmit)
 
       if (result.success && result.applicationId) {
         setApplicationId(result.applicationId)
@@ -438,16 +457,23 @@ const ApplyNowPage = () => {
     }
   }
 
+  // Update handleFinalSubmit to ensure referral code is included
   const handleFinalSubmit = async () => {
     setIsSubmitting(true)
 
     try {
-      // Update the application with final status
-      const result = await submitApplication({
+      // Ensure referral code is included in the final submission
+      const dataToSubmit = {
         ...formData,
+        referralCode: formData.referralCode || referralCode, // Use from form data or URL
         applicationId: applicationId,
         status: "pending", // Change from draft to pending ONLY on final submission
-      })
+      }
+
+      console.log("Submitting final application with data:", dataToSubmit)
+
+      // Update the application with final status
+      const result = await submitApplication(dataToSubmit)
 
       if (result.success) {
         // Set the reference ID from the database
