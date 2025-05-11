@@ -416,7 +416,7 @@ export async function getBankStatements(applicationId: string) {
     // Don't select file_data to avoid large data transfer
     const { data, error } = await supabase
       .from("bank_statements")
-      .select("id, application_id, file_name, file_url, file_type, file_size, month_year, notes, created_at")
+      .select("id, application_id, file_name, file_url, file_type, file_size, month_year, notes")
       .eq("application_id", applicationId)
       .order("month_year", { ascending: false })
 

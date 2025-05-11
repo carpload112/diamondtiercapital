@@ -36,6 +36,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import ApplicationTagsEditor from "@/components/admin/ApplicationTagsEditor"
 import ApplicationFolderSelector from "@/components/admin/ApplicationFolderSelector"
 import { BankStatementViewer } from "@/components/BankStatementViewer"
+import FileSaver from "file-saver"
 
 export default function ApplicationDetailPage({ params }: { params: { id: string } }) {
   const { id } = params
@@ -396,6 +397,115 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
     )
   }
 
+  const exportToExcel = async () => {
+    try {
+      // Show loading toast
+      toast({
+        title: "Preparing export",
+        description: "Generating Excel file...",
+      })
+
+      // Dynamically import xlsx to reduce bundle size
+      const XLSX = await import("xlsx")
+
+      // Create a workbook with multiple sheets
+      const wb = XLSX.utils.book_new()
+
+      // Format application data for Excel
+      const applicationSheet = [
+        ["Application ID", application.id],
+        ["Reference ID", application.reference_id || "N/A"],
+        ["Status", application.status?.replace(/_/g, " ") || "Pending"],
+        ["Submission Date", application.submitted_at ? new Date(application.submitted_at).toLocaleDateString() : "N/A"],
+        ["Notes", application.notes || ""],
+        ["", ""],
+        ["APPLICANT DETAILS", ""],
+        ["Full Name", applicantName],
+        ["Email", email],
+        ["Phone", phone],
+        ["Preferred Contact", getValue(application, "applicant_details.preferred_contact", "N/A")],
+        ["", ""],
+        ["BUSINESS DETAILS", ""],
+        ["Business Name", businessName],
+        ["Business Type", businessType],
+        ["Industry", industry],
+        ["Years in Business", yearsInBusiness],
+        ["Annual Revenue", annualRevenue],
+        ["Estimated Monthly Deposits", estimatedMonthlyDeposits],
+        ["Credit Score", creditScore],
+        ["Bankruptcy History", getValue(application, "business_details.bankruptcy_history", false) ? "Yes" : "No"],
+        ["EIN", getValue(application, "business_details.ein", "N/A")],
+        ["", ""],
+        ["FUNDING DETAILS", ""],
+        ["Funding Amount", fundingAmount],
+        ["Funding Purpose", fundingPurpose],
+        ["Timeframe", timeframe],
+        ["Collateral", getValue(application, "funding_requests.collateral", "N/A")],
+        ["", ""],
+        ["ADDITIONAL INFORMATION", ""],
+        ["How They Heard About Us", getValue(application, "additional_information.hear_about_us", "N/A")],
+        ["Additional Comments", additionalComments],
+        ["Terms Agreed", getValue(application, "additional_information.terms_agreed", false) ? "Yes" : "No"],
+        ["Marketing Consent", getValue(application, "additional_information.marketing_consent", false) ? "Yes" : "No"],
+      ]
+
+      // Add application sheet
+      const wsApplication = XLSX.utils.aoa_to_sheet(applicationSheet)
+      XLSX.utils.book_append_sheet(wb, wsApplication, "Application Details")
+
+      // Get bank statements
+      const supabase = createClient()
+      const { data: bankStatements } = await supabase
+        .from("bank_statements")
+        .select("id, file_name, file_type, file_size, month_year, notes")
+        .eq("application_id", application.id)
+        .order("month_year", { ascending: false })
+
+      if (bankStatements && bankStatements.length > 0) {
+        // Format bank statements for Excel
+        const bankStatementsData = [["Month/Year", "File Name", "File Type", "File Size (KB)", "Notes"]]
+
+        bankStatements.forEach((statement) => {
+          bankStatementsData.push([
+            statement.month_year,
+            statement.file_name,
+            statement.file_type,
+            Math.round(statement.file_size / 1024).toString(),
+            statement.notes || "",
+          ])
+        })
+
+        // Add bank statements sheet
+        const wsBankStatements = XLSX.utils.aoa_to_sheet(bankStatementsData)
+        XLSX.utils.book_append_sheet(wb, wsBankStatements, "Bank Statements")
+      }
+
+      // Generate Excel file
+      const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" })
+      const blob = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      })
+
+      // Generate filename with client name and date
+      const fileName = `${businessName.replace(/[^a-z0-9]/gi, "_")}_Application_${new Date().toISOString().split("T")[0]}.xlsx`
+
+      // Save file
+      FileSaver.saveAs(blob, fileName)
+
+      toast({
+        title: "Export successful",
+        description: "Application data has been exported to Excel",
+      })
+    } catch (error) {
+      console.error("Error exporting to Excel:", error)
+      toast({
+        title: "Export failed",
+        description: "There was an error exporting the application data",
+        variant: "destructive",
+      })
+    }
+  }
+
   return (
     <div className="space-y-4 pb-6">
       {/* Header with Back Button */}
@@ -560,6 +670,11 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
               >
                 <CalendarClock className="mr-2 h-4 w-4" />
                 Schedule Meeting
+              </Button>
+
+              <Button variant="outline" className="w-full justify-start" onClick={exportToExcel}>
+                <FileText className="mr-2 h-4 w-4" />
+                Export to Excel
               </Button>
 
               <Button
@@ -834,7 +949,17 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <BankStatementViewer applicationId={params.id} isAdmin={true} />
+              <BankStatementViewer
+                applicationId={params.id}
+                isAdmin={true}
+                readOnly={false}
+                onDelete={() => {
+                  toast({
+                    title: "Bank statement deleted",
+                    description: "The bank statement has been deleted successfully",
+                  })
+                }}
+              />
             </CardContent>
           </Card>
         </div>

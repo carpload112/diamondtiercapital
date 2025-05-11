@@ -24,7 +24,7 @@ interface BankStatement {
   file_size: number
   month_year: string
   notes: string | null
-  created_at: string
+  created_at?: string // Make this optional
   file_data?: string // Base64 data
 }
 
@@ -103,7 +103,8 @@ export function BankStatementViewer({
     else return (bytes / 1048576).toFixed(1) + " MB"
   }
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "N/A"
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
@@ -262,7 +263,7 @@ export function BankStatementViewer({
                           <AlertTriangle className="h-3 w-3 text-amber-500 ml-1" title="Very large file" />
                         )}
                       </span>
-                      <span>{formatDate(statement.created_at)}</span>
+                      {statement.created_at && <span>{formatDate(statement.created_at)}</span>}
                     </div>
                   </div>
                 </div>
