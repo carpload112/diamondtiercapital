@@ -63,6 +63,22 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
     }
   }, [applicationId])
 
+  // Function to convert a blob to base64 safely
+  const blobToBase64 = async (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      // Make sure we're in a browser environment
+      if (typeof window === "undefined" || !window.FileReader) {
+        reject(new Error("FileReader is not available in this environment"))
+        return
+      }
+
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = (e) => reject(new Error(`FileReader error: ${e}`))
+      reader.readAsDataURL(blob)
+    })
+  }
+
   const handleFileChange = (month: string, e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
@@ -206,6 +222,11 @@ export function BankStatementUploader({ applicationId, onUploadComplete }: BankS
                 description: `Uploading ${formatFileSize(file.size)}. This may take several minutes.`,
                 duration: 10000, // 10 seconds
               })
+            }
+
+            // Check if we're in a browser environment before proceeding
+            if (typeof window === "undefined" || !window.FileReader) {
+              throw new Error("FileReader is not available in this environment")
             }
 
             // Upload the file

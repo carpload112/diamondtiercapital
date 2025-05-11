@@ -2,18 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { getBankStatements, getBankStatementWithData, deleteBankStatement } from "@/lib/supabase/actions"
 import { useToast } from "@/hooks/use-toast"
-import { FileIcon, Trash2, Download, FileText, Eye, AlertTriangle } from "lucide-react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-
-interface BankStatementViewerProps {
-  applicationId: string
-  onDelete?: () => void
-  readOnly?: boolean
-  isAdmin?: boolean
-}
+import { getBankStatements, deleteBankStatement, getBankStatementWithData } from "@/lib/supabase/actions"
+import { FileIcon, Trash2, Eye, Download, AlertCircle, FileCheck } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 interface BankStatement {
   id: string
@@ -23,343 +15,326 @@ interface BankStatement {
   file_type: string
   file_size: number
   month_year: string
-  notes: string | null
-  created_at?: string // Make this optional
-  file_data?: string // Base64 data
+  notes?: string
+  uploaded_at?: string // Make this optional since it might not exist
+  file_data?: string // This will be populated when viewing a specific statement
+}
+
+interface BankStatementViewerProps {
+  applicationId: string
+  isAdmin?: boolean
+  readOnly?: boolean
+  onDelete?: () => void
 }
 
 export function BankStatementViewer({
   applicationId,
-  onDelete,
-  readOnly = false,
   isAdmin = false,
+  readOnly = true,
+  onDelete,
 }: BankStatementViewerProps) {
   const [statements, setStatements] = useState<BankStatement[]>([])
   const [loading, setLoading] = useState(true)
-  const [deleting, setDeleting] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [selectedStatement, setSelectedStatement] = useState<BankStatement | null>(null)
-  const [loadingStatement, setLoadingStatement] = useState<string | null>(null)
+  const [viewDialogOpen, setViewDialogOpen] = useState(false)
+  const [deleteInProgress, setDeleteInProgress] = useState<string | null>(null)
   const { toast } = useToast()
 
+  // Load statements on component mount
   useEffect(() => {
-    if (applicationId) {
-      loadStatements()
-    }
+    loadStatements()
   }, [applicationId])
 
+  // Function to load bank statements
   const loadStatements = async () => {
     setLoading(true)
+    setError(null)
+
     try {
-      const { success, data, error } = await getBankStatements(applicationId)
-      if (success && data) {
-        setStatements(data)
+      const result = await getBankStatements(applicationId)
+      if (result.success && result.data) {
+        setStatements(result.data)
       } else {
-        console.error("Error loading bank statements:", error)
+        setError(result.error || "Failed to load bank statements")
         toast({
-          title: "Error loading bank statements",
-          description: error || "Failed to load bank statements",
+          title: "Error",
+          description: result.error || "Failed to load bank statements",
           variant: "destructive",
         })
       }
-    } catch (error) {
-      console.error("Error in loadStatements:", error)
+    } catch (err) {
+      console.error("Error loading bank statements:", err)
+      setError("An unexpected error occurred")
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while loading bank statements",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
   }
 
-  const handleDelete = async (statementId: string) => {
-    if (confirm("Are you sure you want to delete this bank statement?")) {
-      setDeleting(statementId)
-      try {
-        const { success, error } = await deleteBankStatement(statementId)
-        if (success) {
-          setStatements((prev) => prev.filter((s) => s.id !== statementId))
-          toast({
-            title: "Bank statement deleted",
-            description: "The bank statement has been deleted successfully",
-          })
-          if (onDelete) {
-            onDelete()
-          }
-        } else {
-          toast({
-            title: "Error deleting bank statement",
-            description: error || "Failed to delete bank statement",
-            variant: "destructive",
-          })
-        }
-      } catch (error) {
-        console.error("Error in handleDelete:", error)
-      } finally {
-        setDeleting(null)
+  // Function to view a bank statement
+  const viewStatement = async (statementId: string) => {
+    try {
+      const result = await getBankStatementWithData(statementId)
+      if (result.success && result.data) {
+        setSelectedStatement(result.data)
+        setViewDialogOpen(true)
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to load bank statement data",
+          variant: "destructive",
+        })
       }
+    } catch (err) {
+      console.error("Error viewing bank statement:", err)
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while loading the bank statement",
+        variant: "destructive",
+      })
     }
   }
 
-  const formatFileSize = (bytes: number) => {
+  // Function to delete a bank statement
+  const handleDelete = async (statementId: string) => {
+    if (readOnly) return
+
+    if (!confirm("Are you sure you want to delete this bank statement? This action cannot be undone.")) {
+      return
+    }
+
+    setDeleteInProgress(statementId)
+
+    try {
+      const result = await deleteBankStatement(statementId)
+      if (result.success) {
+        setStatements((prev) => prev.filter((statement) => statement.id !== statementId))
+        toast({
+          title: "Success",
+          description: "Bank statement deleted successfully",
+        })
+
+        // Call the onDelete callback if provided
+        if (onDelete) {
+          onDelete()
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to delete bank statement",
+          variant: "destructive",
+        })
+      }
+    } catch (err) {
+      console.error("Error deleting bank statement:", err)
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while deleting the bank statement",
+        variant: "destructive",
+      })
+    } finally {
+      setDeleteInProgress(null)
+    }
+  }
+
+  // Function to download a bank statement
+  const downloadStatement = () => {
+    if (!selectedStatement || !selectedStatement.file_data) return
+
+    try {
+      // Create a link element
+      const link = document.createElement("a")
+      link.href = selectedStatement.file_data
+      link.download = selectedStatement.file_name
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } catch (err) {
+      console.error("Error downloading bank statement:", err)
+      toast({
+        title: "Error",
+        description: "Failed to download the bank statement",
+        variant: "destructive",
+      })
+    }
+  }
+
+  // Function to format file size
+  const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return bytes + " bytes"
     else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB"
     else return (bytes / 1048576).toFixed(1) + " MB"
   }
 
-  const formatDate = (dateString?: string) => {
+  // Function to format date
+  const formatDate = (dateString?: string): string => {
     if (!dateString) return "N/A"
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
-  }
 
-  const viewStatement = async (statement: BankStatement) => {
-    // If we already have the file data, just show it
-    if (statement.file_data) {
-      setSelectedStatement(statement)
-      return
-    }
-
-    // Otherwise, we need to fetch the file data
-    setLoadingStatement(statement.id)
     try {
-      const { success, data, error } = await getBankStatementWithData(statement.id)
-
-      if (success && data) {
-        // Check if this is a placeholder for a very large file
-        if (data.file_data && data.file_data.includes("placeholder=true")) {
-          toast({
-            title: "Very large file",
-            description: "This file is too large to preview. Please download it instead.",
-            variant: "warning",
-          })
-          setLoadingStatement(null)
-          return
-        }
-
-        setSelectedStatement(data)
-      } else {
-        toast({
-          title: "Error loading file",
-          description: error || "Failed to load file data",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      console.error("Error loading statement data:", error)
-      toast({
-        title: "Error",
-        description: "Failed to load file data",
-        variant: "destructive",
+      const date = new Date(dateString)
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       })
-    } finally {
-      setLoadingStatement(null)
+    } catch (e) {
+      console.error("Error formatting date:", e)
+      return "Invalid date"
     }
   }
 
-  const downloadStatement = async (statement: BankStatement) => {
-    // If we already have the file data, use it
-    if (statement.file_data) {
-      // Check if this is a placeholder
-      if (statement.file_data.includes("placeholder=true")) {
-        toast({
-          title: "Cannot download file directly",
-          description: "This file is too large for direct download. Please contact support.",
-          variant: "warning",
-        })
-        return
-      }
-
-      // Create a download link for the base64 data
-      const link = document.createElement("a")
-      link.href = statement.file_data
-      link.download = statement.file_name
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      return
-    }
-
-    // Otherwise, we need to fetch the file data first
-    setLoadingStatement(statement.id)
-    try {
-      const { success, data, error } = await getBankStatementWithData(statement.id)
-
-      if (success && data && data.file_data) {
-        // Check if this is a placeholder
-        if (data.file_data.includes("placeholder=true")) {
-          toast({
-            title: "Cannot download file directly",
-            description: "This file is too large for direct download. Please contact support.",
-            variant: "warning",
-          })
-          setLoadingStatement(null)
-          return
-        }
-
-        // Create a download link
-        const link = document.createElement("a")
-        link.href = data.file_data
-        link.download = data.file_name
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-      } else {
-        toast({
-          title: "Error downloading file",
-          description: error || "Failed to download file",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      console.error("Error downloading statement:", error)
-      toast({
-        title: "Error",
-        description: "Failed to download file",
-        variant: "destructive",
-      })
-    } finally {
-      setLoadingStatement(null)
-    }
-  }
-
-  const isVeryLargeFile = (statement: BankStatement) => {
-    return statement.file_size > 50 * 1024 * 1024
+  // Function to get file icon based on file type
+  const getFileIcon = (fileType: string) => {
+    if (fileType.includes("pdf")) return "pdf"
+    if (fileType.includes("image")) return "image"
+    if (fileType.includes("excel") || fileType.includes("spreadsheet")) return "excel"
+    return "document"
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center">
-          <FileIcon className="h-5 w-5 mr-2 text-blue-500" />
-          Bank Statements
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="flex justify-center py-8">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+    <div className="space-y-4">
+      {loading ? (
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        </div>
+      ) : error ? (
+        <div className="p-4 border border-red-200 bg-red-50 rounded-md">
+          <div className="flex items-center">
+            <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+            <p className="text-sm text-red-700">{error}</p>
           </div>
-        ) : statements.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <FileText className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-            <p>No bank statements have been uploaded yet.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {statements.map((statement) => (
-              <div
-                key={statement.id}
-                className="flex items-center justify-between p-3 border rounded-md hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center space-x-3">
-                  <FileIcon className="h-8 w-8 text-blue-500" />
-                  <div>
-                    <p className="font-medium">{statement.file_name}</p>
-                    <div className="flex space-x-4 text-sm text-gray-500">
+        </div>
+      ) : statements.length === 0 ? (
+        <div className="p-4 border border-gray-200 bg-gray-50 rounded-md">
+          <p className="text-sm text-gray-500 text-center">No bank statements have been uploaded yet.</p>
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          {statements.map((statement) => (
+            <div
+              key={statement.id}
+              className="p-4 border border-gray-200 rounded-md bg-white hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-start space-x-3">
+                  <div
+                    className={`p-2 rounded-md ${
+                      getFileIcon(statement.file_type) === "pdf"
+                        ? "bg-red-100 text-red-600"
+                        : getFileIcon(statement.file_type) === "image"
+                          ? "bg-blue-100 text-blue-600"
+                          : getFileIcon(statement.file_type) === "excel"
+                            ? "bg-green-100 text-green-600"
+                            : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    <FileIcon className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-medium text-gray-900 truncate">{statement.file_name}</h4>
+                    <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
                       <span>{statement.month_year}</span>
-                      <span className="flex items-center">
-                        {formatFileSize(statement.file_size)}
-                        {isVeryLargeFile(statement) && (
-                          <AlertTriangle className="h-3 w-3 text-amber-500 ml-1" title="Very large file" />
-                        )}
-                      </span>
-                      {statement.created_at && <span>{formatDate(statement.created_at)}</span>}
+                      <span>{formatFileSize(statement.file_size)}</span>
+                      {statement.uploaded_at && <span>Uploaded: {formatDate(statement.uploaded_at)}</span>}
                     </div>
+                    {statement.notes && <p className="mt-1 text-xs text-gray-500 line-clamp-2">{statement.notes}</p>}
                   </div>
                 </div>
                 <div className="flex space-x-2">
-                  {!isVeryLargeFile(statement) && (
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex items-center"
-                          onClick={() => viewStatement(statement)}
-                          disabled={loadingStatement === statement.id}
-                        >
-                          {loadingStatement === statement.id ? (
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-1"></div>
-                          ) : (
-                            <Eye className="h-4 w-4 mr-1" />
-                          )}
-                          View
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-4xl">
-                        <DialogHeader>
-                          <DialogTitle>{selectedStatement?.file_name}</DialogTitle>
-                        </DialogHeader>
-                        <div className="mt-4 max-h-[70vh] overflow-auto">
-                          {selectedStatement?.file_type.startsWith("image/") ? (
-                            <img
-                              src={selectedStatement.file_data || "/placeholder.svg"}
-                              alt={selectedStatement.file_name}
-                              className="max-w-full h-auto"
-                            />
-                          ) : selectedStatement?.file_type === "application/pdf" ? (
-                            <iframe
-                              src={selectedStatement.file_data}
-                              title={selectedStatement.file_name}
-                              className="w-full h-[70vh]"
-                            />
-                          ) : (
-                            <div className="p-4 bg-gray-100 rounded-md text-center">
-                              <FileText className="h-16 w-16 mx-auto mb-2 text-gray-400" />
-                              <p>
-                                This file type ({selectedStatement?.file_type}) cannot be previewed. Please download the
-                                file to view it.
-                              </p>
-                              <Button
-                                variant="outline"
-                                className="mt-4"
-                                onClick={() => downloadStatement(selectedStatement!)}
-                              >
-                                <Download className="h-4 w-4 mr-2" />
-                                Download File
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center"
-                    onClick={() => downloadStatement(statement)}
-                    disabled={loadingStatement === statement.id}
-                  >
-                    {loadingStatement === statement.id ? (
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-1"></div>
-                    ) : (
-                      <Download className="h-4 w-4 mr-1" />
-                    )}
-                    Download
+                  <Button variant="outline" size="sm" className="h-8 px-2" onClick={() => viewStatement(statement.id)}>
+                    <Eye className="h-4 w-4 mr-1" />
+                    <span>View</span>
                   </Button>
                   {!readOnly && (
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex items-center text-red-500 hover:text-red-700 hover:bg-red-50"
+                      className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50"
                       onClick={() => handleDelete(statement.id)}
-                      disabled={deleting === statement.id}
+                      disabled={deleteInProgress === statement.id}
                     >
-                      {deleting === statement.id ? (
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-1"></div>
+                      {deleteInProgress === statement.id ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
                       ) : (
-                        <Trash2 className="h-4 w-4 mr-1" />
+                        <Trash2 className="h-4 w-4" />
                       )}
-                      Delete
                     </Button>
                   )}
                 </div>
               </div>
-            ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* View Statement Dialog */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="max-w-4xl w-full">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <FileCheck className="h-5 w-5 mr-2 text-green-500" />
+              {selectedStatement?.file_name}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
+              <span>Month: {selectedStatement?.month_year}</span>
+              <span>
+                Size: {selectedStatement?.file_size ? formatFileSize(selectedStatement.file_size) : "Unknown"}
+              </span>
+              {selectedStatement?.uploaded_at && <span>Uploaded: {formatDate(selectedStatement.uploaded_at)}</span>}
+            </div>
+
+            {selectedStatement?.notes && (
+              <div className="p-3 bg-gray-50 border border-gray-200 rounded-md">
+                <p className="text-sm text-gray-700">{selectedStatement.notes}</p>
+              </div>
+            )}
+
+            <div className="flex justify-end">
+              <Button variant="outline" onClick={downloadStatement} className="flex items-center">
+                <Download className="h-4 w-4 mr-2" />
+                Download
+              </Button>
+            </div>
+
+            {selectedStatement?.file_data && (
+              <div className="border border-gray-200 rounded-md overflow-hidden bg-gray-50">
+                {selectedStatement.file_type.includes("pdf") ? (
+                  <iframe
+                    src={selectedStatement.file_data}
+                    className="w-full h-[70vh]"
+                    title={selectedStatement.file_name}
+                  />
+                ) : selectedStatement.file_type.includes("image") ? (
+                  <div className="flex justify-center p-4">
+                    <img
+                      src={selectedStatement.file_data || "/placeholder.svg"}
+                      alt={selectedStatement.file_name}
+                      className="max-h-[70vh] object-contain"
+                    />
+                  </div>
+                ) : (
+                  <div className="p-8 text-center">
+                    <FileIcon className="h-16 w-16 mx-auto text-gray-400" />
+                    <p className="mt-4 text-gray-600">
+                      Preview not available for this file type. Please download the file to view it.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </DialogContent>
+      </Dialog>
+    </div>
   )
 }
