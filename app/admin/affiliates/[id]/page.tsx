@@ -9,6 +9,7 @@ import { createServerClient } from "@/lib/supabase/server"
 import { getAffiliateById, getAffiliateStats } from "@/lib/supabase/affiliate-actions"
 import { formatCurrency } from "@/lib/utils/affiliate-utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { AffiliateRealTimeUpdater } from "@/components/admin/AffiliateRealTimeUpdater"
 
 export default async function AffiliateDetailPage({ params }: { params: { id: string } }) {
   const { id } = params
@@ -115,6 +116,7 @@ export default async function AffiliateDetailPage({ params }: { params: { id: st
             <p className="text-sm text-gray-500 mt-1">
               {affiliate.email} {affiliate.company_name && `• ${affiliate.company_name}`}
             </p>
+            <AffiliateRealTimeUpdater affiliateId={id} />
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2">

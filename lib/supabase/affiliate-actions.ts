@@ -207,11 +207,27 @@ export async function getAffiliateStats(affiliateId: string) {
       .select("id", { count: "exact", head: true })
       .eq("affiliate_id", affiliateId)
 
-    // Get total applications
-    const { data: applications } = await supabase
+    // Get application counts directly with count() for better performance
+    const { count: totalApplications, error: countError } = await supabase
       .from("applications")
-      .select("id, status")
+      .select("id", { count: "exact" })
       .eq("affiliate_id", affiliateId)
+
+    if (countError) throw countError
+
+    // Get counts by status
+    const { data: statusCounts, error: statusError } = await supabase
+      .from("applications")
+      .select("status")
+      .eq("affiliate_id", affiliateId)
+
+    if (statusError) throw statusError
+
+    // Calculate counts by status
+    const approvedApplications = statusCounts?.filter((app) => app.status === "approved").length || 0
+    const pendingApplications =
+      statusCounts?.filter((app) => app.status === "pending" || app.status === "in_review").length || 0
+    const rejectedApplications = statusCounts?.filter((app) => app.status === "rejected").length || 0
 
     // Get total commissions
     const { data: commissions } = await supabase
@@ -220,10 +236,6 @@ export async function getAffiliateStats(affiliateId: string) {
       .eq("affiliate_id", affiliateId)
 
     // Calculate stats
-    const totalApplications = applications?.length || 0
-    const approvedApplications = applications?.filter((app) => app.status === "approved").length || 0
-    const pendingApplications = applications?.filter((app) => app.status === "pending").length || 0
-    const rejectedApplications = applications?.filter((app) => app.status === "rejected").length || 0
 
     const totalCommissions = commissions?.reduce((sum, commission) => sum + Number(commission.amount), 0) || 0
     const paidCommissions =
@@ -236,19 +248,18 @@ export async function getAffiliateStats(affiliateId: string) {
         .reduce((sum, commission) => sum + Number(commission.amount), 0) || 0
 
     // Calculate conversion rate
-    const conversionRate = totalClicks > 0 ? (totalApplications / totalClicks) * 100 : 0
 
     return {
       data: {
         totalClicks: totalClicks || 0,
-        totalApplications,
+        totalApplications: totalApplications || 0,
         approvedApplications,
         pendingApplications,
         rejectedApplications,
         totalCommissions,
         paidCommissions,
         pendingCommissions,
-        conversionRate,
+        conversionRate: totalClicks > 0 ? (totalApplications / totalClicks) * 100 : 0,
       },
     }
   } catch (error) {

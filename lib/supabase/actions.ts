@@ -293,6 +293,19 @@ export async function submitApplication(formData: ApplicationFormData) {
             })
             .eq("id", applicationId)
 
+          // Trigger a real-time update for the affiliate's dashboard
+          // This creates a notification record that can be used to refresh the affiliate's stats
+          await supabase.from("affiliate_notifications").insert({
+            affiliate_id: affiliate.id,
+            type: "new_application",
+            application_id: applicationId,
+            read: false,
+            data: {
+              application_reference: referenceId,
+              timestamp: new Date().toISOString(),
+            },
+          })
+
           // For now, we'll create a pending commission based on a default amount
           // In a real system, this would be calculated based on the actual funding amount
           const defaultCommissionAmount = 1000 // $1000 placeholder
