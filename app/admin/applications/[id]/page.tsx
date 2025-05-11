@@ -95,6 +95,12 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
 
       if (fundingError && fundingError.code !== "PGRST116") {
         console.error("Error fetching funding requests:", fundingError)
+      } else {
+        console.log("Funding data fetched successfully:", fundingData)
+      }
+
+      if (fundingData) {
+        console.log("Funding data retrieved successfully:", fundingData)
       }
 
       // Get additional information
@@ -116,6 +122,8 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
         funding_requests: fundingData || {},
         additional_information: additionalData || {},
       }
+
+      console.log("Combined application data:", combinedData)
 
       setApplication(combinedData)
       setStatus(combinedData?.status || "pending")
@@ -829,20 +837,20 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                 </div>
                 <div>
                   <p className="text-xs font-medium text-gray-500">Purpose</p>
-                  <p>{fundingPurpose}</p>
+                  <p>{fundingPurpose !== "N/A" ? fundingPurpose : "N/A"}</p>
                 </div>
                 <div>
                   <p className="text-xs font-medium text-gray-500">Timeframe</p>
                   <div className="flex items-center gap-1">
                     <Clock4 className="h-3 w-3 text-gray-400" />
-                    <p>{timeframe}</p>
+                    <p>{timeframe !== "N/A" ? timeframe : "N/A"}</p>
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-gray-500">Annual Revenue</p>
+                  <p className="text-xs font-medium text-gray-500">Collateral</p>
                   <div className="flex items-center gap-1">
-                    <BarChart className="h-3 w-3 text-gray-400" />
-                    <p>{annualRevenue}</p>
+                    <Target className="h-3 w-3 text-gray-400" />
+                    <p>{getValue(application, "funding_requests.collateral", "N/A")}</p>
                   </div>
                 </div>
               </div>
@@ -883,6 +891,9 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                 </div>
                 <div>
                   <p className="text-xs font-medium text-gray-500">Annual Revenue</p>
+
+                  <p className="text-xs font-medium text-gray-500">Annual Revenue</p>
+
                   <div className="flex items-center gap-1">
                     <BarChart className="h-3 w-3 text-gray-400" />
                     <p>{annualRevenue}</p>

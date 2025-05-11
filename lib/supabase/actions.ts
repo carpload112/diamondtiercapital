@@ -22,7 +22,7 @@ export interface ApplicationFormData {
   // Financial Information
   annualRevenue?: string
   creditScore?: string
-  estimatedMonthlyDeposits?: string // New field
+  estimatedMonthlyDeposits?: string
   bankruptcy?: string
 
   // Financial Needs
@@ -53,6 +53,9 @@ export async function submitApplication(formData: ApplicationFormData) {
     // Generate a unique application ID if not updating
     const applicationId = formData.applicationId || uuidv4()
     const referenceId = `APP${Math.random().toString(36).substring(2, 7).toUpperCase()}`
+
+    // Log the form data for debugging
+    console.log("Submit application form data:", formData)
 
     if (!isUpdate) {
       // Insert into applications table
@@ -96,7 +99,7 @@ export async function submitApplication(formData: ApplicationFormData) {
           years_in_business: formData.yearsInBusiness,
           ein: formData.ein || null,
           annual_revenue: formData.annualRevenue || null,
-          estimated_monthly_deposits: formData.estimatedMonthlyDeposits || null, // New field
+          estimated_monthly_deposits: formData.estimatedMonthlyDeposits || null,
           credit_score: formData.creditScore || null,
           bankruptcy_history: formData.bankruptcy === "Yes",
         })
@@ -108,19 +111,32 @@ export async function submitApplication(formData: ApplicationFormData) {
       }
 
       // Insert into funding_requests table
-      if (formData.fundingAmount) {
-        const { error: fundingError } = await supabase.from("funding_requests").insert({
-          application_id: applicationId,
-          funding_amount: formData.fundingAmount,
-          funding_purpose: formData.fundingPurpose,
+      if (formData.fundingAmount || formData.fundingPurpose || formData.timeframe) {
+        console.log("Inserting funding request with data:", {
+          fundingAmount: formData.fundingAmount,
+          fundingPurpose: formData.fundingPurpose,
           timeframe: formData.timeframe,
-          collateral: formData.collateral || null,
         })
+
+        const { data: fundingData, error: fundingError } = await supabase
+          .from("funding_requests")
+          .insert({
+            application_id: applicationId,
+            funding_amount: formData.fundingAmount || null,
+            funding_purpose: formData.fundingPurpose || null,
+            timeframe: formData.timeframe || null,
+            collateral: formData.collateral || null,
+          })
+          .select()
 
         if (fundingError) {
           console.error("Error inserting funding request:", fundingError)
           throw fundingError
         }
+
+        console.log("Funding request inserted successfully:", fundingData)
+      } else {
+        console.log("No funding request data to insert")
       }
 
       // Insert into additional_information table
@@ -152,6 +168,68 @@ export async function submitApplication(formData: ApplicationFormData) {
         if (updateError) {
           console.error("Error updating application:", updateError)
           throw updateError
+        }
+      }
+
+      // Update funding_requests if any funding data is provided
+      if (formData.fundingAmount || formData.fundingPurpose || formData.timeframe || formData.collateral) {
+        console.log("Updating funding request with data:", {
+          fundingAmount: formData.fundingAmount,
+          fundingPurpose: formData.fundingPurpose,
+          timeframe: formData.timeframe,
+          collateral: formData.collateral,
+        })
+
+        // Check if funding request exists
+        const { data: existingFunding, error: checkError } = await supabase
+          .from("funding_requests")
+          .select("id")
+          .eq("application_id", applicationId)
+          .maybeSingle()
+
+        if (checkError) {
+          console.error("Error checking existing funding request:", checkError)
+          throw checkError
+        }
+
+        if (existingFunding) {
+          // Update existing funding request
+          const { data: updatedFunding, error: updateFundingError } = await supabase
+            .from("funding_requests")
+            .update({
+              funding_amount: formData.fundingAmount || null,
+              funding_purpose: formData.fundingPurpose || null,
+              timeframe: formData.timeframe || null,
+              collateral: formData.collateral || null,
+            })
+            .eq("application_id", applicationId)
+            .select()
+
+          if (updateFundingError) {
+            console.error("Error updating funding request:", updateFundingError)
+            throw updateFundingError
+          }
+
+          console.log("Funding request updated successfully:", updatedFunding)
+        } else {
+          // Insert new funding request
+          const { data: newFunding, error: insertFundingError } = await supabase
+            .from("funding_requests")
+            .insert({
+              application_id: applicationId,
+              funding_amount: formData.fundingAmount || null,
+              funding_purpose: formData.fundingPurpose || null,
+              timeframe: formData.timeframe || null,
+              collateral: formData.collateral || null,
+            })
+            .select()
+
+          if (insertFundingError) {
+            console.error("Error inserting funding request during update:", insertFundingError)
+            throw insertFundingError
+          }
+
+          console.log("New funding request inserted during update:", newFunding)
         }
       }
 
@@ -254,6 +332,30 @@ export async function submitApplication(formData: ApplicationFormData) {
     console.error("Error submitting application:", error)
     return { success: false, error: "Failed to submit application" }
   }
+}
+
+// Function to split a file into chunks for processing
+async function splitFileIntoChunks(file: File, chunkSize: number = 1024 * 1024): Promise<Blob[]> {
+  const chunks: Blob[] = []
+  let start = 0
+
+  while (start < file.size) {
+    const end = Math.min(start + chunkSize, file.size)
+    chunks.push(file.slice(start, end))
+    start = end
+  }
+
+  return chunks
+}
+
+// Function to convert a blob to base64
+async function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
 }
 
 // Bank statement upload function with chunking for large files

@@ -4,7 +4,7 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react"
+import { ArrowRight, ArrowLeft, Loader2 } from "lucide-react"
 import FormStep from "./FormStep"
 import FormProgress from "./FormProgress"
 import MobileStepper from "./MobileStepper"
@@ -350,6 +350,9 @@ export default function ApplicationForm({ onBack }: ApplicationFormProps) {
     setIsSubmitting(true)
 
     try {
+      // Log the form data to help with debugging
+      console.log("Initial submit form data:", formData)
+
       // Submit the initial application data to get an application ID
       const result = await submitApplication({
         ...formData,
@@ -384,6 +387,9 @@ export default function ApplicationForm({ onBack }: ApplicationFormProps) {
     setIsSubmitting(true)
 
     try {
+      // Log the form data to help with debugging
+      console.log("Final submit form data:", formData)
+
       // Update the application with final status
       const result = await submitApplication({
         ...formData,
