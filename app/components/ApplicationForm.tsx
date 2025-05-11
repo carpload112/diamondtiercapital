@@ -151,6 +151,7 @@ const formSteps = [
         type: "radio",
         options: ["Yes", "No", "Not Sure"],
         tooltip: "Assets that can be used to secure a loan, such as real estate, equipment, or inventory.",
+        required: true,
       },
     ],
   },
@@ -231,6 +232,7 @@ const formSteps = [
         label: "How did you hear about us?",
         type: "select",
         options: ["Search Engine", "Social Media", "Referral", "Advertisement", "Other"],
+        required: true,
       },
       {
         name: "additionalInfo",
@@ -273,6 +275,7 @@ export default function ApplicationForm({ onBack }: ApplicationFormProps) {
 
   // Reset errors when changing steps
   const handleInputChange = (name: string, value: any) => {
+    console.log(`Field updated: ${name} = ${value}`)
     setFormData((prevData) => ({ ...prevData, [name]: value }))
     setTouchedFields((prev) => ({ ...prev, [name]: true }))
 
@@ -293,12 +296,14 @@ export default function ApplicationForm({ onBack }: ApplicationFormProps) {
     currentFields.forEach((field) => {
       if (field.required && field.type !== "custom") {
         const value = formData[field.name]
-        if (!value) {
+        if (!value && value !== false) {
           newErrors[field.name] = "This field is required"
         } else if (field.name === "email" && !/\S+@\S+\.\S+/.test(value)) {
           newErrors[field.name] = "Please enter a valid email address"
         } else if (field.name === "phone" && !/^[\d\s()-]{10,15}$/.test(value)) {
           newErrors[field.name] = "Please enter a valid phone number"
+        } else if (field.name === "termsAgreed" && !value) {
+          newErrors[field.name] = "You must agree to the Terms and Conditions"
         }
       }
     })
@@ -323,6 +328,16 @@ export default function ApplicationForm({ onBack }: ApplicationFormProps) {
         variant: "destructive",
       })
       return
+    }
+
+    // If we're on the Financial Needs step, ensure we capture the funding data
+    if (currentStep === 2) {
+      console.log("Financial Needs data:", {
+        fundingAmount: formData.fundingAmount,
+        fundingPurpose: formData.fundingPurpose,
+        timeframe: formData.timeframe,
+        collateral: formData.collateral,
+      })
     }
 
     // If we're on the Financial Information step, submit the initial application
@@ -387,6 +402,17 @@ export default function ApplicationForm({ onBack }: ApplicationFormProps) {
     setIsSubmitting(true)
 
     try {
+      // Verify consent checkbox is checked
+      if (!formData.termsAgreed) {
+        toast({
+          title: "Terms Agreement Required",
+          description: "You must agree to the Terms of Service to submit your application.",
+          variant: "destructive",
+        })
+        setIsSubmitting(false)
+        return
+      }
+
       // Log the form data to help with debugging
       console.log("Final submit form data:", formData)
 
@@ -428,7 +454,11 @@ export default function ApplicationForm({ onBack }: ApplicationFormProps) {
 
     if (requiredFields.length === 0) return 100
 
-    const completedFields = requiredFields.filter((field) => !!formData[field.name])
+    const completedFields = requiredFields.filter((field) => {
+      const value = formData[field.name]
+      return value !== undefined && value !== null && value !== ""
+    })
+
     return Math.round((completedFields.length / requiredFields.length) * 100)
   }
 

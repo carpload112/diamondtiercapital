@@ -110,12 +110,13 @@ export async function submitApplication(formData: ApplicationFormData) {
         }
       }
 
-      // Insert into funding_requests table
-      if (formData.fundingAmount || formData.fundingPurpose || formData.timeframe) {
+      // Insert into funding_requests table - ALWAYS insert if we have any funding data
+      if (formData.fundingAmount || formData.fundingPurpose || formData.timeframe || formData.collateral) {
         console.log("Inserting funding request with data:", {
           fundingAmount: formData.fundingAmount,
           fundingPurpose: formData.fundingPurpose,
           timeframe: formData.timeframe,
+          collateral: formData.collateral,
         })
 
         const { data: fundingData, error: fundingError } = await supabase
@@ -140,35 +141,32 @@ export async function submitApplication(formData: ApplicationFormData) {
       }
 
       // Insert into additional_information table
-      if (formData.termsAgreed !== undefined) {
-        const { error: additionalError } = await supabase.from("additional_information").insert({
-          application_id: applicationId,
-          hear_about_us: formData.hearAboutUs || null,
-          additional_info: formData.additionalInfo || null,
-          terms_agreed: formData.termsAgreed,
-          marketing_consent: formData.marketingConsent || false,
-        })
+      const { error: additionalError } = await supabase.from("additional_information").insert({
+        application_id: applicationId,
+        hear_about_us: formData.hearAboutUs || null,
+        additional_info: formData.additionalInfo || null,
+        terms_agreed: formData.termsAgreed || false,
+        marketing_consent: formData.marketingConsent || false,
+      })
 
-        if (additionalError) {
-          console.error("Error inserting additional information:", additionalError)
-          throw additionalError
-        }
+      if (additionalError) {
+        console.error("Error inserting additional information:", additionalError)
+        throw additionalError
       }
     } else {
       // Update existing application
-      if (formData.status) {
-        const { error: updateError } = await supabase
-          .from("applications")
-          .update({
-            status: formData.status,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", applicationId)
+      const { error: updateError } = await supabase
+        .from("applications")
+        .update({
+          status: formData.status,
+          updated_at: new Date().toISOString(),
+          notes: formData.additionalInfo || null,
+        })
+        .eq("id", applicationId)
 
-        if (updateError) {
-          console.error("Error updating application:", updateError)
-          throw updateError
-        }
+      if (updateError) {
+        console.error("Error updating application:", updateError)
+        throw updateError
       }
 
       // Update funding_requests if any funding data is provided
@@ -233,18 +231,48 @@ export async function submitApplication(formData: ApplicationFormData) {
         }
       }
 
-      // Update business_details if estimatedMonthlyDeposits is provided
-      if (formData.estimatedMonthlyDeposits) {
+      // Update business_details
+      if (formData.annualRevenue || formData.estimatedMonthlyDeposits || formData.creditScore) {
+        const updateData: any = {}
+
+        if (formData.annualRevenue) updateData.annual_revenue = formData.annualRevenue
+        if (formData.estimatedMonthlyDeposits) updateData.estimated_monthly_deposits = formData.estimatedMonthlyDeposits
+        if (formData.creditScore) updateData.credit_score = formData.creditScore
+        if (formData.bankruptcy) updateData.bankruptcy_history = formData.bankruptcy === "Yes"
+
         const { error: updateBusinessError } = await supabase
           .from("business_details")
-          .update({
-            estimated_monthly_deposits: formData.estimatedMonthlyDeposits,
-          })
+          .update(updateData)
           .eq("application_id", applicationId)
 
         if (updateBusinessError) {
           console.error("Error updating business details:", updateBusinessError)
           throw updateBusinessError
+        }
+      }
+
+      // Update additional_information
+      if (
+        formData.hearAboutUs ||
+        formData.additionalInfo !== undefined ||
+        formData.termsAgreed !== undefined ||
+        formData.marketingConsent !== undefined
+      ) {
+        const updateData: any = {}
+
+        if (formData.hearAboutUs) updateData.hear_about_us = formData.hearAboutUs
+        if (formData.additionalInfo !== undefined) updateData.additional_info = formData.additionalInfo
+        if (formData.termsAgreed !== undefined) updateData.terms_agreed = formData.termsAgreed
+        if (formData.marketingConsent !== undefined) updateData.marketing_consent = formData.marketingConsent
+
+        const { error: updateAdditionalError } = await supabase
+          .from("additional_information")
+          .update(updateData)
+          .eq("application_id", applicationId)
+
+        if (updateAdditionalError) {
+          console.error("Error updating additional information:", updateAdditionalError)
+          throw updateAdditionalError
         }
       }
     }
@@ -332,30 +360,6 @@ export async function submitApplication(formData: ApplicationFormData) {
     console.error("Error submitting application:", error)
     return { success: false, error: "Failed to submit application" }
   }
-}
-
-// Function to split a file into chunks for processing
-async function splitFileIntoChunks(file: File, chunkSize: number = 1024 * 1024): Promise<Blob[]> {
-  const chunks: Blob[] = []
-  let start = 0
-
-  while (start < file.size) {
-    const end = Math.min(start + chunkSize, file.size)
-    chunks.push(file.slice(start, end))
-    start = end
-  }
-
-  return chunks
-}
-
-// Function to convert a blob to base64
-async function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = reject
-    reader.readAsDataURL(blob)
-  })
 }
 
 // Bank statement upload function with chunking for large files

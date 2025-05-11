@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
+import { getApplicationDetails } from "@/lib/supabase/application-actions"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
@@ -16,7 +17,6 @@ import {
   Phone,
   Calendar,
   CreditCard,
-  Briefcase,
   BarChart,
   Clock4,
   Target,
@@ -27,15 +27,22 @@ import {
   Archive,
   CalendarClock,
   FileText,
+  Shield,
+  Info,
+  AlertCircle,
+  LineChart,
 } from "lucide-react"
 import Link from "next/link"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import ApplicationTagsEditor from "@/components/admin/ApplicationTagsEditor"
 import ApplicationFolderSelector from "@/components/admin/ApplicationFolderSelector"
 import { BankStatementViewer } from "@/components/BankStatementViewer"
+import { getNestedValue } from "@/lib/utils/form-data-utils"
 import FileSaver from "file-saver"
 
 export default function ApplicationDetailPage({ params }: { params: { id: string } }) {
@@ -43,12 +50,16 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
   const router = useRouter()
   const { toast } = useToast()
   const [application, setApplication] = useState<any>(null)
+  const [organizedData, setOrganizedData] = useState<any>(null)
+  const [debugLog, setDebugLog] = useState<string>("")
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
   const [status, setStatus] = useState("")
   const [notes, setNotes] = useState("")
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [contactMenuOpen, setContactMenuOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState("overview")
+  const [showDebugInfo, setShowDebugInfo] = useState(false)
 
   useEffect(() => {
     fetchApplicationDetails()
@@ -57,77 +68,21 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
   const fetchApplicationDetails = async () => {
     try {
       setLoading(true)
-      const supabase = createClient()
 
-      // Get the application data
-      const { data: appData, error: appError } = await supabase.from("applications").select("*").eq("id", id).single()
+      // Use the enhanced server action to get application details
+      const result = await getApplicationDetails(id)
 
-      if (appError) throw appError
-
-      // Get applicant details
-      const { data: applicantData, error: applicantError } = await supabase
-        .from("applicant_details")
-        .select("*")
-        .eq("application_id", id)
-        .single()
-
-      if (applicantError && applicantError.code !== "PGRST116") {
-        console.error("Error fetching applicant details:", applicantError)
+      if (!result.success) {
+        throw new Error(result.error || "Failed to fetch application details")
       }
 
-      // Get business details
-      const { data: businessData, error: businessError } = await supabase
-        .from("business_details")
-        .select("*")
-        .eq("application_id", id)
-        .single()
+      setApplication(result.rawData)
+      setOrganizedData(result.organizedData)
+      setDebugLog(result.debugLog)
+      setStatus(result.rawData?.status || "pending")
+      setNotes(result.rawData?.notes || "")
 
-      if (businessError && businessError.code !== "PGRST116") {
-        console.error("Error fetching business details:", businessError)
-      }
-
-      // Get funding requests
-      const { data: fundingData, error: fundingError } = await supabase
-        .from("funding_requests")
-        .select("*")
-        .eq("application_id", id)
-        .single()
-
-      if (fundingError && fundingError.code !== "PGRST116") {
-        console.error("Error fetching funding requests:", fundingError)
-      } else {
-        console.log("Funding data fetched successfully:", fundingData)
-      }
-
-      if (fundingData) {
-        console.log("Funding data retrieved successfully:", fundingData)
-      }
-
-      // Get additional information
-      const { data: additionalData, error: additionalError } = await supabase
-        .from("additional_information")
-        .select("*")
-        .eq("application_id", id)
-        .single()
-
-      if (additionalError && additionalError.code !== "PGRST116") {
-        console.error("Error fetching additional information:", additionalError)
-      }
-
-      // Combine all data
-      const combinedData = {
-        ...appData,
-        applicant_details: applicantData || {},
-        business_details: businessData || {},
-        funding_requests: fundingData || {},
-        additional_information: additionalData || {},
-      }
-
-      console.log("Combined application data:", combinedData)
-
-      setApplication(combinedData)
-      setStatus(combinedData?.status || "pending")
-      setNotes(combinedData?.notes || "")
+      console.log("Application data loaded successfully")
     } catch (error) {
       console.error("Error fetching application details:", error)
       toast({
@@ -169,19 +124,6 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
     }
   }
 
-  const formatCurrency = (amount: string | number) => {
-    if (!amount) return "N/A"
-    try {
-      return new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-        maximumFractionDigits: 0,
-      }).format(Number(amount))
-    } catch (error) {
-      return amount.toString()
-    }
-  }
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
@@ -192,29 +134,6 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
         return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">In Review</Badge>
       default:
         return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">Pending</Badge>
-    }
-  }
-
-  // Helper function to safely get nested values
-  const getValue = (obj: any, path: string, defaultValue: any = "N/A") => {
-    if (!obj) return defaultValue
-
-    try {
-      const keys = path.split(".")
-      let result = obj
-
-      for (const key of keys) {
-        if (result && typeof result === "object" && key in result) {
-          result = result[key]
-        } else {
-          return defaultValue
-        }
-      }
-
-      return result || defaultValue
-    } catch (error) {
-      console.error("Error getting value:", error)
-      return defaultValue
     }
   }
 
@@ -229,6 +148,25 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
         .substring(0, 2)
     } catch (error) {
       return "NA"
+    }
+  }
+
+  const getIconForSection = (iconName: string) => {
+    switch (iconName) {
+      case "User":
+        return <User className="h-4 w-4 text-blue-500" />
+      case "Building2":
+        return <Building2 className="h-4 w-4 text-blue-500" />
+      case "DollarSign":
+        return <DollarSign className="h-4 w-4 text-blue-500" />
+      case "LineChart":
+        return <LineChart className="h-4 w-4 text-blue-500" />
+      case "FileText":
+        return <FileText className="h-4 w-4 text-blue-500" />
+      case "Shield":
+        return <Shield className="h-4 w-4 text-blue-500" />
+      default:
+        return <Info className="h-4 w-4 text-blue-500" />
     }
   }
 
@@ -260,72 +198,15 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
     )
   }
 
-  // Get applicant name from applicant_details
-  const applicantName = getValue(application, "applicant_details.full_name")
-
-  // Get business name from business_details
-  const businessName = getValue(application, "business_details.business_name")
-
-  // Get email from applicant_details
-  const email = getValue(application, "applicant_details.email")
-
-  // Get phone from applicant_details
-  const phone = getValue(application, "applicant_details.phone")
-
-  // Get funding amount from funding_requests
-  const fundingAmount = getValue(application, "funding_requests.funding_amount")
-
-  // Get business type from business_details
-  const businessType = getValue(application, "business_details.business_type")
-
-  // Get industry from business_details
-  const industry = getValue(application, "business_details.industry")
-
-  // Get years in business from business_details
-  const yearsInBusiness = getValue(application, "business_details.years_in_business")
-
-  // Get annual revenue from business_details
-  const annualRevenue = getValue(application, "business_details.annual_revenue")
-
-  // Get estimated monthly deposits from business_details
-  const estimatedMonthlyDeposits = getValue(application, "business_details.estimated_monthly_deposits")
-
-  // Get credit score from business_details
-  const creditScore = getValue(application, "business_details.credit_score")
-
-  // Get funding purpose from funding_requests
-  const fundingPurpose = getValue(application, "funding_requests.funding_purpose")
-
-  // Get timeframe from funding_requests
-  const timeframe = getValue(application, "funding_requests.timeframe")
-
-  // Get additional comments from additional_information
-  const additionalComments = getValue(application, "additional_information.additional_info")
-
-  const handleArchive = async () => {
-    try {
-      const supabase = createClient()
-
-      const { error } = await supabase.from("applications").update({ archived: true }).eq("id", params.id)
-
-      if (error) throw error
-
-      toast({
-        title: "Application archived",
-        description: "The application has been archived successfully",
-      })
-
-      // Redirect to applications list after archiving
-      router.push("/admin/applications")
-    } catch (error) {
-      console.error("Error archiving application:", error)
-      toast({
-        title: "Error",
-        description: "Failed to archive application",
-        variant: "destructive",
-      })
-    }
-  }
+  // Get key data for quick access
+  const applicantName = getNestedValue(application, "applicant_details.full_name")
+  const businessName = getNestedValue(application, "business_details.business_name")
+  const email = getNestedValue(application, "applicant_details.email")
+  const phone = getNestedValue(application, "applicant_details.phone")
+  const fundingAmount = getNestedValue(application, "funding_requests.funding_amount")
+  const fundingPurpose = getNestedValue(application, "funding_requests.funding_purpose")
+  const timeframe = getNestedValue(application, "funding_requests.timeframe")
+  const collateral = getNestedValue(application, "funding_requests.collateral")
 
   const getStatusVariant = (status: string) => {
     switch (status) {
@@ -407,91 +288,58 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
 
   const exportToExcel = async () => {
     try {
-      // Show loading toast
       toast({
         title: "Preparing export",
         description: "Generating Excel file...",
       })
 
-      // Log the data we're exporting to help with debugging
-      console.log("Exporting application data:", application)
-
-      // Dynamically import xlsx to reduce bundle size
       const XLSX = await import("xlsx")
-
-      // Create a workbook with multiple sheets
       const wb = XLSX.utils.book_new()
 
-      // Format application data for Excel - ensure we're capturing all fields from the UI
-      const applicationSheet = [
+      // Create a sheet for each form section
+      Object.keys(organizedData).forEach((sectionKey) => {
+        const section = organizedData[sectionKey]
+        const sheetData = [
+          [section.title, ""],
+          ["Field", "Value"],
+        ]
+
+        section.fields.forEach((field: any) => {
+          sheetData.push([field.label, field.value])
+        })
+
+        const ws = XLSX.utils.aoa_to_sheet(sheetData)
+        XLSX.utils.book_append_sheet(wb, ws, section.title.substring(0, 31)) // Excel sheet names limited to 31 chars
+      })
+
+      // Add application metadata
+      const metadataSheet = [
+        ["Application Details", ""],
         ["Application ID", application.id],
         ["Reference ID", application.reference_id || "N/A"],
         ["Status", application.status?.replace(/_/g, " ") || "Pending"],
         ["Submission Date", application.submitted_at ? new Date(application.submitted_at).toLocaleDateString() : "N/A"],
         ["Notes", application.notes || ""],
-        ["", ""],
-        ["APPLICANT DETAILS", ""],
-        ["Full Name", applicantName],
-        ["Email", email],
-        ["Phone", phone],
-        ["Credit Score", creditScore || "N/A"],
-        ["Preferred Contact", getValue(application, "applicant_details.preferred_contact", "N/A")],
-        ["", ""],
-        ["BUSINESS DETAILS", ""],
-        ["Business Name", businessName],
-        ["Business Type", businessType],
-        ["Industry", industry],
-        ["Years in Business", yearsInBusiness],
-        ["Annual Revenue", annualRevenue],
-        ["Estimated Monthly Deposits", estimatedMonthlyDeposits],
-        ["Credit Score", creditScore],
-        ["Bankruptcy History", getValue(application, "business_details.bankruptcy_history", false) ? "Yes" : "No"],
-        ["EIN", getValue(application, "business_details.ein", "N/A")],
-        ["", ""],
-        ["FUNDING DETAILS", ""],
-        ["Funding Amount", fundingAmount],
-        ["Funding Purpose", fundingPurpose],
-        ["Timeframe", timeframe],
-        ["Collateral", getValue(application, "funding_requests.collateral", "N/A")],
-        ["", ""],
-        ["ADDITIONAL INFORMATION", ""],
-        ["How They Heard About Us", getValue(application, "additional_information.hear_about_us", "N/A")],
-        ["Additional Comments", additionalComments],
-        ["Terms Agreed", getValue(application, "additional_information.terms_agreed", false) ? "Yes" : "No"],
-        ["Marketing Consent", getValue(application, "additional_information.marketing_consent", false) ? "Yes" : "No"],
       ]
 
-      // Add application sheet
-      const wsApplication = XLSX.utils.aoa_to_sheet(applicationSheet)
-      XLSX.utils.book_append_sheet(wb, wsApplication, "Application Details")
+      const wsMetadata = XLSX.utils.aoa_to_sheet(metadataSheet)
+      XLSX.utils.book_append_sheet(wb, wsMetadata, "Application Info")
 
-      // Get bank statements
-      const supabase = createClient()
-      const { data: bankStatements, error: bankStatementsError } = await supabase
-        .from("bank_statements")
-        .select("id, file_name, file_type, file_size, month_year, notes")
-        .eq("application_id", application.id)
-        .order("month_year", { ascending: false })
+      // Add bank statements if available
+      if (application.bank_statements && application.bank_statements.length > 0) {
+        const bankStatementsData = [["Month/Year", "File Name", "File Type", "File Size (KB)", "Notes", "Uploaded"]]
 
-      if (bankStatementsError) {
-        console.error("Error fetching bank statements for export:", bankStatementsError)
-      }
-
-      if (bankStatements && bankStatements.length > 0) {
-        // Format bank statements for Excel
-        const bankStatementsData = [["Month/Year", "File Name", "File Type", "File Size (KB)", "Notes"]]
-
-        bankStatements.forEach((statement) => {
+        application.bank_statements.forEach((statement: any) => {
           bankStatementsData.push([
             statement.month_year,
             statement.file_name,
             statement.file_type,
             Math.round(statement.file_size / 1024).toString(),
             statement.notes || "",
+            new Date(statement.uploaded_at).toLocaleDateString(),
           ])
         })
 
-        // Add bank statements sheet
         const wsBankStatements = XLSX.utils.aoa_to_sheet(bankStatementsData)
         XLSX.utils.book_append_sheet(wb, wsBankStatements, "Bank Statements")
       }
@@ -604,15 +452,15 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Name</h3>
-                <p className="text-lg">{application?.applicant_details?.full_name}</p>
+                <p className="text-lg">{applicantName}</p>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Email</h3>
-                <p className="text-lg">{application?.applicant_details?.email}</p>
+                <p className="text-lg">{email}</p>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Phone</h3>
-                <p className="text-lg">{application?.applicant_details?.phone}</p>
+                <p className="text-lg">{phone}</p>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-500">Status</h3>
@@ -676,8 +524,6 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                 variant="outline"
                 className="w-full justify-start"
                 onClick={() => {
-                  // Open a dialog to schedule a meeting
-                  // This is a placeholder - you might want to integrate with a calendar service
                   toast({
                     title: "Schedule Meeting",
                     description: "Calendar integration coming soon",
@@ -699,17 +545,12 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                 onClick={async () => {
                   try {
                     const supabase = createClient()
-
                     const { error } = await supabase.from("applications").update({ archived: true }).eq("id", params.id)
-
                     if (error) throw error
-
                     toast({
                       title: "Application archived",
                       description: "The application has been archived successfully",
                     })
-
-                    // Redirect to applications list after archiving
                     router.push("/admin/applications")
                   } catch (error) {
                     console.error("Error archiving application:", error)
@@ -724,266 +565,351 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
                 <Archive className="mr-2 h-4 w-4" />
                 Archive Application
               </Button>
+
+              <Button
+                variant="outline"
+                className="w-full justify-start mt-4"
+                onClick={() => setShowDebugInfo(!showDebugInfo)}
+              >
+                <AlertCircle className="mr-2 h-4 w-4" />
+                {showDebugInfo ? "Hide Debug Info" : "Show Debug Info"}
+              </Button>
             </div>
           </div>
         </div>
 
-        {/* Section headers */}
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center space-x-2">
-            <h2 className="text-lg font-semibold">Application Details</h2>
-            <div className="text-xs text-gray-500">(All information visible on one page)</div>
-          </div>
+        {/* Debug Information */}
+        {showDebugInfo && (
+          <Card className="bg-gray-50 border-gray-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-amber-500" />
+                Debug Information
+              </CardTitle>
+              <CardDescription>This section shows raw application data for debugging purposes</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <pre className="text-xs overflow-auto bg-gray-100 p-4 rounded-md max-h-96">{debugLog}</pre>
+            </CardContent>
+          </Card>
+        )}
 
-          {/* Status Button in Corner */}
-          <div className="flex items-center gap-2">
-            <div className="hidden sm:block">{getStatusBadge(status)}</div>
+        {/* Application Content Tabs */}
+        <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <div className="flex justify-between items-center mb-4">
+            <TabsList>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="form-data">Form Data</TabsTrigger>
+              <TabsTrigger value="documents">Documents</TabsTrigger>
+              <TabsTrigger value="notes">Notes</TabsTrigger>
+            </TabsList>
+
             <Button onClick={() => setIsDrawerOpen(true)} size="sm" className="bg-blue-600 hover:bg-blue-700">
               <MessageSquare className="h-4 w-4 mr-2" />
               Status & Notes
             </Button>
           </div>
-        </div>
 
-        {/* Application Content in Full-Width Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {/* Applicant Details */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <User className="h-4 w-4 text-blue-500" />
-                Applicant Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Full Name</p>
-                  <p>{applicantName}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Email Address</p>
-                  <div className="flex items-center gap-1">
-                    <Mail className="h-3 w-3 text-gray-400" />
-                    <p className="break-all">{email}</p>
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {/* Applicant Details */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <User className="h-4 w-4 text-blue-500" />
+                    Applicant Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-xs font-medium text-gray-500">Full Name</p>
+                      <p>{applicantName}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500">Email Address</p>
+                      <div className="flex items-center gap-1">
+                        <Mail className="h-3 w-3 text-gray-400" />
+                        <p className="break-all">{email}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500">Phone Number</p>
+                      <div className="flex items-center gap-1">
+                        <Phone className="h-3 w-3 text-gray-400" />
+                        <p>{phone}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500">Preferred Contact</p>
+                      <p>{getNestedValue(application, "applicant_details.preferred_contact")}</p>
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Phone Number</p>
-                  <div className="flex items-center gap-1">
-                    <Phone className="h-3 w-3 text-gray-400" />
-                    <p>{phone}</p>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Credit Score</p>
-                  <div className="flex items-center gap-1">
-                    <CreditCard className="h-3 w-3 text-gray-400" />
-                    <p>{creditScore}</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
 
-          {/* Business Summary */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-blue-500" />
-                Business Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Business Name</p>
-                  <p>{businessName}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Business Type</p>
-                  <p>{businessType}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Years in Business</p>
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3 text-gray-400" />
-                    <p>{yearsInBusiness}</p>
+              {/* Business Summary */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-blue-500" />
+                    Business Summary
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-xs font-medium text-gray-500">Business Name</p>
+                      <p>{businessName}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500">Business Type</p>
+                      <p>{getNestedValue(application, "business_details.business_type")}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500">Years in Business</p>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3 text-gray-400" />
+                        <p>{getNestedValue(application, "business_details.years_in_business")}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500">Industry</p>
+                      <p>{getNestedValue(application, "business_details.industry")}</p>
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Industry</p>
-                  <p>{industry}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
 
-          {/* Funding Request */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-blue-500" />
-                Funding Request
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Amount Requested</p>
-                  <p className="text-base font-semibold text-blue-700">
-                    {fundingAmount !== "N/A" ? fundingAmount : "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Purpose</p>
-                  <p>{fundingPurpose !== "N/A" ? fundingPurpose : "N/A"}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Timeframe</p>
-                  <div className="flex items-center gap-1">
-                    <Clock4 className="h-3 w-3 text-gray-400" />
-                    <p>{timeframe !== "N/A" ? timeframe : "N/A"}</p>
+              {/* Funding Request */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-blue-500" />
+                    Funding Request
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-xs font-medium text-gray-500">Amount Requested</p>
+                      <p className="text-base font-semibold text-blue-700">
+                        {fundingAmount !== "N/A" ? fundingAmount : "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500">Purpose</p>
+                      <p>{fundingPurpose !== "N/A" ? fundingPurpose : "N/A"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500">Timeframe</p>
+                      <div className="flex items-center gap-1">
+                        <Clock4 className="h-3 w-3 text-gray-400" />
+                        <p>{timeframe !== "N/A" ? timeframe : "N/A"}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500">Collateral</p>
+                      <div className="flex items-center gap-1">
+                        <Target className="h-3 w-3 text-gray-400" />
+                        <p>{collateral !== "N/A" ? collateral : "N/A"}</p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Collateral</p>
-                  <div className="flex items-center gap-1">
-                    <Target className="h-3 w-3 text-gray-400" />
-                    <p>{getValue(application, "funding_requests.collateral", "N/A")}</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
 
-          {/* Business Details */}
-          <Card className="md:col-span-2 xl:col-span-1">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-blue-500" />
-                Business Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Business Name</p>
-                  <p className="font-medium">{businessName}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Business Type</p>
-                  <div className="flex items-center gap-1">
-                    <Briefcase className="h-3 w-3 text-gray-400" />
-                    <p>{businessType}</p>
+              {/* Financial Information */}
+              <Card className="md:col-span-2 xl:col-span-1">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <LineChart className="h-4 w-4 text-blue-500" />
+                    Financial Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-xs font-medium text-gray-500">Annual Revenue</p>
+                      <div className="flex items-center gap-1">
+                        <BarChart className="h-3 w-3 text-gray-400" />
+                        <p>{getNestedValue(application, "business_details.annual_revenue")}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500">Monthly Deposits</p>
+                      <div className="flex items-center gap-1">
+                        <BarChart className="h-3 w-3 text-gray-400" />
+                        <p>{getNestedValue(application, "business_details.estimated_monthly_deposits")}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500">Credit Score</p>
+                      <div className="flex items-center gap-1">
+                        <CreditCard className="h-3 w-3 text-gray-400" />
+                        <p>{getNestedValue(application, "business_details.credit_score")}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500">Bankruptcy History</p>
+                      <div className="flex items-center gap-1">
+                        {getNestedValue(application, "business_details.bankruptcy_history") === "Yes" ? (
+                          <CheckCircle className="h-3 w-3 text-red-500" />
+                        ) : (
+                          <XCircle className="h-3 w-3 text-green-500" />
+                        )}
+                        <p>{getNestedValue(application, "business_details.bankruptcy_history")}</p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Industry</p>
-                  <p>{industry}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Years in Business</p>
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3 text-gray-400" />
-                    <p>{yearsInBusiness}</p>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Annual Revenue</p>
+                </CardContent>
+              </Card>
 
-                  <p className="text-xs font-medium text-gray-500">Annual Revenue</p>
+              {/* Consent Information */}
+              <Card className="md:col-span-2 xl:col-span-1">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-blue-500" />
+                    Consent Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-xs font-medium text-gray-500">Terms Agreed</p>
+                      <div className="flex items-center gap-1 mt-1">
+                        {getNestedValue(application, "additional_information.terms_agreed") === "Yes" ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-red-500" />
+                        )}
+                        <p>{getNestedValue(application, "additional_information.terms_agreed")}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500">Marketing Consent</p>
+                      <div className="flex items-center gap-1 mt-1">
+                        {getNestedValue(application, "additional_information.marketing_consent") === "Yes" ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-gray-400" />
+                        )}
+                        <p>{getNestedValue(application, "additional_information.marketing_consent")}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500">How They Heard About Us</p>
+                      <p>{getNestedValue(application, "additional_information.hear_about_us")}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-                  <div className="flex items-center gap-1">
-                    <BarChart className="h-3 w-3 text-gray-400" />
-                    <p>{annualRevenue}</p>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Estimated Monthly Deposits</p>
-                  <div className="flex items-center gap-1">
-                    <BarChart className="h-3 w-3 text-gray-400" />
-                    <p>{getValue(application, "business_details.estimated_monthly_deposits", "N/A")}</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              {/* Additional Comments */}
+              {getNestedValue(application, "additional_information.additional_info") !== "N/A" && (
+                <Card className="md:col-span-2 xl:col-span-1">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4 text-blue-500" />
+                      Additional Comments
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                      {getNestedValue(application, "additional_information.additional_info")}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
 
-          {/* Funding Details */}
-          <Card className="md:col-span-2 xl:col-span-1">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-blue-500" />
-                Funding Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Funding Amount</p>
-                  <p className="text-base font-semibold text-blue-700">
-                    {fundingAmount !== "N/A" ? fundingAmount : "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Funding Purpose</p>
-                  <div className="flex items-center gap-1">
-                    <Target className="h-3 w-3 text-gray-400" />
-                    <p>{fundingPurpose}</p>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Timeframe</p>
-                  <div className="flex items-center gap-1">
-                    <Clock4 className="h-3 w-3 text-gray-400" />
-                    <p>{timeframe}</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Additional Comments */}
-          {additionalComments !== "N/A" && (
-            <Card className="md:col-span-2 xl:col-span-1">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-blue-500" />
-                  Additional Comments
-                </CardTitle>
+          {/* Form Data Tab - Shows all form data organized by the original form structure */}
+          <TabsContent value="form-data">
+            <Card>
+              <CardHeader>
+                <CardTitle>Complete Form Data</CardTitle>
+                <CardDescription>All data submitted through the application form, organized by section</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">{additionalComments}</p>
+                <Accordion type="multiple" className="w-full">
+                  {Object.keys(organizedData || {}).map((sectionKey) => {
+                    const section = organizedData[sectionKey]
+                    return (
+                      <AccordionItem value={sectionKey} key={sectionKey}>
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center gap-2">
+                            {getIconForSection(section.icon)}
+                            <span>{section.title}</span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-2">
+                            {section.fields.map((field: any, index: number) => (
+                              <div key={index} className="border-b border-gray-100 pb-2">
+                                <p className="text-xs font-medium text-gray-500">{field.label}</p>
+                                <p className="text-sm">{field.value}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    )
+                  })}
+                </Accordion>
               </CardContent>
             </Card>
-          )}
+          </TabsContent>
 
-          {/* Bank Statements */}
-          <Card className="md:col-span-2 xl:col-span-3">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <FileText className="h-4 w-4 text-blue-500" />
-                Bank Statements
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <BankStatementViewer
-                applicationId={params.id}
-                isAdmin={true}
-                readOnly={false}
-                onDelete={() => {
-                  toast({
-                    title: "Bank statement deleted",
-                    description: "The bank statement has been deleted successfully",
-                  })
-                }}
-              />
-            </CardContent>
-          </Card>
-        </div>
+          {/* Documents Tab */}
+          <TabsContent value="documents">
+            <Card>
+              <CardHeader>
+                <CardTitle>Bank Statements & Documents</CardTitle>
+                <CardDescription>View and manage uploaded bank statements and other documents</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <BankStatementViewer
+                  applicationId={params.id}
+                  isAdmin={true}
+                  readOnly={false}
+                  onDelete={() => {
+                    toast({
+                      title: "Bank statement deleted",
+                      description: "The bank statement has been deleted successfully",
+                    })
+                    fetchApplicationDetails() // Refresh data after deletion
+                  }}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        {/* Status & Notes Drawer - Using React state instead of DOM manipulation */}
+          {/* Notes Tab */}
+          <TabsContent value="notes">
+            <Card>
+              <CardHeader>
+                <CardTitle>Admin Notes</CardTitle>
+                <CardDescription>Internal notes about this application</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  placeholder="Add notes about this application..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={8}
+                  className="mb-4"
+                />
+                <Button onClick={updateApplication} disabled={updating}>
+                  {updating ? "Saving..." : "Save Notes"}
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Status & Notes Drawer */}
         {isDrawerOpen && (
           <div className="fixed inset-0 z-50 overflow-hidden">
             <div className="absolute inset-0 bg-black/20" onClick={() => setIsDrawerOpen(false)} />
