@@ -31,18 +31,3 @@ export const useAdminAuth = create<AdminAuthState>()(
     },
   ),
 )
-
-/**
- * Utility function to check if the user is authenticated as an admin
- * Can be used in server components and server actions
- */
-export const checkAdminAuth = () => {
-  // Get the store state directly
-  const isAuthenticated = useAdminAuth.getState().isAuthenticated
-
-  if (!isAuthenticated) {
-    throw new Error("Unauthorized: Admin authentication required")
-  }
-
-  return true
-}

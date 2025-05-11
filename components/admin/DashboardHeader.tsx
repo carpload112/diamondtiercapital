@@ -46,4 +46,6 @@ function DashboardHeader({
   )
 }
 
+// Export both as default and named export to support both import styles
 export { DashboardHeader }
+export default DashboardHeader
