@@ -1,10 +1,11 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, useInView } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, CreditCard, Building2, Percent, ShieldCheck, GraduationCap } from "lucide-react"
 import Link from "next/link"
+import { useRef } from "react"
 
 const services = [
   {
@@ -60,9 +61,27 @@ const services = [
 ]
 
 export default function Services() {
+  const ref = useRef(null)
+  const isInView = useInView(ref, { once: true, amount: 0.1 })
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+  }
+
   return (
-    <section id="services" className="py-24 bg-white w-full" aria-label="Our Services">
-      <div className="container mx-auto px-4 w-full">
+    <section id="services" className="section-modern py-24 bg-mesh w-full" aria-label="Our Services">
+      <div className="container mx-auto px-4 w-full relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -73,22 +92,22 @@ export default function Services() {
           <div className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
             Our Services
           </div>
-          <h2 className="text-4xl font-bold mb-4 gradient-text">Business Funding Consultation</h2>
+          <h2 className="text-4xl font-bold mb-4 text-gradient">Business Funding Consultation</h2>
           <p className="text-xl text-gray-600">
             We help businesses explore funding options that may align with their goals
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <motion.div
+          ref={ref}
+          variants={containerVariants}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
+        >
           {services.map((service, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              viewport={{ once: true }}
-            >
-              <Card className="h-full overflow-hidden border-none shadow-lg hover:shadow-xl transition-all duration-300 group">
+            <motion.div key={index} variants={itemVariants} className="h-full">
+              <Card className="morphic-card h-full overflow-hidden border-none transition-all duration-300 group">
                 <CardContent className="p-0">
                   <div className="p-6 pb-4">
                     <div
@@ -110,7 +129,11 @@ export default function Services() {
                     </ul>
                   </div>
                   <div className="bg-gradient-to-r from-primary/5 to-accent/5 p-4 border-t border-gray-100">
-                    <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-white" asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full btn-outline-modern group-hover:bg-primary group-hover:text-white"
+                      asChild
+                    >
                       <Link href={service.link}>
                         Learn More
                         <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -121,7 +144,7 @@ export default function Services() {
               </Card>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   )

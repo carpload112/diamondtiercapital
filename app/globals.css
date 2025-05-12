@@ -202,6 +202,144 @@
   .btn-lg {
     @apply px-5 py-2.5 text-base;
   }
+
+  /* Modern design elements */
+  .morphic-card {
+    @apply bg-white rounded-2xl shadow-xl border border-gray-100 p-6 transition-all duration-300;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+  }
+
+  .morphic-card:hover {
+    box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.08), 0 10px 15px -3px rgba(0, 0, 0, 0.02);
+    transform: translateY(-5px);
+  }
+
+  .glass-card {
+    @apply backdrop-blur-md bg-white/70 border border-white/20 rounded-2xl;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+  }
+
+  .glass-dark {
+    @apply backdrop-blur-md bg-gray-900/70 border border-gray-800/30 rounded-2xl text-white;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  }
+
+  .gradient-border {
+    position: relative;
+    border-radius: 1rem;
+    background-clip: padding-box;
+    padding: 1.5rem;
+  }
+
+  .gradient-border::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: -1;
+    margin: -2px;
+    border-radius: inherit;
+    background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)));
+  }
+
+  .floating {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-15px);
+    }
+    100% {
+      transform: translateY(0px);
+    }
+  }
+
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shimmer::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    100% {
+      left: 150%;
+    }
+  }
+
+  .btn-modern {
+    @apply relative overflow-hidden rounded-xl font-medium transition-all duration-300;
+    background-size: 200% auto;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-modern:hover {
+    background-position: right center;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .btn-gradient {
+    @apply btn-modern text-white;
+    background-image: linear-gradient(
+      to right,
+      hsl(var(--primary)) 0%,
+      hsl(var(--accent)) 50%,
+      hsl(var(--primary)) 100%
+    );
+  }
+
+  .btn-outline-modern {
+    @apply btn-modern bg-white border-2 border-gray-200;
+    transition: all 0.3s ease;
+  }
+
+  .btn-outline-modern:hover {
+    @apply border-primary text-primary;
+  }
+
+  .section-modern {
+    @apply relative overflow-hidden py-24;
+  }
+
+  .section-modern::before {
+    content: "";
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(var(--primary), 0.1) 0%, transparent 70%);
+    top: -100px;
+    left: -100px;
+    z-index: 0;
+  }
+
+  .section-modern::after {
+    content: "";
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(var(--accent), 0.1) 0%, transparent 70%);
+    bottom: -100px;
+    right: -100px;
+    z-index: 0;
+  }
 }
 
 @layer utilities {
@@ -215,5 +353,27 @@
 
   .text-shadow-lg {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
+  }
+
+  .bg-mesh {
+    background-color: hsla(0, 0%, 100%, 1);
+    background-image: radial-gradient(at 40% 20%, hsla(var(--primary), 0.1) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, hsla(var(--accent), 0.1) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, hsla(var(--primary), 0.1) 0px, transparent 50%),
+      radial-gradient(at 80% 50%, hsla(var(--accent), 0.1) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(var(--primary), 0.1) 0px, transparent 50%),
+      radial-gradient(at 80% 100%, hsla(var(--accent), 0.1) 0px, transparent 50%),
+      radial-gradient(at 0% 0%, hsla(var(--primary), 0.1) 0px, transparent 50%);
+  }
+
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 200px 200px;
+    opacity: 0.05;
   }
 }

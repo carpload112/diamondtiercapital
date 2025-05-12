@@ -1,10 +1,11 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, useScroll, useTransform } from "framer-motion"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
 import Link from "next/link"
+import { useRef } from "react"
 
 const steps = [
   {
@@ -25,15 +26,25 @@ const steps = [
 ]
 
 export default function HowItWorks() {
+  const containerRef = useRef(null)
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start end", "end start"],
+  })
+
+  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0.6, 1, 1, 0.6])
+  const scale = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0.95, 1, 1, 0.95])
+
   return (
-    <section className="py-24 bg-gradient-to-b from-white to-secondary/50 relative overflow-hidden">
+    <section ref={containerRef} className="py-24 bg-gradient-to-b from-white to-secondary/50 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute -top-[30%] -left-[10%] w-[40%] h-[60%] rounded-full bg-primary/5 blur-3xl"></div>
         <div className="absolute -bottom-[30%] -right-[10%] w-[40%] h-[60%] rounded-full bg-accent/5 blur-3xl"></div>
+        <div className="absolute inset-0 bg-noise"></div>
       </div>
 
-      <div className="container mx-auto px-4 relative z-10">
+      <motion.div style={{ opacity, scale }} className="container mx-auto px-4 relative z-10">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -44,7 +55,7 @@ export default function HowItWorks() {
             <div className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
               Simple Process
             </div>
-            <h2 className="text-3xl font-bold mb-8">How It Works</h2>
+            <h2 className="text-3xl font-bold mb-8 text-gradient">How It Works</h2>
             <div className="space-y-10">
               {steps.map((step, index) => (
                 <motion.div
@@ -56,7 +67,7 @@ export default function HowItWorks() {
                   className="flex gap-6 items-start"
                 >
                   <div className="relative">
-                    <div className="flex-shrink-0 w-14 h-14 flex items-center justify-center bg-white rounded-2xl shadow-lg border border-gray-100">
+                    <div className="flex-shrink-0 w-14 h-14 flex items-center justify-center glass-card rounded-2xl shadow-lg border border-gray-100">
                       <span className="text-2xl">{step.emoji}</span>
                     </div>
                     {index < steps.length - 1 && (
@@ -71,10 +82,7 @@ export default function HowItWorks() {
               ))}
             </div>
 
-            <Button
-              className="mt-10 bg-gradient-to-r from-primary to-accent text-white hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-300 group"
-              asChild
-            >
+            <Button className="mt-10 btn-gradient shadow-md hover:shadow-lg transition-all duration-300 group" asChild>
               <Link href="/contact">
                 Get Started <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Link>
@@ -98,7 +106,7 @@ export default function HowItWorks() {
             />
 
             {/* Floating badge */}
-            <div className="absolute -bottom-6 -right-6 bg-white rounded-xl shadow-lg p-4 z-20">
+            <div className="absolute -bottom-6 -right-6 glass-card rounded-xl shadow-lg p-4 z-20 floating">
               <div className="flex items-center gap-3">
                 <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-primary/10 rounded-full">
                   <span className="text-primary font-bold">98%</span>
@@ -111,7 +119,7 @@ export default function HowItWorks() {
             </div>
           </motion.div>
         </div>
-      </div>
+      </motion.div>
     </section>
   )
 }

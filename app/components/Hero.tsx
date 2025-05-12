@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { motion } from "framer-motion"
 import Image from "next/image"
 import CalendlyModal from "./CalendlyModal"
-import { ArrowRight, Calculator, ChevronDown } from "lucide-react"
+import { ArrowRight, Calculator, ChevronDown, Sparkles } from "lucide-react"
 
 export default function Hero() {
   const [isCalendlyOpen, setIsCalendlyOpen] = useState(false)
@@ -16,6 +16,11 @@ export default function Hero() {
   const [interestRate, setInterestRate] = useState(6)
   const [loanType, setLoanType] = useState("SBA 7(a)")
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false)
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    setIsVisible(true)
+  }, [])
 
   const calculateMonthlyPayment = () => {
     const monthlyRate = interestRate / 100 / 12
@@ -71,24 +76,26 @@ export default function Hero() {
             repeatType: "reverse",
           }}
         />
+
+        {/* Noise texture overlay */}
+        <div className="absolute inset-0 bg-noise"></div>
       </div>
 
       <div className="container mx-auto px-4 py-12 md:py-20 relative z-10 w-full">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
             transition={{ duration: 0.8 }}
             className="text-white text-center lg:text-left"
           >
-            <div className="inline-block px-4 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm font-medium text-white mb-6">
+            <div className="inline-block px-4 py-1 rounded-full glass-dark text-sm font-medium text-white mb-6 flex items-center">
+              <Sparkles className="h-4 w-4 mr-2 text-yellow-400" />
               Expert Business Funding Consultation
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 text-shadow-lg">
               Unlock Your Business
-              <span className="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-                Financial Potential
-              </span>
+              <span className="block mt-2 text-gradient shimmer">Financial Potential</span>
             </h1>
             <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-lg mx-auto lg:mx-0">
               We help businesses explore various funding options including SBA loans, business credit cards, and
@@ -97,7 +104,7 @@ export default function Hero() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Button
                 size="lg"
-                className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-lg px-8 py-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 group"
+                className="btn-gradient text-lg px-8 py-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group"
                 onClick={() => setIsCalendlyOpen(true)}
               >
                 Schedule Consultation{" "}
@@ -106,7 +113,7 @@ export default function Hero() {
               <Button
                 size="lg"
                 variant="outline"
-                className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 text-lg px-8 py-6 rounded-lg"
+                className="bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 text-lg px-8 py-6 rounded-xl"
                 onClick={() => {
                   const servicesSection = document.getElementById("services")
                   if (servicesSection) {
@@ -136,11 +143,11 @@ export default function Hero() {
 
           <motion.div
             initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
+            animate={{ opacity: isVisible ? 1 : 0, x: isVisible ? 0 : 20 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             className={`lg:block ${isCalculatorOpen ? "block" : "hidden"}`}
           >
-            <div className="bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-white/20">
+            <div className="glass-card p-6 rounded-2xl shadow-2xl border border-white/20">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-800">Payment Calculator</h2>
                 <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary">
@@ -233,9 +240,9 @@ export default function Hero() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-6 rounded-xl">
+                <div className="gradient-border bg-white">
                   <h3 className="text-lg font-semibold mb-2 text-gray-800">Estimated Monthly Payment</h3>
-                  <p className="text-3xl font-bold text-primary">${calculateMonthlyPayment()}</p>
+                  <p className="text-3xl font-bold text-gradient">${calculateMonthlyPayment()}</p>
                   <div className="flex justify-between mt-2 text-sm">
                     <span className="text-gray-600">Total Interest:</span>
                     <span className="font-medium">${totalInterest()}</span>
@@ -250,7 +257,7 @@ export default function Hero() {
                   </p>
                 </div>
                 <Button
-                  className="w-full bg-gradient-to-r from-primary to-accent text-white hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-300"
+                  className="btn-gradient w-full shadow-md hover:shadow-lg transition-all duration-300"
                   onClick={() => setIsCalendlyOpen(true)}
                 >
                   Schedule Consultation
@@ -264,9 +271,9 @@ export default function Hero() {
         <div className="absolute bottom-10 left-10 hidden lg:block">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
             transition={{ delay: 1, duration: 0.8 }}
-            className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-lg flex items-center"
+            className="glass-card px-4 py-2 rounded-full shadow-lg flex items-center"
           >
             <span className="text-primary font-medium text-sm">Trusted by 500+ Businesses</span>
           </motion.div>
@@ -275,9 +282,9 @@ export default function Hero() {
         <div className="absolute bottom-10 right-10 hidden lg:block">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
             transition={{ delay: 1.2, duration: 0.8 }}
-            className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-lg flex items-center"
+            className="glass-card px-4 py-2 rounded-full shadow-lg flex items-center"
           >
             <span className="text-primary font-medium text-sm">98% Client Satisfaction</span>
           </motion.div>
