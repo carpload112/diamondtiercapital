@@ -60,14 +60,29 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
   const [contactMenuOpen, setContactMenuOpen] = useState(false)
   const [activeTab, setActiveTab] = useState("overview")
   const [showDebugInfo, setShowDebugInfo] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    // Check if we're trying to access the archived page
+    if (id === "archived") {
+      // Redirect to the archived applications page
+      router.push("/admin/applications/archived")
+      return
+    }
+
     fetchApplicationDetails()
-  }, [id])
+  }, [id, router])
 
   const fetchApplicationDetails = async () => {
     try {
       setLoading(true)
+      setError(null)
+
+      // Skip fetching if we're on the archived route
+      if (id === "archived") {
+        setLoading(false)
+        return
+      }
 
       // Use the enhanced server action to get application details
       const result = await getApplicationDetails(id)
@@ -85,6 +100,7 @@ export default function ApplicationDetailPage({ params }: { params: { id: string
       console.log("Application data loaded successfully")
     } catch (error) {
       console.error("Error fetching application details:", error)
+      setError(error instanceof Error ? error.message : "Failed to load application details")
       toast({
         title: "Error",
         description: "Failed to load application details",

@@ -4,11 +4,30 @@ import { createServerClient } from "./server"
 import { organizeApplicationData, createApplicationDataDebugLog } from "../utils/form-data-utils"
 
 /**
+ * Validates if a string is a valid UUID
+ * @param id The string to validate
+ * @returns Boolean indicating if the string is a valid UUID
+ */
+function isValidUUID(id: string) {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  return uuidRegex.test(id)
+}
+
+/**
  * Fetches complete application details including all related data
  * @param applicationId The ID of the application to fetch
  * @returns Complete application data with all related tables
  */
 export async function getApplicationDetails(applicationId: string) {
+  // Validate that the ID is a valid UUID
+  if (!isValidUUID(applicationId)) {
+    console.error(`Invalid UUID format: ${applicationId}`)
+    return {
+      success: false,
+      error: "Invalid application ID format",
+    }
+  }
+
   const supabase = createServerClient()
 
   try {

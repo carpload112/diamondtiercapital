@@ -6,18 +6,7 @@ import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 import { useAdminAuth } from "@/lib/admin-auth"
-import {
-  LayoutDashboard,
-  FileText,
-  Settings,
-  LogOut,
-  Menu,
-  X,
-  ChevronRight,
-  User,
-  Users,
-  RefreshCw,
-} from "lucide-react"
+import { FileText, Settings, LogOut, Menu, X, ChevronRight, User, Users, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
@@ -31,17 +20,35 @@ export default function AdminLayout({
   const router = useRouter()
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isDataLoading, setIsDataLoading] = useState(false)
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated, or to applications if on main admin page
   useEffect(() => {
     if (!isAuthenticated && pathname !== "/admin") {
       router.push("/admin")
+    } else if (isAuthenticated && pathname === "/admin") {
+      // Redirect to applications page when accessing the main admin route
+      router.push("/admin/applications")
     }
   }, [isAuthenticated, router, pathname])
 
+  // Force data refresh when navigating between affiliate and application pages
+  useEffect(() => {
+    const isAffiliatesPage = pathname.includes("/affiliates")
+    const isApplicationsPage = pathname.includes("/applications")
+
+    if (isAffiliatesPage || isApplicationsPage) {
+      // Clear any cached data
+      localStorage.removeItem("cachedAffiliateData")
+      localStorage.removeItem("cachedApplicationData")
+
+      // Force component re-render
+      setMobileMenuOpen(mobileMenuOpen)
+    }
+  }, [pathname, mobileMenuOpen])
+
   // Navigation items
   const navItems = [
-    { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { name: "Applications", href: "/admin/applications", icon: FileText },
     { name: "Affiliates", href: "/admin/affiliates", icon: Users },
     { name: "Settings", href: "/admin/settings", icon: Settings },
@@ -110,9 +117,9 @@ export default function AdminLayout({
       </div>
 
       {/* Main content */}
-      <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-3 md:p-4">
+      <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
         {/* Top header */}
-        <header className="bg-white border border-slate-100 rounded-md p-3 flex items-center justify-between mb-4">
+        <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-10">
           <div className="flex items-center">
             <Button
               variant="ghost"
@@ -124,14 +131,16 @@ export default function AdminLayout({
             </Button>
             <div>
               <h2 className="text-sm font-medium text-slate-900">
-                {navItems.find((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))?.name ||
-                  "Dashboard"}
+                {pathname === "/admin"
+                  ? "Applications"
+                  : navItems.find((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))?.name ||
+                    "Applications"}
               </h2>
               <div className="flex items-center text-xs text-slate-500">
-                <Link href="/admin" className="hover:text-blue-600">
+                <Link href="/admin/applications" className="hover:text-blue-600">
                   Admin
                 </Link>
-                {pathname !== "/admin" && (
+                {pathname !== "/admin" && !pathname.startsWith("/admin/applications") && (
                   <>
                     <ChevronRight className="h-3 w-3 mx-1" />
                     <span>
@@ -148,7 +157,14 @@ export default function AdminLayout({
               variant="outline"
               size="sm"
               className="h-8 text-xs flex items-center gap-1"
-              onClick={() => window.location.reload()}
+              onClick={() => {
+                // Clear any cached data
+                localStorage.removeItem("cachedAffiliateData")
+                localStorage.removeItem("cachedApplicationData")
+
+                // Force a hard refresh to get fresh data
+                window.location.reload()
+              }}
             >
               <RefreshCw className="h-3 w-3" />
               Refresh Data
@@ -161,10 +177,21 @@ export default function AdminLayout({
           </div>
         </header>
 
-        {/* Page content - this renders the actual page components that fetch data */}
-        <div className="affiliate-data-container" key={pathname}>
+        {/* Page content container */}
+        <div className="p-4">
+          {/* This ensures the children (page content) is always rendered */}
           {children}
         </div>
+
+        {/* Loading overlay */}
+        {isDataLoading && (
+          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+            <div className="bg-white p-4 rounded-md shadow-lg flex items-center space-x-3">
+              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500"></div>
+              <span>Loading data...</span>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )
