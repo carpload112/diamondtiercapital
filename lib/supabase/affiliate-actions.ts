@@ -35,14 +35,14 @@ export async function createAffiliate(data: {
       return { success: false, error: "An affiliate with this email already exists" }
     }
 
-    // Create the affiliate record
+    // Create the affiliate record - removing the company_name field that doesn't exist
     const { data: affiliate, error } = await supabase
       .from("affiliates")
       .insert({
         name: `${data.firstName} ${data.lastName}`,
         email: data.email,
         phone: data.phone || null,
-        company_name: data.companyName || null,
+        // company_name: data.companyName || null, // Removing this field as it doesn't exist
         referral_code: referralCode,
         status: "active", // Default status
       })

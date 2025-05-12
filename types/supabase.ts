@@ -173,6 +173,8 @@ export interface Database {
           tier: string
           created_at: string
           status: string
+          phone: string | null
+          // Removed company_name as it doesn't exist in the database
         }
         Insert: {
           id?: string
@@ -182,6 +184,8 @@ export interface Database {
           tier?: string
           created_at?: string
           status?: string
+          phone?: string | null
+          // Removed company_name as it doesn't exist in the database
         }
         Update: {
           id?: string
@@ -191,6 +195,8 @@ export interface Database {
           tier?: string
           created_at?: string
           status?: string
+          phone?: string | null
+          // Removed company_name as it doesn't exist in the database
         }
       }
       affiliate_tiers: {
